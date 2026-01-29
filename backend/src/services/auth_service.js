@@ -3,26 +3,32 @@ const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/user_repository');
 const crypto = require('crypto'); // for verification code
 
+
+
+function generateVerificationCode() {
+    return crypto.randomInt(100000, 999999); // 6-digit code
+}
+
 async function signup({ email, password }) {
     // Check if user exists
     const exists = await userRepository.findByEmail(email);
     if (exists) throw new Error('User already exists');
 
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+
+    // Send email
+    await sendVerificationEmail(email, verificationCode);
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generate email verification code (6 digits)
-    const verificationCode = crypto.randomInt(100000, 999999).toString();
 
     // Create user with rememberToken as verification code
     const user = await userRepository.create({
         email,
         password: hashedPassword,
-        rememberToken: verificationCode,
+        rememberToken: '',
     });
-
-    // Here you would send email with verificationCode
-    console.log(`Send verification code ${verificationCode} to ${email}`);
 
     // Automatically log in user after signup
     const payload = { id: user.id, email: user.email };

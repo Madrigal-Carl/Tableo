@@ -14,4 +14,6 @@ module.exports = (sequelize, DataTypes) => {
         EventResult.belongsTo(models.Event, { foreignKey: 'event_id', as: 'event' });
         EventResult.belongsTo(models.Candidate, { foreignKey: 'candidate_id', as: 'candidate' });
     };
+
+    return EventResult;
 }
