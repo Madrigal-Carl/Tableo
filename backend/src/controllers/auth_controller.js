@@ -92,4 +92,52 @@ async function login(req, res, next) {
     }
 }
 
-module.exports = { signupRequest, signupVerify, login };
+//forget password
+async function forgotPasswordRequest(req, res, next) {
+    try {
+        const { email } = req.body;
+
+        const user = await userRepository.findByEmail(email);
+        if (!user) return res.status(400).json({ message: 'Email not found' });
+
+        await requestVerification({ email });
+
+        res.json({ message: 'Password reset code sent to your email' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function forgotPasswordVerify(req, res, next) {
+    try {
+        const { email, code } = req.body;
+
+        const validCode = verifyCode({ email, code });
+        if (!validCode) return res.status(400).json({ message: 'Invalid or expired code' });
+
+        res.json({ message: 'Code verified, you can now reset your password' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function forgotPasswordReset(req, res, next) {
+    try {
+        const { email, password, confirmPassword } = req.body;
+
+        if (password !== confirmPassword)
+            return res.status(400).json({ message: 'Passwords do not match' });
+
+        const user = await userRepository.findByEmail(email);
+        if (!user) return res.status(400).json({ message: 'Email not found' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await userRepository.updatePassword(user.id, hashedPassword);
+
+        res.json({ message: 'Password has been reset successfully' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = {signupRequest,signupVerify,login,forgotPasswordRequest,forgotPasswordVerify,forgotPasswordReset,};
