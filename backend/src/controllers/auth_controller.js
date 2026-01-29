@@ -4,6 +4,9 @@ const userRepository = require('../repositories/user_repository');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+
+const blacklistedTokens = new Set();
+
 async function signupRequest(req, res, next) {
     const { email, password, confirmPassword } = req.body;
 
@@ -140,4 +143,15 @@ async function forgotPasswordReset(req, res, next) {
     }
 }
 
-module.exports = {signupRequest,signupVerify,login,forgotPasswordRequest,forgotPasswordVerify,forgotPasswordReset,};
+// Logout
+function logout(req, res) {
+    const header = req.headers.authorization;
+    if (!header) return res.status(400).json({ message: "No token provided" });
+
+    const token = header.split(' ')[1];
+    blacklistedTokens.add(token); // optional: server-side invalidation
+
+    res.json({ message: "Logged out successfully" });
+}
+
+module.exports = {signupRequest,signupVerify,login,forgotPasswordRequest,forgotPasswordVerify,forgotPasswordReset, logout};
