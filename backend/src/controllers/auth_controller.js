@@ -48,5 +48,47 @@ async function signupVerify(req, res, next) {
         next(err);
     }
 }
+async function login(req, res, next) {
+    try {
+        const { email, password } = req.body;
 
-module.exports = { signupRequest, signupVerify };
+        const user = await userRepository.findByEmail(email);
+        if (!user) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const payload = { id: user.id, email: user.email };
+
+        const accessToken = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
+        );
+
+        const refreshToken = jwt.sign(
+            payload,
+            process.env.REFRESH_TOKEN_SECRET,
+            {  expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+
+        res.status(200).json({
+            message: "Login successful",
+            user: {
+                id: user.id,
+                email: user.email,
+            },
+            accessToken,
+            refreshToken
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { signupRequest, signupVerify, login };
