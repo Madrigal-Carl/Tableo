@@ -8,4 +8,8 @@ module.exports = {
     create(data) {
         return User.create(data);
     },
+
+    updatePassword(id, hashedPassword) {
+        return User.update({ password: hashedPassword }, { where: { id } });
+    },
 };
