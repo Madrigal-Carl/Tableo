@@ -4,6 +4,9 @@ const userRepository = require('../repositories/user_repository');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+
+const blacklistedTokens = new Set();
+
 async function signupRequest(req, res, next) {
     const { email, password, confirmPassword } = req.body;
 
@@ -92,4 +95,63 @@ async function login(req, res, next) {
     }
 }
 
-module.exports = { signupRequest, signupVerify, login };
+//forget password
+async function forgotPasswordRequest(req, res, next) {
+    try {
+        const { email } = req.body;
+
+        const user = await userRepository.findByEmail(email);
+        if (!user) return res.status(400).json({ message: 'Email not found' });
+
+        await requestVerification({ email });
+
+        res.json({ message: 'Password reset code sent to your email' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function forgotPasswordVerify(req, res, next) {
+    try {
+        const { email, code } = req.body;
+
+        const validCode = verifyCode({ email, code });
+        if (!validCode) return res.status(400).json({ message: 'Invalid or expired code' });
+
+        res.json({ message: 'Code verified, you can now reset your password' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function forgotPasswordReset(req, res, next) {
+    try {
+        const { email, password, confirmPassword } = req.body;
+
+        if (password !== confirmPassword)
+            return res.status(400).json({ message: 'Passwords do not match' });
+
+        const user = await userRepository.findByEmail(email);
+        if (!user) return res.status(400).json({ message: 'Email not found' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await userRepository.updatePassword(user.id, hashedPassword);
+
+        res.json({ message: 'Password has been reset successfully' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Logout
+function logout(req, res) {
+    const header = req.headers.authorization;
+    if (!header) return res.status(400).json({ message: "No token provided" });
+
+    const token = header.split(' ')[1];
+    blacklistedTokens.add(token); // optional: server-side invalidation
+
+    res.json({ message: "Logged out successfully" });
+}
+
+module.exports = {signupRequest,signupVerify,login,forgotPasswordRequest,forgotPasswordVerify,forgotPasswordReset, logout};
