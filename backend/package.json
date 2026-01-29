@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "migrate": "sequelize db:migrate",
-    "seed": "sequelize db:seed:all"
+    "db:migrate": "sequelize db:migrate",
+    "db:create": "sequelize db:create",
+    "db:seed": "sequelize db:seed:all"
   },
   "keywords": [],
   "author": "",
