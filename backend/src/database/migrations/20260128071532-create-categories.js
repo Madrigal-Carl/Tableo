@@ -26,16 +26,6 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      stage_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'stages',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
