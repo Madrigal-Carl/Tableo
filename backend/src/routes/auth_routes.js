@@ -9,6 +9,7 @@ const {
     validateForgotPasswordVerify,
     validateForgotPasswordReset 
 } = require('../validators/auth_validator');
+const authMiddleware = require('../middlewares/auth');
 
 //Signup route
 router.post('/signup', validateSignup, authController.signupRequest);
@@ -25,4 +26,6 @@ router.post('/forgot-password/verify', validateForgotPasswordVerify, authControl
 
 router.post('/forgot-password/reset', validateForgotPasswordReset, authController.forgotPasswordReset);
 
+//logout route
+router.post('/logout', authMiddleware   , authController.logout)
 module.exports = router;
