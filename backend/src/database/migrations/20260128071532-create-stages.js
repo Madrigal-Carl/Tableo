@@ -9,7 +9,7 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('judges', {
+    await queryInterface.createTable('stages', {
       id: {
         autoIncrement: true,
         primaryKey: true,
@@ -26,18 +26,10 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      invitation_code: {
-        type: Sequelize.STRING,
-        unique: true,
+      round: {
+        type: Sequelize.INTEGER,
         allowNull: false,
-      },
-      name: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      sex: {
-        type: Sequelize.ENUM('male', 'female'),
-        allowNull: true,
+        defaultValue: 1,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -59,6 +51,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('judges');
+    await queryInterface.dropTable('stages');
   }
 };

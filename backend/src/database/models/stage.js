@@ -9,7 +9,13 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Stage.associate = function (models) {
-        Stage.hasOne(models.Category, { foreignKey: 'category_id', as: 'category' });
+        Stage.belongsTo(models.Event, { foreignKey: 'event_id', as: 'event' });
+        Stage.belongsToMany(models.Category, {
+            through: 'category_stage',
+            foreignKey: 'stage_id',
+            otherKey: 'category_id',
+            as: 'categories',
+        });
     }
 
     return Stage;

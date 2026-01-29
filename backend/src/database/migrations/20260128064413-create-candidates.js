@@ -32,7 +32,7 @@ module.exports = {
       },
       sex: {
         type: Sequelize.ENUM('male', 'female'),
-        allowNull: false,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
