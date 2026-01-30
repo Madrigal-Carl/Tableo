@@ -10,6 +10,8 @@ module.exports = (sequelize, DataTypes) => {
         {
             timestamps: true,
             underscored: true,
+            paranoid: true,
+            deletedAt: 'deleted_at',
         },
     );
 

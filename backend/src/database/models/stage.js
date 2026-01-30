@@ -6,12 +6,14 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         timestamps: true,
         underscored: true,
+        paranoid: true,
+        deletedAt: 'deleted_at',
     });
 
     Stage.associate = function (models) {
         Stage.belongsTo(models.Event, { foreignKey: 'event_id', as: 'event' });
         Stage.belongsToMany(models.Category, {
-            through: 'category_stage',
+            through: models.CategoryStage,
             foreignKey: 'stage_id',
             otherKey: 'category_id',
             as: 'categories',
