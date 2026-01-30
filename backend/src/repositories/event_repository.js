@@ -38,10 +38,18 @@ async function softDelete(eventId, userId) {
     });
 }
 
+function update(id, data, transaction) {
+    return Event.update(data, {
+        where: { id },
+        transaction,
+    });
+}
+
 module.exports = {
     create,
     findById,
     findByIdWithRelations,
     findByUser,
     softDelete,
+    update,
 };

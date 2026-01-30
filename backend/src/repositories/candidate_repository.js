@@ -4,4 +4,12 @@ function create(data, transaction) {
     return Candidate.create(data, { transaction });
 }
 
-module.exports = { create };
+function findByEvent(eventId, transaction) {
+    return Candidate.findAll({
+        where: { event_id: eventId },
+        order: [['id', 'ASC']],
+        transaction,
+    });
+}
+
+module.exports = { create, findByEvent };
