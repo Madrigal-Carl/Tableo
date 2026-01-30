@@ -90,6 +90,15 @@ async function createEvent({
     });
 }
 
+async function deleteEvent(eventId, userId) {
+    try {
+        await eventRepo.softDelete(eventId, userId);
+        return { message: 'Event deleted successfully' };
+    } catch (err) {
+        throw err;
+    }
+}
+
 async function getEvent(eventId, userId) {
     const event = await eventRepo.findByIdWithRelations(eventId);
 
@@ -99,4 +108,4 @@ async function getEvent(eventId, userId) {
     return event;
 }
 
-module.exports = { createEvent, getEvent };
+module.exports = { createEvent, getEvent, deleteEvent };
