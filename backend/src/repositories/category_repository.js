@@ -1,15 +1,24 @@
-const { Category } = require("../database/models");
+const { Category, Stage } = require("../database/models");
 
+// Create a category
 function create(data, transaction) {
   return Category.create(data, { transaction });
 }
 
-// New function to get all categories for a given event
+// Get categories for an event including only linked stages
 function findByEvent(eventId) {
   return Category.findAll({
     where: { event_id: eventId },
-    order: [["id", "ASC"]], 
+    include: [
+      {
+        model: Stage,
+        as: "stages",
+        through: { attributes: [] }, // hide join table fields
+        attributes: ["id", "round"], // only return stage ID and round
+      },
+    ],
+    order: [["id", "ASC"]],
   });
 }
 
-module.exports = {create,findByEvent, };
+module.exports = { create, findByEvent };
