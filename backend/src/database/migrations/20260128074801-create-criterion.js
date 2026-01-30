@@ -29,6 +29,7 @@ module.exports = {
       label: {
         type: Sequelize.TEXT,
         allowNull: false,
+        unique: true,
       },
       percentage: {
         type: Sequelize.FLOAT,
