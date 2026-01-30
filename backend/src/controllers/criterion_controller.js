@@ -1,5 +1,5 @@
 const { createCriterionValidator } = require("../validators/criterion_validator");
-const { createCriterion } = require("../services/criterion_service"); // service function
+const { createCriterion, getCriteriaByCategory } = require("../services/criterion_service");
 
 // CREATE CRITERIA CONTROLLER
 async function createCriterionController(req, res) {
@@ -31,4 +31,27 @@ async function createCriterionController(req, res) {
   }
 }
 
-module.exports = { createCriterionController };
+// READ CRITERIA CONTROLLER
+async function getCriteriaController(req, res) {
+  try {
+    const category_id = parseInt(req.params.categoryId, 10);
+    if (isNaN(category_id)) {
+      return res.status(400).json({ message: "Invalid category ID" });
+    }
+
+    const criteria = await getCriteriaByCategory(category_id);
+
+    return res.status(200).json({
+      message: "Criteria fetched successfully",
+      data: criteria,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Failed to fetch criteria",
+      error: err.message,
+    });
+  }
+}
+
+module.exports = { createCriterionController, getCriteriaController };

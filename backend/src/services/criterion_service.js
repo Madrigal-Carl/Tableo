@@ -36,4 +36,15 @@ async function createCriterion({ category_id, criteria }) {
   });
 }
 
-module.exports = { createCriterion };
+// READ CRITERIA by category
+async function getCriteriaByCategory(category_id) {
+  // Ensure category exists
+  const category = await categoryRepo.findById(category_id);
+  if (!category) throw new Error("Category not found");
+
+  // Fetch criteria
+  const criteria = await criterionRepo.findByCategory(category_id);
+  return criteria;
+}
+
+module.exports = { createCriterion, getCriteriaByCategory };
