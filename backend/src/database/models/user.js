@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     const User = sequelize.define('User', {
         email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
         password: { type: DataTypes.STRING, allowNull: false },
-        rememberToken: { type: DataTypes.STRING, allowNull: true },
+        rememberMe: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     }, {
         timestamps: true,
         underscored: true
