@@ -21,4 +21,18 @@ function findByEvent(eventId) {
   });
 }
 
-module.exports = { create, findByEvent };
+// Find a category by ID
+function findById(categoryId) {
+  return Category.findByPk(categoryId, {
+    include: [
+      {
+        model: Stage,
+        as: "stages",
+        through: { attributes: [] },
+        attributes: ["id", "round"],
+      },
+    ],
+  });
+}
+
+module.exports = { create, findByEvent, findById };
