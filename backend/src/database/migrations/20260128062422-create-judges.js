@@ -28,8 +28,8 @@ module.exports = {
       },
       invitation_code: {
         type: Sequelize.STRING,
-        unique: true,
         allowNull: false,
+        unique: true,
       },
       name: {
         type: Sequelize.STRING,

@@ -33,10 +33,12 @@ module.exports = {
       percentage: {
         type: Sequelize.FLOAT,
         allowNull: false,
+        defaultValue: 0,
       },
       max_score: {
         type: Sequelize.FLOAT,
         allowNull: false,
+        defaultValue: 0,
       },
       created_at: {
         type: Sequelize.DATE,
