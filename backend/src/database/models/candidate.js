@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
         "Candidate",
         {
             name: { type: DataTypes.STRING, allowNull: false },
-            sex: { type: DataTypes.STRING, allowNull: true },
+            sex: { type: DataTypes.ENUM('male', 'female'), allowNull: true },
         },
         {
             timestamps: true,
