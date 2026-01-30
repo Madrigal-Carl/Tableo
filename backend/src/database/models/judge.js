@@ -6,10 +6,9 @@ module.exports = (sequelize, DataTypes) => {
         name: { type: DataTypes.STRING, allowNull: false },
         sex: { type: DataTypes.ENUM('male', 'female'), allowNull: true },
     }, {
+        paranoid: true,
         timestamps: true,
         underscored: true,
-        paranoid: true,
-        deletedAt: 'deleted_at',
     });
 
     Judge.associate = function (models) {

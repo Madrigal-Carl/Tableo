@@ -1,0 +1,38 @@
+const Joi = require("joi");
+
+function validateCategory(isUpdate = false) {
+  const schema = Joi.object({
+    event_id: isUpdate
+      ? Joi.number().integer().optional()
+      : Joi.number().integer().required().messages({
+          "any.required": "Event ID is required",
+          "number.base": "Event ID must be a number",
+        }),
+    name: Joi.string().min(2).optional().messages({
+      "string.empty": "Category name cannot be empty",
+    }),
+    percentage: Joi.number().min(0).max(100).optional().messages({
+      "number.base": "Percentage must be a number",
+      "number.min": "Percentage cannot be less than 0",
+      "number.max": "Percentage cannot be more than 100",
+    }),
+    maxScore: Joi.number().greater(0).optional().messages({
+      "number.base": "Max score must be a number",
+      "number.greater": "Max score must be greater than 0",
+    }),
+    stage_id: Joi.number().integer().optional().messages({
+      "number.base": "Stage ID must be a number",
+      "number.integer": "Stage ID must be an integer",
+    }),
+  });
+
+  return (req, res, next) => {
+    const { error } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+    next();
+  };
+}
+
+module.exports = { validateCategory };

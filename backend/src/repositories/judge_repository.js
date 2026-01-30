@@ -10,7 +10,16 @@ function findByInvitationCode(invitationCode) {
     });
 }
 
+function findByEvent(eventId, transaction) {
+    return Judge.findAll({
+        where: { event_id: eventId },
+        order: [['id', 'ASC']],
+        transaction,
+    });
+}
+
 module.exports = {
     create,
     findByInvitationCode,
+    findByEvent,
 };
