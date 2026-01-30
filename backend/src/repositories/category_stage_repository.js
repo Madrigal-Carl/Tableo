@@ -12,7 +12,7 @@ function findByCategory(categoryId) {
     include: [
       {
         model: Stage,
-        as: "stage", // must match the alias in CategoryStage.associate
+        as: "stage",
         attributes: ["id", "round"],
       },
       {
@@ -25,4 +25,28 @@ function findByCategory(categoryId) {
   });
 }
 
-module.exports = { create, findByCategory }; // ✅ export both functions
+// Find specific category-stage INCLUDING soft deleted
+function findOneIncludingSoftDeleted(categoryId, stageId) {
+  return CategoryStage.findOne({
+    where: {
+      category_id: categoryId,
+      stage_id: stageId,
+    },
+    paranoid: false,
+  });
+}
+
+// Soft delete all other stages except the active one
+async function softDeleteOtherStages(categoryId, activeStageId, transaction) {
+  return CategoryStage.destroy({
+    where: {
+      category_id: categoryId,
+      stage_id: { [require("sequelize").Op.ne]: activeStageId },
+    },
+    transaction,
+  });
+}
+
+
+
+module.exports = { create, findByCategory, findOneIncludingSoftDeleted, softDeleteOtherStages };

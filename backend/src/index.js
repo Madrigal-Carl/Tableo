@@ -10,8 +10,8 @@ const eventRoutes = require('./routes/event_routes');
 const categoryRoutes = require('./routes/category_route');
 
 app.use('/api/auth', authRoutes);
-app.use('/api/event', eventRoutes);
-app.use('/api/category', categoryRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/categories', categoryRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
