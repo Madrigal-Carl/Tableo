@@ -1,4 +1,4 @@
-const { Event, Category, Stage, Judge, Candidate } = require('../database/models');
+const { Event, Category, Stage, Judge, Candidate, sequelize, } = require('../database/models');
 
 function create(data, transaction) {
     return Event.create(data, { transaction });

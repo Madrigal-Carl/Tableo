@@ -9,10 +9,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       tableName: 'category_stage',
+      paranoid: true,
       timestamps: true,
       underscored: true,
-      paranoid: true,
-      deletedAt: 'deleted_at',
     }
   );
 
