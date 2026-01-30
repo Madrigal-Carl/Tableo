@@ -46,6 +46,16 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      criterion_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'criterion',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
       score: {
         type: Sequelize.FLOAT,
         allowNull: false,
