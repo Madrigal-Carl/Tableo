@@ -38,4 +38,16 @@ async function createCategory({
   });
 }
 
-module.exports = { createCategory };
+//get categories by event ID
+async function getCategoriesByEvent(eventId) {
+  // Optional: check if the event exists
+  const event = await eventRepo.findById(eventId);
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  const categories = await categoryRepo.findByEvent(eventId);
+  return categories;
+}
+
+module.exports = {createCategory,getCategoriesByEvent};
