@@ -1,3 +1,4 @@
+const { get } = require('../routes/event_routes');
 const eventService = require('../services/event_service');
 
 async function createEvent(req, res, next) {
@@ -26,4 +27,4 @@ async function getEvent(req, res, next) {
     }
 }
 
-module.exports = { createEvent };
+module.exports = { createEvent, getEvent };
