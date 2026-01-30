@@ -5,6 +5,7 @@ const authenticate = require("../middlewares/auth"); // middleware
 const {
   createCriterionController,
   getCriteriaController,
+  updateCriteriaController, // renamed for multi-update
 } = require("../controllers/criterion_controller");
 
 // Async wrapper to handle errors and avoid crashing nodemon
@@ -16,7 +17,7 @@ function asyncHandler(fn) {
 
 // CREATE CRITERIA
 router.post(
-  "/:categoryId/create",
+  "/:categoryId/",
   authenticate,
   asyncHandler(async (req, res) => {
     req.body.category_id = parseInt(req.params.categoryId, 10);
@@ -30,6 +31,15 @@ router.get(
   authenticate,
   asyncHandler(async (req, res) => {
     await getCriteriaController(req, res);
+  })
+);
+
+// UPDATE CRITERIA (multi-update)
+router.put(
+  "/:categoryId/",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    await updateCriteriaController(req, res);
   })
 );
 
