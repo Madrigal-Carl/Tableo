@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         CompetitionScore.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
         CompetitionScore.belongsTo(models.Candidate, { foreignKey: 'candidate_id', as: 'candidate' });
         CompetitionScore.belongsTo(models.Judge, { foreignKey: 'judge_id', as: 'judge' });
+        CompetitionScore.belongsTo(models.Criterion, { foreignKey: 'criterion_id', as: 'criterion' });
     };
 
     return CompetitionScore;
