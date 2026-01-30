@@ -4,6 +4,7 @@ const eventRepo = require('../repositories/event_repository');
 const stageRepo = require('../repositories/stage_repository');
 const judgeRepo = require('../repositories/judge_repository');
 const candidateRepo = require('../repositories/candidate_repository');
+const eventRepo = require('../repositories/event_repository');
 
 const crypto = require('crypto');
 
