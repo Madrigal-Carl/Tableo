@@ -7,8 +7,11 @@ app.use(express.urlencoded({ extended: true }));
 
 const authRoutes = require('./routes/auth_routes');
 const eventRoutes = require('./routes/event_routes');
+const categoryRoutes = require('./routes/category_route');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/event', eventRoutes);
+app.use('/api/category', categoryRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
