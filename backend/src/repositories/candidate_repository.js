@@ -12,4 +12,13 @@ function findByEvent(eventId, transaction) {
     });
 }
 
-module.exports = { create, findByEvent };
+function findByEventIncludingSoftDeleted(eventId, transaction) {
+    return Candidate.findAll({
+        where: { event_id: eventId },
+        paranoid: false,
+        transaction,
+        order: [["id", "ASC"]],
+    });
+}
+
+module.exports = { create, findByEvent, findByEventIncludingSoftDeleted };
