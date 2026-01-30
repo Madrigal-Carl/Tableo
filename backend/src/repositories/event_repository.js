@@ -25,9 +25,23 @@ function findByUser(userId) {
     });
 }
 
+async function softDelete(eventId, userId) {
+    return sequelize.transaction(async (t) => {
+        const event = await Event.findByPk(eventId, { transaction: t });
+
+        if (!event) throw new Error('Event not found');
+        if (event.user_id !== userId) throw new Error('Unauthorized');
+
+        await event.destroy({ transaction: t });
+
+        return true;
+    });
+}
+
 module.exports = {
     create,
     findById,
     findByIdWithRelations,
     findByUser,
+    softDelete,
 };
