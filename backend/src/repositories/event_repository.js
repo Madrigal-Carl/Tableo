@@ -1,4 +1,4 @@
-const { Event, Category, Stage, Judge, Candidate } = require('../database/models');
+const { Event, Category, Stage, Judge, Candidate, sequelize, } = require('../database/models');
 
 function create(data, transaction) {
     return Event.create(data, { transaction });
@@ -38,10 +38,18 @@ async function softDelete(eventId, userId) {
     });
 }
 
+function update(id, data, transaction) {
+    return Event.update(data, {
+        where: { id },
+        transaction,
+    });
+}
+
 module.exports = {
     create,
     findById,
     findByIdWithRelations,
     findByUser,
     softDelete,
+    update,
 };

@@ -4,10 +4,9 @@ module.exports = (sequelize, DataTypes) => {
     const CompetitionScore = sequelize.define('CompetitionScore', {
         score: { type: DataTypes.FLOAT, allowNull: false, deafultValue: 0 },
     }, {
+        paranoid: true,
         timestamps: true,
         underscored: true,
-        paranoid: true,
-        deletedAt: 'deleted_at',
     });
 
     CompetitionScore.associate = function (models) {

@@ -9,10 +9,9 @@ module.exports = (sequelize, DataTypes) => {
         location: { type: DataTypes.STRING, allowNull: false },
         description: { type: DataTypes.TEXT, allowNull: true },
     }, {
+        paranoid: true,
         timestamps: true,
         underscored: true,
-        paranoid: true,
-        deletedAt: 'deleted_at',
     });
 
     Event.associate = function (models) {

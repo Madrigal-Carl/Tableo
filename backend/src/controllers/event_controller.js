@@ -27,7 +27,6 @@ async function getEvent(req, res, next) {
     }
 }
 
-
 async function deleteEvent(req, res, next) {
     try {
         const userId = req.user.id;
@@ -41,4 +40,17 @@ async function deleteEvent(req, res, next) {
     }
 }
 
-module.exports = { createEvent, getEvent, deleteEvent };
+async function updateEvent(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const eventId = req.params.id;
+
+        const result = await eventService.updateEvent(eventId, userId, req.body);
+
+        res.json({ message: 'Event updated successfully', event: result });
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent };

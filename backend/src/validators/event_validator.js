@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-function validateCreateEvent(req, res, next) {
+function validateEvent(req, res, next) {
     const schema = Joi.object({
         title: Joi.string().required(),
         description: Joi.string().allow('', null),
@@ -21,4 +21,4 @@ function validateCreateEvent(req, res, next) {
     next();
 }
 
-module.exports = { validateCreateEvent };
+module.exports = { validateEvent };

@@ -8,10 +8,9 @@ module.exports = (sequelize, DataTypes) => {
             sex: { type: DataTypes.ENUM('male', 'female'), allowNull: true },
         },
         {
+            paranoid: true,
             timestamps: true,
             underscored: true,
-            paranoid: true,
-            deletedAt: 'deleted_at',
         },
     );
 
