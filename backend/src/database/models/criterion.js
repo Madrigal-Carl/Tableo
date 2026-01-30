@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 
     Criterion.associate = function (models) {
         Criterion.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
+        Criterion.hasMany(models.CompetitionScore, { foreignKey: 'criterion_id', as: 'criterion' });
     };
 
     return Criterion;
