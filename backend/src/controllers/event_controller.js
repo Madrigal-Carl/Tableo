@@ -17,4 +17,13 @@ async function createEvent(req, res, next) {
     }
 }
 
+async function getEvent(req, res, next) {
+    try {
+        const event = await eventService.getEvent(req.params.id, req.user.id);
+        res.json(event);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = { createEvent };
