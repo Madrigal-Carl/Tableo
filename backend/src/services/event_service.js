@@ -4,6 +4,7 @@ const eventRepo = require('../repositories/event_repository');
 const stageRepo = require('../repositories/stage_repository');
 const judgeRepo = require('../repositories/judge_repository');
 const candidateRepo = require('../repositories/candidate_repository');
+const eventRepo = require('../repositories/event_repository');
 
 const crypto = require('crypto');
 
@@ -41,7 +42,6 @@ async function createEvent({
     userId,
 }) {
     return sequelize.transaction(async (t) => {
-        // 1️⃣ Create Event
         const event = await eventRepo.create(
             {
                 title,
@@ -55,7 +55,6 @@ async function createEvent({
             t
         );
 
-        // 2️⃣ Create Stages (Rounds)
         for (let i = 1; i <= rounds; i++) {
             await stageRepo.create(
                 {
@@ -66,7 +65,6 @@ async function createEvent({
             );
         }
 
-        // 3️⃣ Create Judges
         for (let i = 0; i < judges; i++) {
             const invitationCode = await generateUniqueInvitationCode();
             await judgeRepo.create(
@@ -79,7 +77,6 @@ async function createEvent({
             );
         }
 
-        // 4️⃣ Create Candidates
         for (let i = 0; i < candidates; i++) {
             await candidateRepo.create(
                 {
@@ -94,4 +91,13 @@ async function createEvent({
     });
 }
 
-module.exports = { createEvent };
+async function getEvent(eventId, userId) {
+    const event = await eventRepo.findByIdWithRelations(eventId);
+
+    if (!event) throw new Error('Event not found');
+    if (event.user_id !== userId) throw new Error('Unauthorized');
+
+    return event;
+}
+
+module.exports = { createEvent, getEvent };
