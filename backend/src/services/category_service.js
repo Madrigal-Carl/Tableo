@@ -7,7 +7,7 @@ async function createCategory({
   event_id,
   name,
   percentage,
-  max_score,
+  maxScore,
   userId,
 }) {
   return sequelize.transaction(async (t) => {
@@ -29,7 +29,7 @@ async function createCategory({
         event_id,
         name,
         percentage,
-        max_score,
+        maxScore,
       },
       t
     );

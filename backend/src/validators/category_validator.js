@@ -19,7 +19,7 @@ function validateCreateCategory(req, res, next) {
       "number.max": "Percentage cannot be more than 100",
     }),
 
-    max_score: Joi.number().min(0).required().messages({
+    maxScore: Joi.number().min(0).required().messages({
       "any.required": "Max score is required",
       "number.base": "Max score must be a number",
       "number.min": "Max score cannot be negative",
