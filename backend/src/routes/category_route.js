@@ -3,19 +3,15 @@ const router = express.Router();
 
 const auth = require('../middlewares/auth');
 const { validateCategory } = require('../validators/category_validator');
-const {
-  createCategory,
-  getCategoriesByEvent,
-  updateCategory,
-} = require('../controllers/category_controller');
+const categoryController = require('../controllers/category_controller');
 
 // Create a category
-router.post('/', auth, validateCategory(), createCategory);
+router.post('/', auth, validateCategory(), categoryController.createCategory);
 
 // Get all categories for a specific event
-router.get('/event/:eventId', auth, getCategoriesByEvent);
+router.get('/event/:eventId', auth, categoryController.getCategoriesByEvent);
 
-// Update a category (details + stage)
-router.put('/:categoryId', auth, validateCategory(true), updateCategory);
+// Update a category by ID 
+router.put('/:categoryId', auth, validateCategory(), categoryController.updateCategory);
 
 module.exports = router;
