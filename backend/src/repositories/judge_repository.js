@@ -18,8 +18,18 @@ function findByEvent(eventId, transaction) {
     });
 }
 
+function findByEventIncludingSoftDeleted(eventId, transaction) {
+    return Judge.findAll({
+        where: { event_id: eventId },
+        paranoid: false,
+        transaction,
+        order: [["id", "ASC"]],
+    });
+}
+
 module.exports = {
     create,
     findByInvitationCode,
     findByEvent,
+    findByEventIncludingSoftDeleted,
 };

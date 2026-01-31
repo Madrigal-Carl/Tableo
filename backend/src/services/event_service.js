@@ -126,17 +126,23 @@ async function updateEvent(eventId, userId, payload) {
 }
 
 async function syncCandidates(eventId, newCount, transaction) {
-    const existing = await candidateRepo.findByEvent(eventId, transaction);
-    const currentCount = existing.length;
+    const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
+        eventId,
+        transaction
+    );
 
-    if (newCount > currentCount) {
-        // ➕ CREATE
-        const toCreate = newCount - currentCount;
+    // Ensure required candidates
+    for (let i = 1; i <= newCount; i++) {
+        const candidate = allCandidates.find(c => c.name === `Candidate ${i}`);
 
-        for (let i = 0; i < toCreate; i++) {
+        if (candidate) {
+            if (candidate.deletedAt) {
+                await candidate.restore({ transaction });
+            }
+        } else {
             await candidateRepo.create(
                 {
-                    name: `Candidate ${currentCount + i + 1}`,
+                    name: `Candidate ${i}`,
                     event_id: eventId,
                 },
                 transaction
@@ -144,32 +150,34 @@ async function syncCandidates(eventId, newCount, transaction) {
         }
     }
 
-    if (newCount < currentCount) {
-        // ➖ SOFT DELETE (LAST ONES)
-        const toDelete = currentCount - newCount;
-
-        const lastCandidates = existing
-            .slice(-toDelete); // last N
-
-        for (const candidate of lastCandidates) {
+    // Soft delete extras
+    for (const candidate of allCandidates) {
+        const index = parseInt(candidate.name.replace("Candidate ", ""), 10);
+        if (index > newCount && !candidate.deletedAt) {
             await candidate.destroy({ transaction });
         }
     }
 }
 
 async function syncJudges(eventId, newCount, transaction) {
-    const existing = await judgeRepo.findByEvent(eventId, transaction);
-    const currentCount = existing.length;
+    const allJudges = await judgeRepo.findByEventIncludingSoftDeleted(
+        eventId,
+        transaction
+    );
 
-    if (newCount > currentCount) {
-        const toCreate = newCount - currentCount;
+    for (let i = 1; i <= newCount; i++) {
+        let judge = allJudges.find(j => j.name === `Judge ${i}`);
 
-        for (let i = 0; i < toCreate; i++) {
+        if (judge) {
+            if (judge.deletedAt) {
+                await judge.restore({ transaction });
+            }
+        } else {
             const invitationCode = await generateUniqueInvitationCode();
 
             await judgeRepo.create(
                 {
-                    name: `Judge ${currentCount + i + 1}`,
+                    name: `Judge ${i}`,
                     invitationCode,
                     event_id: eventId,
                 },
@@ -178,41 +186,44 @@ async function syncJudges(eventId, newCount, transaction) {
         }
     }
 
-    if (newCount < currentCount) {
-        const toDelete = currentCount - newCount;
-
-        const lastJudges = existing.slice(-toDelete);
-
-        for (const judge of lastJudges) {
+    for (const judge of allJudges) {
+        const index = parseInt(judge.name.replace("Judge ", ""), 10);
+        if (index > newCount && !judge.deletedAt) {
             await judge.destroy({ transaction });
         }
     }
 }
 
 async function syncStages(eventId, newRounds, transaction) {
-    const existing = await stageRepo.findByEvent(eventId, transaction);
-    const currentRounds = existing.length;
+    const allStages = await stageRepo.findByEventIncludingSoftDeleted(
+        eventId,
+        transaction
+    );
 
-    if (newRounds > currentRounds) {
-        const toCreate = newRounds - currentRounds;
+    const stageByRound = new Map();
+    for (const stage of allStages) {
+        stageByRound.set(stage.round, stage);
+    }
 
-        for (let i = 0; i < toCreate; i++) {
+    // Ensure required rounds exist
+    for (let round = 1; round <= newRounds; round++) {
+        const stage = stageByRound.get(round);
+
+        if (stage) {
+            if (stage.deletedAt) {
+                await stage.restore({ transaction });
+            }
+        } else {
             await stageRepo.create(
-                {
-                    round: currentRounds + i + 1,
-                    event_id: eventId,
-                },
+                { round, event_id: eventId },
                 transaction
             );
         }
     }
 
-    if (newRounds < currentRounds) {
-        const toDelete = currentRounds - newRounds;
-
-        const lastStages = existing.slice(-toDelete);
-
-        for (const stage of lastStages) {
+    // Soft delete extra rounds
+    for (const stage of allStages) {
+        if (stage.round > newRounds && !stage.deletedAt) {
             await stage.destroy({ transaction });
         }
     }
