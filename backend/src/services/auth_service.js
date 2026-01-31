@@ -2,16 +2,37 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/user_repository');
 const { requestVerification, verifyCode } = require('./email_verification_service');
+const { getCookieOptions } = require('../utils/auth_cookies');
 
-const blacklistedTokens = new Set();
-const activeSessions = new Map();
-
-function generateTokens(payload, rememberMe = false) {
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '15m' });
-    const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-        expiresIn: rememberMe ? '30d' : '7d',
+function generateAccessToken(payload) {
+    return jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN,
     });
-    return { accessToken, refreshToken };
+}
+
+function generateRefreshToken(payload) {
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
+    });
+}
+
+function setAuthCookies(res, payload, rememberMe) {
+    const accessToken = generateAccessToken(payload);
+
+    res.cookie(
+        'access_token',
+        accessToken,
+        getCookieOptions(Number(process.env.JWT_COOKIE_MAX_AGE))
+    );
+
+    if (rememberMe) {
+        const refreshToken = generateRefreshToken(payload);
+        res.cookie(
+            'refresh_token',
+            refreshToken,
+            getCookieOptions(Number(process.env.REFRESH_TOKEN_COOKIE_MAX_AGE))
+        );
+    }
 }
 
 async function signupRequest({ email, password }) {
@@ -22,60 +43,40 @@ async function signupRequest({ email, password }) {
     return { message: 'Verification code sent' };
 }
 
-async function signupVerify({ email, code, rememberMe }) {
+async function signupVerify({ email, code, rememberMe }, res) {
     const password = verifyCode({ email, code });
     if (!password) throw new Error('Invalid or expired code');
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await userRepository.create({ email, password: hashedPassword });
+    const user = await userRepository.create({
+        email,
+        password: hashedPassword,
+        rememberMe,
+    });
 
     const payload = { id: user.id, email: user.email };
-    const tokens = generateTokens(payload, rememberMe);
+    setAuthCookies(res, payload, rememberMe);
 
-    activeSessions.set(user.id, tokens.accessToken);
-
-    return { message: 'Signup successful', user, ...tokens };
+    return { message: 'Signup successful', user };
 }
 
-async function login({ email, password }) {
+async function login({ email, password, rememberMe }, res) {
     const user = await userRepository.findByEmail(email);
     if (!user) throw new Error('Invalid email or password');
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error('Invalid email or password');
 
-    if (activeSessions.has(user.id)) {
-        throw new Error('This account is already logged in from another device/session');
-    }
-
     const payload = { id: user.id, email: user.email };
-    const tokens = generateTokens(payload);
+    setAuthCookies(res, payload, rememberMe);
 
-    activeSessions.set(user.id, tokens.accessToken);
-
-    return { message: 'Login successful', user, ...tokens };
+    return { message: 'Login successful', user };
 }
 
-async function refreshToken(oldToken) {
-    if (!oldToken) throw new Error('Refresh token missing');
-    if (blacklistedTokens.has(oldToken)) throw new Error('Token invalidated');
-
-    let payload;
-    try { payload = jwt.verify(oldToken, process.env.REFRESH_TOKEN_SECRET); }
-    catch { throw new Error('Invalid or expired refresh token'); }
-
-    blacklistedTokens.add(oldToken);
-
-    const newTokens = generateTokens({ id: payload.id, email: payload.email });
-    activeSessions.set(payload.id, newTokens.accessToken);
-
-    return newTokens;
-}
-
-async function logout(user) {
-    if (user && activeSessions.has(user.id)) {
-        activeSessions.delete(user.id);
-    }
+async function logout(res) {
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return { message: 'Logged out successfully' };
 }
 
 async function forgotPasswordRequest({ email }) {
@@ -100,10 +101,8 @@ module.exports = {
     signupRequest,
     signupVerify,
     login,
-    refreshToken,
     logout,
     forgotPasswordRequest,
     forgotPasswordVerify,
     forgotPasswordReset,
-    blacklistedTokens
 };
