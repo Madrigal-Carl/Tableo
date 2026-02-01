@@ -3,15 +3,15 @@ const eventRepo = require("../repositories/event_repository");
 const categoryStageRepo = require("../repositories/category_stage_repository");
 const sequelize = require("../database/models").sequelize;
 
-async function createCategory({ name, percentage, maxScore, stage_id, event_id, userId }) {
+async function createCategory({ eventId, name, percentage, maxScore, stage_id, userId }) {
   return sequelize.transaction(async (t) => {
-    const event = await eventRepo.findByIdWithRelations(event_id);
+    const event = await eventRepo.findByIdWithRelations(eventId);
     if (!event) throw new Error("Event not found");
 
     if (event.user_id !== userId) throw new Error("You are not allowed to add categories to this event");
 
     // Create category
-    const category = await categoryRepo.create({ name, percentage, maxScore, event_id }, t);
+    const category = await categoryRepo.create({ name, percentage, maxScore, eventId }, t);
 
     // Link to stage
     await categoryStageRepo.create({ category_id: category.id, stage_id }, t);
