@@ -43,7 +43,7 @@ async function signupRequest({ email, password }) {
     return { message: 'Verification code sent' };
 }
 
-async function signupVerify({ email, code, rememberMe }, res) {
+async function signupVerify({ email, code }, res) {
     const password = verifyCode({ email, code });
     if (!password) throw new Error('Invalid or expired code');
 
@@ -51,11 +51,10 @@ async function signupVerify({ email, code, rememberMe }, res) {
     const user = await userRepository.create({
         email,
         password: hashedPassword,
-        rememberMe,
     });
 
     const payload = { id: user.id, email: user.email };
-    setAuthCookies(res, payload, rememberMe);
+    setAuthCookies(res, payload);
 
     return { message: 'Signup successful', user };
 }
