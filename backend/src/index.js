@@ -12,11 +12,13 @@ const authRoutes = require('./routes/auth_routes');
 const eventRoutes = require('./routes/event_routes');
 const eventCategoryRoutes = require('./routes/event_category_routes');
 const categoryRoutes = require('./routes/category_route');
+const candidateRoutes = require('./routes/candidate_routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/events', eventCategoryRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/candidates', candidateRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
