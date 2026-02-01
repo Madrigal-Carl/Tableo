@@ -12,4 +12,13 @@ function findByEvent(eventId, transaction) {
     });
 }
 
-module.exports = { create, findByEvent };
+function findByEventIncludingSoftDeleted(eventId, transaction) {
+    return Stage.findAll({
+        where: { event_id: eventId },
+        paranoid: false,
+        transaction,
+        order: [["round", "ASC"]],
+    });
+}
+
+module.exports = { create, findByEvent, findByEventIncludingSoftDeleted };

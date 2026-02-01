@@ -4,12 +4,20 @@ function create(data, transaction) {
     return Candidate.create(data, { transaction });
 }
 
-function findByEvent(eventId, transaction) {
+function findByEventIncludingSoftDeleted(eventId, transaction) {
     return Candidate.findAll({
         where: { event_id: eventId },
-        order: [['id', 'ASC']],
+        paranoid: false,
+        transaction,
+        order: [['sequence', 'ASC']],
+    });
+}
+
+function update(id, data, transaction) {
+    return Candidate.update(data, {
+        where: { id },
         transaction,
     });
 }
 
-module.exports = { create, findByEvent };
+module.exports = { create, findByEventIncludingSoftDeleted, update };

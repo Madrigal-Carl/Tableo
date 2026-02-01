@@ -9,7 +9,6 @@ const {
     validateForgotPasswordRequest,
     validateForgotPasswordVerify,
     validateForgotPasswordReset,
-    validateRefreshToken
 } = require('../validators/auth_validator');
 
 // Signup
@@ -19,13 +18,10 @@ router.post('/signup/verify', validateVerification, authController.signupVerify)
 // Login
 router.post('/login', validateLogin, authController.login);
 
-// Refresh access token
-router.post('/refresh', validateRefreshToken, authController.refreshToken);
-
 // Forgot Password
-router.post('/forgot-password', validateForgotPasswordRequest, authController.forgotPasswordRequest);
-router.post('/forgot-password/verify', validateForgotPasswordVerify, authController.forgotPasswordVerify);
-router.post('/forgot-password/reset', validateForgotPasswordReset, authController.forgotPasswordReset);
+router.post('/password/forgot', validateForgotPasswordRequest, authController.forgotPasswordRequest);
+router.post('/password/verify', validateForgotPasswordVerify, authController.forgotPasswordVerify);
+router.post('/password/reset', validateForgotPasswordReset, authController.forgotPasswordReset);
 
 // Logout
 router.post('/logout', authMiddleware, authController.logout);
