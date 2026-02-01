@@ -4,8 +4,8 @@ function create(data, transaction) {
     return Event.create(data, { transaction });
 }
 
-function findById(id) {
-    return Event.findByPk(id);
+function findById(id, transaction) {
+    return Event.findByPk(id, { transaction });
 }
 
 function findByIdWithRelations(id) {

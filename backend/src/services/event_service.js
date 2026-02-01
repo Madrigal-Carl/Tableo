@@ -3,7 +3,7 @@ const sequelize = require('../database/models').sequelize;
 const eventRepo = require('../repositories/event_repository');
 const stageRepo = require('../repositories/stage_repository');
 const judgeRepo = require('../repositories/judge_repository');
-const candidateRepo = require('../repositories/candidate_repository');
+const candidateService = require('./candidate_service');
 
 const crypto = require('crypto');
 
@@ -76,15 +76,7 @@ async function createEvent({
             );
         }
 
-        for (let i = 0; i < candidates; i++) {
-            await candidateRepo.create(
-                {
-                    name: `Candidate ${i + 1}`,
-                    event_id: event.id,
-                },
-                t
-            );
-        }
+        await candidateService.createOrUpdate(event.id, candidates, t);
 
         return event;
     });
@@ -101,6 +93,7 @@ async function deleteEvent(eventId, userId) {
 
 async function getEvent(eventId, userId) {
     const event = await eventRepo.findByIdWithRelations(eventId);
+    console.log("Event from DB:", event ? event.toJSON() : null);
 
     if (!event) throw new Error('Event not found');
     if (event.user_id !== userId) throw new Error('Unauthorized');
@@ -117,46 +110,12 @@ async function updateEvent(eventId, userId, payload) {
 
         await eventRepo.update(eventId, payload, t);
 
-        await syncCandidates(eventId, payload.candidates, t);
+        await candidateService.createOrUpdate(eventId, payload.candidates, t);
         await syncJudges(eventId, payload.judges, t);
         await syncStages(eventId, payload.rounds, t);
 
         return event;
     });
-}
-
-async function syncCandidates(eventId, newCount, transaction) {
-    const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
-        eventId,
-        transaction
-    );
-
-    // Ensure required candidates
-    for (let i = 1; i <= newCount; i++) {
-        const candidate = allCandidates.find(c => c.name === `Candidate ${i}`);
-
-        if (candidate) {
-            if (candidate.deletedAt) {
-                await candidate.restore({ transaction });
-            }
-        } else {
-            await candidateRepo.create(
-                {
-                    name: `Candidate ${i}`,
-                    event_id: eventId,
-                },
-                transaction
-            );
-        }
-    }
-
-    // Soft delete extras
-    for (const candidate of allCandidates) {
-        const index = parseInt(candidate.name.replace("Candidate ", ""), 10);
-        if (index > newCount && !candidate.deletedAt) {
-            await candidate.destroy({ transaction });
-        }
-    }
 }
 
 async function syncJudges(eventId, newCount, transaction) {
