@@ -2,7 +2,7 @@
 
 module.exports = (sequelize, DataTypes) => {
     const Criterion = sequelize.define('Criterion', {
-        label: { type: DataTypes.TEXT, allowNull: false, unique: true },
+        label: { type: DataTypes.STRING(255), allowNull: false, unique: true },
         percentage: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
     }, {
         paranoid: true,

@@ -19,9 +19,6 @@ router.post('/signup/verify', validateVerification, authController.signupVerify)
 // Login
 router.post('/login', validateLogin, authController.login);
 
-// Refresh access token
-router.post('/refresh', validateRefreshToken, authController.refreshToken);
-
 // Forgot Password
 router.post('/forgot-password', validateForgotPasswordRequest, authController.forgotPasswordRequest);
 router.post('/forgot-password/verify', validateForgotPasswordVerify, authController.forgotPasswordVerify);
