@@ -1,4 +1,3 @@
-const { get } = require('../routes/event_routes');
 const eventService = require('../services/event_service');
 
 async function createEvent(req, res, next) {
@@ -20,7 +19,7 @@ async function createEvent(req, res, next) {
 
 async function getEvent(req, res, next) {
     try {
-        const event = await eventService.getEvent(req.params.id, req.user.id);
+        const event = await eventService.getEvent(req.params.eventId, req.user.id);
         res.json(event);
     } catch (err) {
         next(err);
@@ -30,7 +29,7 @@ async function getEvent(req, res, next) {
 async function deleteEvent(req, res, next) {
     try {
         const userId = req.user.id;
-        const eventId = req.params.id;
+        const eventId = req.params.eventId;
 
         const result = await eventService.deleteEvent(eventId, userId);
 
@@ -43,7 +42,7 @@ async function deleteEvent(req, res, next) {
 async function updateEvent(req, res, next) {
     try {
         const userId = req.user.id;
-        const eventId = req.params.id;
+        const eventId = req.params.eventId;
 
         const result = await eventService.updateEvent(eventId, userId, req.body);
 
