@@ -9,12 +9,7 @@ function validateCandidate(req, res, next) {
         sex: Joi.string().valid('male', 'female').required().messages({
             'any.only': 'Sex must be either "male" or "female"',
             'any.required': 'Sex is required',
-        }),
-        event_id: Joi.number().integer().required().messages({
-            'number.base': 'Event ID must be a number',
-            'number.integer': 'Event ID must be an integer',
-            'any.required': 'Event ID is required',
-        }),
+        })
     });
 
     const { error } = schema.validate(req.body);
