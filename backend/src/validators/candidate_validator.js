@@ -2,9 +2,19 @@ const Joi = require('joi');
 
 function validateCandidate(req, res, next) {
     const schema = Joi.object({
-        name: Joi.string().required(),
-        sex: Joi.string().valid('male', 'female').required(),
-        event_id: Joi.number().required()
+        name: Joi.string().required().messages({
+            'string.empty': 'Candidate name is required',
+            'any.required': 'Candidate name is required',
+        }),
+        sex: Joi.string().valid('male', 'female').required().messages({
+            'any.only': 'Sex must be either "male" or "female"',
+            'any.required': 'Sex is required',
+        }),
+        event_id: Joi.number().integer().required().messages({
+            'number.base': 'Event ID must be a number',
+            'number.integer': 'Event ID must be an integer',
+            'any.required': 'Event ID is required',
+        }),
     });
 
     const { error } = schema.validate(req.body);
@@ -15,7 +25,12 @@ function validateCandidate(req, res, next) {
 
 function validateCandidateCount(req, res, next) {
     const schema = Joi.object({
-        count: Joi.number().integer().min(1).required()
+        count: Joi.number().integer().min(1).required().messages({
+            'number.base': 'Count must be a number',
+            'number.integer': 'Count must be an integer',
+            'number.min': 'Count must be at least 1',
+            'any.required': 'Count is required',
+        }),
     });
 
     const { error } = schema.validate(req.body);

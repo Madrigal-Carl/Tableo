@@ -3,11 +3,17 @@ const categoryService = require("../services/category_service");
 async function createCategory(req, res, next) {
   try {
     const userId = req.user.id;
-    const category = await categoryService.createCategory({ ...req.body, userId });
+    const { eventId } = req.params;
+
+    const category = await categoryService.createCategory({
+      eventId,
+      userId,
+      ...req.body,
+    });
 
     res.status(201).json({
-      message: "Category created successfully",
-      category: category,
+      message: 'Category created successfully',
+      category,
     });
   } catch (err) {
     next(err);
@@ -16,11 +22,12 @@ async function createCategory(req, res, next) {
 
 async function getCategoriesByEvent(req, res, next) {
   try {
-    const categories = await categoryService.getCategoriesByEvent(req.params.eventId);
+    const { eventId } = req.params;
+    const categories = await categoryService.getCategoriesByEvent(eventId);
 
-    res.status(200).json({
-      message: "Categories fetched successfully",
-      categories: categories,
+    res.json({
+      message: 'Categories fetched successfully',
+      categories,
     });
   } catch (err) {
     next(err);
