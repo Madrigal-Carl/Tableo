@@ -12,36 +12,42 @@ async function updateCandidate(candidateId, data) {
     });
 }
 
-async function createOrUpdate(eventId, newCount, transaction = null) {
-    const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
-        eventId,
-        transaction
-    );
+async function createOrUpdate(eventId, newCount) {
+    return sequelize.transaction(async (t) => {
+        const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
 
-    for (let seq = 1; seq <= newCount; seq++) {
-        let candidate = allCandidates.find(c => c.sequence === seq);
+        const updatedCandidates = [];
 
-        if (candidate) {
-            if (candidate.deletedAt) {
-                await candidate.restore({ transaction });
+        for (let seq = 1; seq <= newCount; seq++) {
+            let candidate = allCandidates.find(c => c.sequence === seq);
+
+            if (candidate) {
+                if (candidate.deletedAt) {
+                    await candidate.restore({ transaction: t });
+                }
+            } else {
+                candidate = await candidateRepo.create(
+                    {
+                        name: `Candidate ${seq}`,
+                        sequence: seq,
+                        event_id: eventId,
+                    },
+                    t
+                );
             }
-        } else {
-            await candidateRepo.create(
-                {
-                    name: `Candidate ${seq}`,
-                    sequence: seq,
-                    event_id: eventId,
-                },
-                transaction
-            );
-        }
-    }
 
-    for (const candidate of allCandidates) {
-        if (candidate.sequence > newCount && !candidate.deletedAt) {
-            await candidate.destroy({ transaction });
+            updatedCandidates.push(candidate);
         }
-    }
+
+        for (const candidate of allCandidates) {
+            if (candidate.sequence > newCount && !candidate.deletedAt) {
+                await candidate.destroy({ transaction: t });
+            }
+        }
+
+        const finalCandidates = await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
+        return finalCandidates;
+    });
 }
 
 module.exports = { createOrUpdate, updateCandidate };
