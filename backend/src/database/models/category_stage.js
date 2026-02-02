@@ -4,11 +4,11 @@ module.exports = (sequelize, DataTypes) => {
   const CategoryStage = sequelize.define(
     'CategoryStage',
     {
-      category_id: { type: DataTypes.INTEGER, allowNull: false },
-      stage_id: { type: DataTypes.INTEGER, allowNull: false },
+      categoryId: { type: DataTypes.INTEGER, allowNull: false },
+      stageId: { type: DataTypes.INTEGER, allowNull: false },
     },
     {
-      tableName: 'category_stage',
+      tableName: 'category_stages',
       paranoid: true,
       timestamps: true,
       underscored: true,
@@ -17,11 +17,11 @@ module.exports = (sequelize, DataTypes) => {
 
   CategoryStage.associate = function (models) {
     CategoryStage.belongsTo(models.Category, {
-      foreignKey: 'category_id',
+      foreignKey: 'categoryId',
       as: 'category',
     });
     CategoryStage.belongsTo(models.Stage, {
-      foreignKey: 'stage_id',
+      foreignKey: 'stageId',
       as: 'stage',
     });
   };

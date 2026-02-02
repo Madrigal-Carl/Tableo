@@ -18,8 +18,8 @@ module.exports = (sequelize, DataTypes) => {
         Category.hasOne(models.CategoryResult, { foreignKey: 'category_id', as: 'category_result' });
         Category.belongsToMany(models.Stage, {
             through: models.CategoryStage,
-            foreignKey: 'category_id',
-            otherKey: 'stage_id',
+            foreignKey: 'categoryId',
+            otherKey: 'stageId',
             as: 'stages',
         });
     };
