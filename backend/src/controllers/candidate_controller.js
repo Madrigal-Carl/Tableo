@@ -17,12 +17,8 @@ async function createOrUpdateCandidates(req, res, next) {
         const eventId = parseInt(req.params.eventId);
         const { count } = req.body;
 
-        const candidates = await candidateService.createOrUpdate(eventId, count);
-
-        res.json({
-            message: `Candidates synced successfully for event ${eventId}`,
-            candidates
-        });
+        await candidateService.createOrUpdate(eventId, count);
+        res.json({ message: `Candidates synced successfully for event ${eventId}` });
     } catch (err) {
         next(err);
     }
