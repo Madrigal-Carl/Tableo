@@ -8,7 +8,7 @@ function create(data, transaction) {
 // Get all stages linked to a category
 function findByCategory(categoryId) {
   return CategoryStage.findAll({
-    where: { category_id: categoryId },
+    where: { categoryId },
     include: [
       {
         model: Stage,
@@ -28,10 +28,7 @@ function findByCategory(categoryId) {
 // Find specific category-stage INCLUDING soft deleted
 function findOneIncludingSoftDeleted(categoryId, stageId) {
   return CategoryStage.findOne({
-    where: {
-      category_id: categoryId,
-      stage_id: stageId,
-    },
+    where: { categoryId, stageId },
     paranoid: false,
   });
 }
@@ -40,13 +37,11 @@ function findOneIncludingSoftDeleted(categoryId, stageId) {
 async function softDeleteOtherStages(categoryId, activeStageId, transaction) {
   return CategoryStage.destroy({
     where: {
-      category_id: categoryId,
-      stage_id: { [require("sequelize").Op.ne]: activeStageId },
+      categoryId,
+      stageId: { [require("sequelize").Op.ne]: activeStageId },
     },
     transaction,
   });
 }
-
-
 
 module.exports = { create, findByCategory, findOneIncludingSoftDeleted, softDeleteOtherStages };

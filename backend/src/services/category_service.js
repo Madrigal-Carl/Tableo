@@ -11,10 +11,10 @@ async function createCategory({ eventId, name, percentage, maxScore, stage_id, u
     if (event.user_id !== userId) throw new Error("You are not allowed to add categories to this event");
 
     // Create category
-    const category = await categoryRepo.create({ name, percentage, maxScore, eventId }, t);
+    const category = await categoryRepo.create({ name, percentage, maxScore, event_id: eventId }, t);
 
     // Link to stage
-    await categoryStageRepo.create({ category_id: category.id, stage_id }, t);
+    await categoryStageRepo.create({ categoryId: category.id, stageId: stage_id }, t);
 
     category.stages = [{ id: stage_id }];
 
@@ -47,7 +47,7 @@ async function updateCategory({ categoryId, name, percentage, maxScore, stage_id
       }
     } else {
       categoryStage = await categoryStageRepo.create(
-        { category_id: categoryId, stage_id },
+        { categoryId: categoryId, stageId: stage_id },
         t
       );
     }
