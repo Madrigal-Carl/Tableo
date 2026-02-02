@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function VerificationModal({ open, onClose }) {
+export default function VerificationModal({ open, onClose, onSuccess }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputsRef = useRef([]);
 
@@ -37,6 +37,14 @@ export default function VerificationModal({ open, onClose }) {
       inputsRef.current[index - 1]?.focus();
     }
   };
+  const handleConfirm = () => {
+  const fullCode = otp.join("");
+
+  if (fullCode.length !== 6) return; // require all digits
+
+  onSuccess?.(); // 🔥 tell Login to open NewPasswordModal
+};
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -74,11 +82,12 @@ export default function VerificationModal({ open, onClose }) {
         </p>
 
         <button
-          onClick={onClose}
-          className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
-        >
-          Confirm
-        </button>
+        onClick={handleConfirm}
+        className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
+      >
+        Confirm
+      </button>
+
       </div>
     </div>
   );
