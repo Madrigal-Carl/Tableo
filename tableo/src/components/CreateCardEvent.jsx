@@ -2,7 +2,7 @@ import React from "react";
 
 function CreateCardEvent({ title, description, date, location, children }) {
   return (
-    <div className="relative w-80 max-w-full h-[420px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition">
+    <div className="relative w-full h-full min-h-[360px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col">
       
       {/* IMAGE / MEDIA SLOT */}
       <div className="absolute inset-0 w-full h-full">
