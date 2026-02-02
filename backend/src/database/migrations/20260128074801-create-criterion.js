@@ -27,8 +27,9 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       label: {
-        type: Sequelize.TEXT,
+        type: Sequelize.STRING(255),
         allowNull: false,
+        unique: true,
       },
       percentage: {
         type: Sequelize.FLOAT,

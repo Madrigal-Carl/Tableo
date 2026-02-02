@@ -1,0 +1,317 @@
+import React, { useState } from "react";
+import CategoryCard from "../components/CategoryCard";
+
+function CategoryPage() {
+    const [categoryName, setCategoryName] = useState("");
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
+    const [criteriaList, setCriteriaList] = useState([
+    { name: "", weight: "" }
+    ]);
+    const handleRemoveCriteriaRow = (index) => {
+        if (criteriaList.length === 1) return
+        setCriteriaList(criteriaList.filter((_, i) => i !== index));
+    };
+    const [roundCategories, setRoundCategories] = useState({
+    "Round 1": [],
+    "Round 2": [],
+    "Round 3": [],
+    "Round 4": [],
+    "Round 5": [],
+    });
+
+    const [pendingCategory, setPendingCategory] = useState(null);
+    const [showCreateCategory, setShowCreateCategory] = useState(true);
+    const [openCriteriaId, setOpenCriteriaId] = useState(null);
+
+
+    const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
+    const [activeRound, setActiveRound] = useState("Round 1");
+
+
+    const handleAddCategory = () => {
+    if (categoryName.trim() === "") return;
+
+    setPendingCategory({
+        id: Date.now(),
+        name: categoryName
+    });
+
+    setIsCategoryModalOpen(false);
+    setIsCriteriaModalOpen(true);
+    };
+
+
+
+    const handleAddCriteriaRow = () => {
+        setCriteriaList([...criteriaList, { name: "", weight: "" }]);
+    };
+
+        const handleCriteriaChange = (index, field, value) => {
+        const updated = [...criteriaList];
+        updated[index][field] = value;
+        setCriteriaList(updated);
+    };
+
+    const handleConfirmCriteria = () => {
+    if (!pendingCategory) return;
+
+    setRoundCategories(prev => ({
+        ...prev,
+        [activeRound]: [
+        ...prev[activeRound],
+        {
+            ...pendingCategory,
+            criteria: criteriaList,
+        },
+        ],
+    }));
+
+    setPendingCategory(null);
+    setCriteriaList([{ name: "", weight: "" }]);
+    setIsCriteriaModalOpen(false);
+    setShowCreateCategory(false);
+    };
+
+
+
+  return (
+    <>
+      <nav className="fixed top-0 left-0 w-full flex justify-between items-center p-4 bg-white shadow-md z-50">
+        <button className="bg-[#FA824C] text-base text-white px-6 py-3 rounded-3xl hover:bg-[#FF9768] font-bold">
+          Back
+        </button>
+        <h1 className="text-4xl font-bold text-gray-800">Event Title</h1>
+        <button
+        className="bg-[#FA824C] text-base text-white px-6 py-3 rounded-3xl hover:bg-[#FF9768] font-bold"
+        onClick={() => setIsCategoryModalOpen(true)}
+        >
+        Add Category
+        </button>
+      </nav>
+
+
+      <section className="w-full min-h-screen flex flex-col items-center justify-center bg-white pt-24">
+        <div className="w-full max-w-6xl space-y-8">
+
+        {/* ROUND TABS (GLOBAL) */}
+        <div className="flex gap-6 border-b mb-10 px-2 justify-center">
+            {rounds.map(round => (
+            <button
+                key={round}
+                onClick={() => setActiveRound(round)}
+                className={`pb-3 text-sm font-medium transition ${
+                activeRound === round
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+            >
+                {round}
+            </button>
+            ))}
+        </div>
+
+        {/* SINGLE TABLE FOR ACTIVE ROUND */}
+        <CategoryCard
+            categories={roundCategories[activeRound]}
+            openCriteriaId={openCriteriaId}
+            setOpenCriteriaId={setOpenCriteriaId}
+        />
+        </div>
+      </section>
+
+        {/* MODAL */}
+        {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
+
+            {/* TITLE */}
+            <h2 className="text-center text-xl font-semibold mb-6">
+                Add Category
+            </h2>
+
+            <form className="space-y-5">
+
+                {/* CATEGORY NAME */}
+                <div className="flex flex-col">
+                <label className="text-sm text-gray-500 mb-1">
+                    Category Name
+                </label>
+                <input
+                    type="text"
+                    value={categoryName}
+                    onChange={(e) => setCategoryName(e.target.value)}
+                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                />
+                </div>
+
+                {/* ROUND */}
+                <div className="flex flex-col">
+                <label className="text-sm text-gray-500 mb-1">
+                    Round
+                </label>
+                <input
+                    type="text"
+                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                />
+                </div>
+
+                {/* WEIGHT + MAX SCORE */}
+                <div className="grid grid-cols-2 gap-4">
+
+                {/* CATEGORY WEIGHT */}
+                <div className="flex flex-col">
+                    <label className="text-sm text-gray-500 mb-1">
+                    Category Weight (%)
+                    </label>
+                    <input
+                    type="number"
+                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    />
+                    <span className="text-xs text-gray-400 mt-1">
+                    All category weights must total 100%.
+                    </span>
+                </div>
+
+                {/* MAX SCORE */}
+                <div className="flex flex-col">
+                    <label className="text-sm text-gray-500 mb-1">
+                    Max Score
+                    </label>
+                    <input
+                    type="number"
+                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    />
+                    <span className="text-xs text-gray-400 mt-1">
+                    Maximum points available for this category.
+                    </span>
+                </div>
+
+                </div>
+
+                {/* ACTION BUTTONS */}
+                <div className="flex justify-between pt-6">
+                <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(false)}
+                    className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    onClick={handleAddCategory}
+                    className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
+                >
+                    Confirm
+                </button>
+                </div>
+
+            </form>
+            </div>
+        </div>
+        )}  
+
+        {isCriteriaModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="bg-white w-full max-h-100 max-w-md rounded-2xl shadow-xl p-6  overflow-y-auto">
+
+            {/* TITLE */}
+            <h2 className="text-center text-xl font-semibold mb-6">
+                Criteria
+            </h2>
+
+            {/* INPUT ROW */}
+            {criteriaList.map((criteria, index) => (
+            <div
+            key={index}
+            className="grid grid-cols-[1fr_1fr_auto] gap-3 mb-4 items-end"
+            >
+            {/* CRITERIA NAME */}
+            <div className="flex flex-col">
+                <label className="text-sm text-gray-500 mb-1">
+                Criteria
+                </label>
+                <input
+                type="text"
+                value={criteria.name}
+                onChange={(e) =>
+                    handleCriteriaChange(index, "name", e.target.value)
+                }
+                placeholder="Enter criteria"
+                className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                />
+            </div>
+
+            {/* CRITERIA WEIGHT */}
+            <div className="flex flex-col">
+                <label className="text-sm text-gray-500 mb-1">
+                Criteria Weight
+                </label>
+                <input
+                type="number"
+                value={criteria.weight}
+                onChange={(e) =>
+                    handleCriteriaChange(index, "weight", e.target.value)
+                }
+                placeholder="%"
+                className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                />
+            </div>
+
+            {/* DELETE BUTTON */}
+            <button
+                type="button"
+                onClick={() => handleRemoveCriteriaRow(index)}
+                className="mb-1 px-2 py-1 rounded-full  text-red-500 hover:bg-red-50 transition"
+                title="Remove"
+            >
+                ✕
+            </button>
+            </div>
+
+            ))}
+
+            {/* ADD CRITERIA BUTTON */}
+            <button
+            type="button"
+            onClick={handleAddCriteriaRow}
+            className="w-full rounded-full bg-[#FA824C] text-white py-2 mb-6 hover:bg-orange-600 transition"
+            >
+            + Add Criteria
+            </button>
+
+
+            {/* ACTION BUTTONS */}
+            <div className="flex justify-between">
+                <button
+                type="button"
+                onClick={() => {
+                    setIsCriteriaModalOpen(false);
+                    setIsCategoryModalOpen(true);
+                }}
+                className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
+                >
+                Previous
+                </button>
+
+                <button
+                type="button"
+                onClick={handleConfirmCriteria}
+                className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
+                >
+                Confirm
+                </button>
+            </div>
+
+            </div>
+        </div>
+        )}
+
+
+    </>
+  );
+}
+
+export default CategoryPage;
