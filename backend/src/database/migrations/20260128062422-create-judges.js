@@ -28,8 +28,8 @@ module.exports = {
       },
       invitation_code: {
         type: Sequelize.STRING,
-        unique: true,
         allowNull: false,
+        unique: true,
       },
       name: {
         type: Sequelize.STRING,
@@ -48,7 +48,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.fn('NOW'),
-      }
+      },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
     });
   },
 

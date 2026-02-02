@@ -1,15 +1,19 @@
 const { User } = require('../database/models');
 
-module.exports = {
-    findByEmail(email) {
-        return User.findOne({ where: { email } });
-    },
+function findByEmail(email) {
+    return User.findOne({ where: { email } });
+}
 
-    create(data) {
-        return User.create(data);
-    },
+function findById(id) {
+    return User.findByPk(id);
+}
 
-    updatePassword(id, hashedPassword) {
-        return User.update({ password: hashedPassword }, { where: { id } });
-    },
-};
+function create(data) {
+    return User.create(data);
+}
+
+function updatePassword(id, hashedPassword) {
+    return User.update({ password: hashedPassword }, { where: { id } });
+}
+
+module.exports = { findByEmail, findById, create, updatePassword };

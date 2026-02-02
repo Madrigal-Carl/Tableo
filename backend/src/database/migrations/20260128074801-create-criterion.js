@@ -9,7 +9,7 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('criteria', {
+    await queryInterface.createTable('criterion', {
       id: {
         autoIncrement: true,
         primaryKey: true,
@@ -27,8 +27,9 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       label: {
-        type: Sequelize.TEXT,
+        type: Sequelize.STRING(255),
         allowNull: false,
+        unique: true,
       },
       percentage: {
         type: Sequelize.FLOAT,
@@ -44,7 +45,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.fn('NOW'),
-      }
+      },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
     });
   },
 
@@ -55,6 +60,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('criteria');
+    await queryInterface.dropTable('criterion');
   }
 };

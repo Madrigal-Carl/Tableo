@@ -21,14 +21,16 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         unique: true,
+        validate: { isEmail: true },
       },
       password: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      remember_token: {
-        type: Sequelize.STRING,
-        allowNull: true,
+      remember_me: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       created_at: {
         type: Sequelize.DATE,
