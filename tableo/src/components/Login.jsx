@@ -2,16 +2,31 @@ import React, { useState } from "react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import VerificationModal from "../components/VerificationModal";
+import NewPasswordModal from "../components/NewPasswordModal"; // ✅ ADD
 
 export default function Login() {
   const [showForgot, setShowForgot] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false); // ✅ ADD
   const [resetEmail, setResetEmail] = useState("");
 
   const handleForgotConfirm = (email) => {
     setResetEmail(email);
-    setShowForgot(false);        // close first modal
-    setShowVerification(true);   // open verification modal
+    setShowForgot(false);
+    setShowVerification(true);
+  };
+
+  // ✅ called after OTP confirm
+  const handleVerificationSuccess = () => {
+    setShowVerification(false);
+    setShowNewPassword(true);
+  };
+
+  // ✅ final step
+  const handlePasswordReset = (newPassword) => {
+    console.log("Reset email:", resetEmail);
+    console.log("New password:", newPassword);
+    setShowNewPassword(false);
   };
 
   return (
@@ -70,6 +85,13 @@ export default function Login() {
       <VerificationModal
         open={showVerification}
         onClose={() => setShowVerification(false)}
+        onSuccess={handleVerificationSuccess}  // ✅ ADD
+      />
+
+      <NewPasswordModal
+        open={showNewPassword}
+        onClose={() => setShowNewPassword(false)}
+        onConfirm={handlePasswordReset}
       />
     </div>
   );
