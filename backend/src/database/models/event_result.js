@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
         average: { type: DataTypes.FLOAT, allowNull: false },
         rank: { type: DataTypes.INTEGER, allowNull: false },
     }, {
+        paranoid: true,
         timestamps: true,
         underscored: true,
     });
@@ -14,4 +15,6 @@ module.exports = (sequelize, DataTypes) => {
         EventResult.belongsTo(models.Event, { foreignKey: 'event_id', as: 'event' });
         EventResult.belongsTo(models.Candidate, { foreignKey: 'candidate_id', as: 'candidate' });
     };
+
+    return EventResult;
 }
