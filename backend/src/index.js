@@ -10,10 +10,9 @@ app.use(express.urlencoded({ extended: true }));
 
 const authRoutes = require('./routes/auth_routes');
 const eventRoutes = require('./routes/event_routes');
-const categoryRoutes = require('./routes/category_route');
+const categoryRoutes = require('./routes/category_routes');
 const criterionRoutes = require('./routes/criterion_route');
 const eventCategoryRoutes = require('./routes/event_category_routes');
-const categoryRoutes = require('./routes/category_routes');
 const candidateRoutes = require('./routes/candidate_routes');
 
 app.use('/api/auth', authRoutes);
