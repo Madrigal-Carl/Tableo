@@ -66,6 +66,10 @@ async function login({ email, password, rememberMe }, res) {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error('Invalid email or password');
 
+    if (rememberMe !== undefined) {
+        await user.update({ rememberMe });
+    }
+
     const payload = { id: user.id, email: user.email };
     setAuthCookies(res, payload, rememberMe);
 
