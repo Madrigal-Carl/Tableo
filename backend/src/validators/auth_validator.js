@@ -56,7 +56,10 @@ function validateLogin(req, res, next) {
             'string.min': 'Password must be at least 6 characters',
             'any.required': 'Password is required'
         }),
-        rememberMe: Joi.boolean().optional()
+        rememberMe: Joi.boolean().required().messages({
+            'any.required': 'Remember Me is required',
+            'boolean.base': 'Remember Me must be true or false'
+        })
     });
     const { error } = schema.validate(req.body);
     if (error) return res.status(400).json({ message: error.details[0].message });
