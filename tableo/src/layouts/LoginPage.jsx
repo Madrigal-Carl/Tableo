@@ -4,12 +4,17 @@ import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import VerificationModal from "../components/VerificationModal";
 import NewPasswordModal from "../components/NewPasswordModal";
-import { login } from "../services/auth_service";
+import {
+  login,
+  forgotPasswordRequest,
+  forgotPasswordReset,
+} from "../services/auth_service";
 
-export default function Login() {
+export default function LoginPage() {
   const [showForgot, setShowForgot] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
 
   const [form, setForm] = useState({
     email: "",
@@ -18,7 +23,6 @@ export default function Login() {
 
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -55,6 +59,29 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotConfirm = async (email) => {
+    await forgotPasswordRequest({ email });
+    setForgotEmail(email);
+    setShowForgot(false);
+    setShowVerification(true);
+  };
+
+  const handleVerificationSuccess = () => {
+    setShowVerification(false);
+    setShowNewPassword(true);
+  };
+
+  const handleResetPassword = async (password) => {
+    await forgotPasswordReset({
+      email: forgotEmail,
+      password,
+      confirmPassword: password,
+    });
+
+    setShowNewPassword(false);
+    setForgotEmail("");
   };
 
   return (
@@ -163,16 +190,21 @@ export default function Login() {
       <ForgotPasswordModal
         open={showForgot}
         onClose={() => setShowForgot(false)}
+        onConfirm={handleForgotConfirm}
       />
 
       <VerificationModal
         open={showVerification}
         onClose={() => setShowVerification(false)}
+        email={forgotEmail}
+        type="forgot"
+        onSuccess={handleVerificationSuccess}
       />
 
       <NewPasswordModal
         open={showNewPassword}
         onClose={() => setShowNewPassword(false)}
+        onConfirm={handleResetPassword}
       />
     </div>
   );
