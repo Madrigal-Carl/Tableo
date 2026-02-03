@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import VerificationModal from "../components/VerificationModal";
-import NewPasswordModal from "../components/NewPasswordModal"; // ✅ ADD
+import NewPasswordModal from "../components/NewPasswordModal";
 
 export default function Login() {
   const [showForgot, setShowForgot] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false); // ✅ ADD
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
 
   const handleForgotConfirm = (email) => {
@@ -16,13 +16,11 @@ export default function Login() {
     setShowVerification(true);
   };
 
-  // ✅ called after OTP confirm
   const handleVerificationSuccess = () => {
     setShowVerification(false);
     setShowNewPassword(true);
   };
 
-  // ✅ final step
   const handlePasswordReset = (newPassword) => {
     console.log("Reset email:", resetEmail);
     console.log("New password:", newPassword);
