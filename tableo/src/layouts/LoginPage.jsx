@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react"; // ✅ added useEffect
+import React, { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import VerificationModal from "../components/VerificationModal";
@@ -9,10 +10,11 @@ export default function Login() {
   const [showVerification, setShowVerification] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
-  const [rememberMe, setRememberMe] = useState(false); // ✅ ADD
+  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
 
-  // ✅ Restore saved preference
   useEffect(() => {
     const saved = localStorage.getItem("rememberMe") === "true";
     setRememberMe(saved);
@@ -35,17 +37,12 @@ export default function Login() {
     setShowNewPassword(false);
   };
 
-  // ✅ LOGIN HANDLER
   const handleLogin = () => {
+    console.log("Password:", password);
     console.log("Remember me:", rememberMe);
 
-    if (rememberMe) {
-      localStorage.setItem("rememberMe", "true");
-    } else {
-      localStorage.removeItem("rememberMe");
-    }
-
-    // 🔜 Your real login API call here
+    if (rememberMe) localStorage.setItem("rememberMe", "true");
+    else localStorage.removeItem("rememberMe");
   };
 
   return (
@@ -62,20 +59,42 @@ export default function Login() {
             <h1 className="text-2xl font-semibold text-gray-800">Welcome back to Tabléo</h1>
             <p className="mt-1 mb-8 text-sm text-gray-500">Sign in to continue</p>
 
-            <input
-              type="email"
-              placeholder="Email address"
-              className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
-            />
+            {/* EMAIL */}
+            <div className="mb-4">
+              <label className="block mb-1 text-base font-medium text-gray-600">
+                Email
+              </label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+              />
+            </div>
 
-            <input
-              type="password"
-              placeholder="Password"
-              className="mb-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
-            />
+            {/* PASSWORD */}
+            <div className="mb-2">
+              <label className="block mb-1 text-base font-medium text-gray-600">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FA824C]"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
 
-            {/* ✅ REMEMBER ME */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 mt-2">
               <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
@@ -117,23 +136,9 @@ export default function Login() {
         </div>
       </div>
 
-      <ForgotPasswordModal
-        open={showForgot}
-        onClose={() => setShowForgot(false)}
-        onConfirm={handleForgotConfirm}
-      />
-
-      <VerificationModal
-        open={showVerification}
-        onClose={() => setShowVerification(false)}
-        onSuccess={handleVerificationSuccess}
-      />
-
-      <NewPasswordModal
-        open={showNewPassword}
-        onClose={() => setShowNewPassword(false)}
-        onConfirm={handlePasswordReset}
-      />
+      <ForgotPasswordModal open={showForgot} onClose={() => setShowForgot(false)} onConfirm={handleForgotConfirm} />
+      <VerificationModal open={showVerification} onClose={() => setShowVerification(false)} onSuccess={handleVerificationSuccess} />
+      <NewPasswordModal open={showNewPassword} onClose={() => setShowNewPassword(false)} onConfirm={handlePasswordReset} />
     </div>
   );
 }
