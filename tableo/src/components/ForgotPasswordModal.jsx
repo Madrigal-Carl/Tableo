@@ -25,10 +25,18 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
   if (!open) return null;
 
   const handleSubmit = () => {
-  if (!email) return;
-  onConfirm?.(email);
-};
+    if (!email) {
+      alert("Email is required");
+      return;
+    }
 
+    if (!onConfirm) {
+      console.error("ForgotPasswordModal: onConfirm is missing");
+      return;
+    }
+
+    onConfirm(email);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">

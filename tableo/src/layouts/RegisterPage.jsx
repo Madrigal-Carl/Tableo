@@ -4,7 +4,7 @@ import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
 import { signupRequest } from "../services/auth_service";
 
-export default function Register() {
+export default function RegisterPage() {
   const [form, setForm] = useState({
     email: "",
     password: "",

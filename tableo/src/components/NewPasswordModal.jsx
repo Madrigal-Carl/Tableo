@@ -25,7 +25,6 @@ export default function NewPasswordModal({ open, onClose, onConfirm }) {
   const handleSubmit = () => {
     if (!password || password !== confirm) return;
     onConfirm?.(password);
-    onClose();
   };
 
   return (
