@@ -47,7 +47,7 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
           Forgot Password
         </h2>
 
-        <p className="mt-4 text-xs text-gray-500">
+        <p className="mt-4 text-base text-gray-700">
           Enter your email account
         </p>
 
@@ -62,7 +62,7 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
 
         <button
           onClick={onClose}
-          className="mt-2 text-xs text-blue-500 hover:underline"
+          className="mt-2 text-sm text-blue-500 hover:underline"
         >
           Back to sign in
         </button>
