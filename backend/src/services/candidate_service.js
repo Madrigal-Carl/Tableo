@@ -3,12 +3,13 @@ const candidateRepo = require('../repositories/candidate_repository');
 
 async function updateCandidate(candidateId, data) {
     return sequelize.transaction(async (t) => {
-        const candidate = await candidateRepo.findByEventIncludingSoftDeleted(data.event_id, t);
-        const target = candidate.find(c => c.id === parseInt(candidateId));
-        if (!target) throw new Error('Candidate not found');
+        // Use repository to find the candidate's event
+        const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
 
+        await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
         await candidateRepo.update(candidateId, data, t);
-        return await candidateRepo.findByEventIncludingSoftDeleted(data.event_id, t);
+
+        return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
     });
 }
 
