@@ -5,9 +5,11 @@ module.exports = (sequelize, DataTypes) => {
         "Candidate",
         {
             name: { type: DataTypes.STRING, allowNull: false },
-            sex: { type: DataTypes.STRING, allowNull: false },
+            sex: { type: DataTypes.ENUM('male', 'female'), allowNull: true },
+            sequence: { type: DataTypes.INTEGER, allowNull: false },
         },
         {
+            paranoid: true,
             timestamps: true,
             underscored: true,
         },

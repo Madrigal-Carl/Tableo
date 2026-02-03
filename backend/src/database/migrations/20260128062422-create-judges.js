@@ -28,8 +28,8 @@ module.exports = {
       },
       invitation_code: {
         type: Sequelize.STRING,
-        unique: true,
         allowNull: false,
+        unique: true,
       },
       name: {
         type: Sequelize.STRING,
@@ -37,7 +37,7 @@ module.exports = {
       },
       sex: {
         type: Sequelize.ENUM('male', 'female'),
-        allowNull: false,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -48,7 +48,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.fn('NOW'),
-      }
+      },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
     });
   },
 
