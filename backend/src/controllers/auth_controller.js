@@ -1,4 +1,8 @@
 const authService = require('../services/auth_service');
+const { requestVerification, verifyCode } = require('../services/email_verification_service');
+const userRepository = require('../repositories/user_repository');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 async function signupRequest(req, res, next) {
     try {

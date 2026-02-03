@@ -1,5 +1,5 @@
-import Navigation from "../components/Navigation";
-import CardEvent from "../components/CreateCardEvent";
+import Navigation from "../../components/Navigation";
+import CardEvent from "../../components/CreateCardEvent";
 import EventImage1 from "../assets/pg1.jpg";
 import React, { useState } from "react";
 import "../index.css";
