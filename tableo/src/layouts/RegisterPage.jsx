@@ -5,6 +5,15 @@ import VerificationModal from "../components/VerificationModal";
 import { signupRequest } from "../services/auth_service";
 
 export default function Register() {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     email: "",
@@ -32,6 +41,30 @@ export default function Register() {
 
       // Open verification modal only if signup succeeds
       setShowModal(true);
+    } catch (err) {
+      setError(err.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle input change
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Handle signup submit
+  const handleSubmit = async () => {
+    setError("");
+    if (!form.email || !form.password || !form.confirmPassword) {
+      setError("All fields are required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await signupRequest(form);
+      setShowModal(true); // open verification modal
     } catch (err) {
       setError(err.message || "Signup failed");
     } finally {
