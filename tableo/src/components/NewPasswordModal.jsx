@@ -25,7 +25,6 @@ export default function NewPasswordModal({ open, onClose, onConfirm }) {
   const handleSubmit = () => {
     if (!password || password !== confirm) return;
     onConfirm?.(password);
-    onClose();
   };
 
   return (
@@ -47,7 +46,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm }) {
 
         {/* New Password */}
         <div className="mb-4">
-          <label className="text-xs text-gray-600">Enter new password</label>
+          <label className="text-sm text-gray-600">Enter new password</label>
           <div className="relative mt-1">
             <input
               type={showPass ? "text" : "password"}
@@ -68,7 +67,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm }) {
 
         {/* Confirm Password */}
         <div className="mb-6">
-          <label className="text-xs text-gray-600">Confirm password</label>
+          <label className="text-sm text-gray-600">Confirm password</label>
           <div className="relative mt-1">
             <input
               type={showConfirm ? "text" : "password"}

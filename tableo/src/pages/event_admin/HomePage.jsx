@@ -137,8 +137,6 @@ function HomePage() {
           ))}
         </div>
 
-
-
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
             <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto scrollbar-hide">

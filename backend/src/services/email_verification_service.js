@@ -9,7 +9,7 @@ function generateVerificationCode() {
 
 async function requestVerification({ email, password }) {
     const code = generateVerificationCode();
-    const expiresAt = Date.now() + 10 * 60 * 1000; 
+    const expiresAt = Date.now() + 10 * 60 * 1000;
 
     verificationStore.set(email, { code, password: password || null, expiresAt });
 
