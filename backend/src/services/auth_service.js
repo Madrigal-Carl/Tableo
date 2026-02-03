@@ -58,6 +58,30 @@ async function signupVerify({ email, code }, res) {
 
     return { message: 'Signup successful', user };
 }
+async function login({ email, password }) {
+
+    const user = await userRepository.findByEmail(email);
+    if (!user) throw new Error("Invalid email or password");
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) throw new Error("Invalid email or password");
+
+    const payload = { id: user.id, email: user.email };
+
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN || "15m",
+    });
+
+    const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
+    });
+
+    return {
+        user,
+        accessToken,
+        refreshToken,
+    };
+}
 
 async function login({ email, password, rememberMe }, res) {
     const user = await userRepository.findByEmail(email);

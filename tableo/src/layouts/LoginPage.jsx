@@ -4,57 +4,57 @@ import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import VerificationModal from "../components/VerificationModal";
 import NewPasswordModal from "../components/NewPasswordModal";
+import { login } from "../services/auth_service";
 
 export default function Login() {
   const [showForgot, setShowForgot] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const [rememberMe, setRememberMe] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Restore rememberMe
   useEffect(() => {
-    const saved = localStorage.getItem("rememberMe") === "true";
-    setRememberMe(saved);
+    setRememberMe(localStorage.getItem("rememberMe") === "true");
   }, []);
 
-  // ✅ Restore saved preference
-  useEffect(() => {
-    const saved = localStorage.getItem("rememberMe") === "true";
-    setRememberMe(saved);
-  }, []);
-
-  // ✅ Restore saved preference
-  useEffect(() => {
-    const saved = localStorage.getItem("rememberMe") === "true";
-    setRememberMe(saved);
-  }, []);
-
-  const handleForgotConfirm = (email) => {
-    setResetEmail(email);
-    setShowForgot(false);
-    setShowVerification(true);
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleVerificationSuccess = () => {
-    setShowVerification(false);
-    setShowNewPassword(true);
-  };
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const handlePasswordReset = (newPassword) => {
-    console.log("Reset email:", resetEmail);
-    console.log("New password:", newPassword);
-    setShowNewPassword(false);
-  };
+      await login({
+        email: form.email,
+        password: form.password,
+        rememberMe,
+      });
 
-  const handleLogin = () => {
-    console.log("Password:", password);
-    console.log("Remember me:", rememberMe);
+      // Save rememberMe preference
+      if (rememberMe) localStorage.setItem("rememberMe", "true");
+      else localStorage.removeItem("rememberMe");
 
-    if (rememberMe) localStorage.setItem("rememberMe", "true");
-    else localStorage.removeItem("rememberMe");
+      // Redirect on success
+      window.location.href = "/dashboard";
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Invalid email or password"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,33 +68,49 @@ export default function Login() {
           </div>
 
           <div className="flex flex-col justify-center px-8 py-10 md:px-12">
-            <h1 className="text-2xl font-semibold text-gray-800">Welcome back to Tabléo</h1>
-            <p className="mt-1 mb-8 text-sm text-gray-500">Sign in to continue</p>
+            <h1 className="text-2xl font-semibold text-gray-800">
+              Welcome back to Tabléo
+            </h1>
+            <p className="mt-1 mb-8 text-sm text-gray-500">
+              Sign in to continue
+            </p>
+
+            {error && (
+              <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+                {error}
+              </div>
+            )}
 
             {/* EMAIL */}
             <div className="mb-4">
-              <label className="block mb-1 text-base font-medium text-gray-600">
+              <label className="block mb-1 text-sm font-medium text-gray-600">
                 Email
               </label>
               <input
+                name="email"
                 type="email"
+                value={form.email}
+                onChange={handleChange}
                 placeholder="Enter your email"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
+                focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
               />
             </div>
 
             {/* PASSWORD */}
             <div className="mb-2">
-              <label className="block mb-1 text-base font-medium text-gray-600">
+              <label className="block mb-1 text-sm font-medium text-gray-600">
                 Password
               </label>
               <div className="relative">
                 <input
+                  name="password"
                   type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={handleChange}
                   placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
+                  focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                 />
                 <button
                   type="button"
@@ -112,7 +128,7 @@ export default function Login() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-[#FA824C] focus:ring-[#FA824C]"
+                  className="h-4 w-4 rounded border-gray-300 text-[#FA824C]"
                 />
                 Remember me
               </label>
@@ -128,9 +144,10 @@ export default function Login() {
 
             <button
               onClick={handleLogin}
-              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
+              disabled={loading}
+              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
             >
-              Login
+              {loading ? "Signing in..." : "Login"}
             </button>
 
             <p className="mt-5 text-center text-sm text-gray-600">
@@ -139,11 +156,6 @@ export default function Login() {
                 Register here
               </a>
             </p>
-
-            <div className="mt-8 flex justify-center gap-6 text-xs text-gray-400">
-              <a href="#" className="hover:text-gray-600">Terms of use</a>
-              <a href="#" className="hover:text-gray-600">Privacy policy</a>
-            </div>
           </div>
         </div>
       </div>
@@ -151,19 +163,16 @@ export default function Login() {
       <ForgotPasswordModal
         open={showForgot}
         onClose={() => setShowForgot(false)}
-        onConfirm={handleForgotConfirm}
       />
 
       <VerificationModal
         open={showVerification}
         onClose={() => setShowVerification(false)}
-        onSuccess={handleVerificationSuccess}
       />
 
       <NewPasswordModal
         open={showNewPassword}
         onClose={() => setShowNewPassword(false)}
-        onConfirm={handlePasswordReset}
       />
     </div>
   );
