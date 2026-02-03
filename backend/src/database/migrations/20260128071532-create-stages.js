@@ -9,31 +9,27 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('criteria', {
+    await queryInterface.createTable('stages', {
       id: {
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      category_id: {
+      event_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'categories',
+          model: 'events',
           key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      label: {
-        type: Sequelize.TEXT,
+      round: {
+        type: Sequelize.INTEGER,
         allowNull: false,
-      },
-      percentage: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
-        defaultValue: 0,
+        defaultValue: 1,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -44,7 +40,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.fn('NOW'),
-      }
+      },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
     });
   },
 
@@ -55,6 +55,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('criteria');
+    await queryInterface.dropTable('stages');
   }
 };

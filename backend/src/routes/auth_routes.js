@@ -1,28 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth_controller');
-const { 
-    validateSignup, 
-    validateVerification, 
-    validateLogin, 
-    validateForgotPasswordRequest, 
+const authMiddleware = require('../middlewares/auth');
+const {
+    validateSignup,
+    validateVerification,
+    validateLogin,
+    validateForgotPasswordRequest,
     validateForgotPasswordVerify,
-    validateForgotPasswordReset 
+    validateForgotPasswordReset,
 } = require('../validators/auth_validator');
 
-//Signup route
+// Signup
 router.post('/signup', validateSignup, authController.signupRequest);
 router.post('/signup/verify', validateVerification, authController.signupVerify);
 
-//Login route
+// Login
 router.post('/login', validateLogin, authController.login);
 
-//Forget password route
+// Forgot Password
+router.post('/password/forgot', validateForgotPasswordRequest, authController.forgotPasswordRequest);
+router.post('/password/verify', validateForgotPasswordVerify, authController.forgotPasswordVerify);
+router.post('/password/reset', validateForgotPasswordReset, authController.forgotPasswordReset);
 
-router.post('/forgot-password', validateForgotPasswordRequest, authController.forgotPasswordRequest);
-
-router.post('/forgot-password/verify', validateForgotPasswordVerify, authController.forgotPasswordVerify);
-
-router.post('/forgot-password/reset', validateForgotPasswordReset, authController.forgotPasswordReset);
+// Logout
+router.post('/logout', authMiddleware, authController.logout);
 
 module.exports = router;
