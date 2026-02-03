@@ -5,91 +5,53 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 async function signupRequest(req, res, next) {
-    const { email, password, confirmPassword } = req.body;
-
-    if (password !== confirmPassword)
-        return res.status(400).json({ message: 'Passwords do not match' });
-
-    const exists = await userRepository.findByEmail(email);
-    if (exists) return res.status(400).json({ message: 'Email already registered' });
-
-    await requestVerification({ email, password });
-
-    res.json({ message: 'Verification code sent' });
+    try {
+        const result = await authService.signupRequest(req.body);
+        res.status(200).json(result);
+    } catch (err) { next(err); }
 }
-
 
 async function signupVerify(req, res, next) {
-    const { email, code, rememberMe } = req.body;
-
-    const password = verifyCode({ email, code });
-    if (!password)
-        return res.status(400).json({ message: 'Invalid or expired code' });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await userRepository.create({ email, password: hashedPassword });
-
-    const payload = { id: user.id, email: user.email };
-
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: '15m',
-    });
-
-    const refreshToken = jwt.sign(
-        payload,
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: rememberMe ? '30d' : '7d',
-        }
-    );
-
-    res.status(201).json({
-        message: 'Signup successful',
-        accessToken,
-        refreshToken,
-    });
+    try {
+        const result = await authService.signupVerify(req.body, res);
+        res.status(201).json(result);
+    } catch (err) { next(err); }
 }
+
 async function login(req, res, next) {
     try {
-        const { email, password } = req.body;
-
-        const user = await userRepository.findByEmail(email);
-        if (!user) {
-            return res.status(400).json({ message: "Invalid email or password" });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Invalid email or password" });
-        }
-
-        const payload = { id: user.id, email: user.email };
-
-        const accessToken = jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
-        );
-
-        const refreshToken = jwt.sign(
-            payload,
-            process.env.REFRESH_TOKEN_SECRET,
-            {  expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-        );
-
-        res.status(200).json({
-            message: "Login successful",
-            user: {
-                id: user.id,
-                email: user.email,
-            },
-            accessToken,
-            refreshToken
-        });
-
-    } catch (err) {
-        next(err);
-    }
+        const result = await authService.login(req.body, res);
+        res.status(200).json(result);
+    } catch (err) { next(err); }
 }
 
-module.exports = { signupRequest, signupVerify, login };
+async function logout(req, res, next) {
+    try {
+        await authService.logout(res);
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (err) { next(err); }
+}
+
+// Forgot password
+async function forgotPasswordRequest(req, res, next) {
+    try { await authService.forgotPasswordRequest(req.body); res.json({ message: 'Code sent' }); }
+    catch (err) { next(err); }
+}
+async function forgotPasswordVerify(req, res, next) {
+    try { await authService.forgotPasswordVerify(req.body); res.json({ message: 'Verified' }); }
+    catch (err) { next(err); }
+}
+async function forgotPasswordReset(req, res, next) {
+    try { await authService.forgotPasswordReset(req.body); res.json({ message: 'Password reset' }); }
+    catch (err) { next(err); }
+}
+
+module.exports = {
+    signupRequest,
+    signupVerify,
+    login,
+    logout,
+    forgotPasswordRequest,
+    forgotPasswordVerify,
+    forgotPasswordReset
+};
