@@ -1,9 +1,37 @@
 import React, { useState } from "react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
-import VerificationModal from "../components/VerificationModal"; // ← IMPORT MODAL
+import VerificationModal from "../components/VerificationModal";
+import { signupRequest } from "../services/auth_service";
 
 export default function Register() {
   const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      await signupRequest(form);
+
+      // Open verification modal only if signup succeeds
+      setShowModal(true);
+    } catch (err) {
+      setError(err.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -13,75 +41,66 @@ export default function Register() {
           {/* LEFT IMAGE */}
           <div className="hidden md:block">
             <div className="relative h-full w-full overflow-hidden rounded-2xl">
-              <img
-                src={goldenDrops}
-                alt="signup"
-                className="h-full w-full object-cover"
-              />
+              <img src={goldenDrops} alt="signup" className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-black/10" />
             </div>
           </div>
 
           {/* RIGHT FORM */}
           <div className="flex flex-col justify-center px-8 py-10 md:px-12">
+            <h1 className="text-2xl font-semibold text-gray-800">Create Account</h1>
+            <p className="mt-1 mb-8 text-sm text-gray-500">Sign up to get started</p>
 
-            <h1 className="text-2xl font-semibold text-gray-800">
-              Create Account
-            </h1>
-
-            <p className="mt-1 mb-8 text-sm text-gray-500">
-              Sign up to get started
-            </p>
+            {error && (
+              <p className="mb-4 text-sm text-red-500">{error}</p>
+            )}
 
             <input
               type="email"
+              name="email"
               placeholder="Email address"
-              className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-              focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+              value={form.email}
+              onChange={handleChange}
+              className="mb-4 w-full rounded-lg border px-4 py-3 text-sm"
             />
 
             <input
               type="password"
+              name="password"
               placeholder="Password"
-              className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-              focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+              value={form.password}
+              onChange={handleChange}
+              className="mb-4 w-full rounded-lg border px-4 py-3 text-sm"
             />
 
             <input
               type="password"
+              name="confirmPassword"
               placeholder="Confirm password"
-              className="mb-6 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-              focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              className="mb-6 w-full rounded-lg border px-4 py-3 text-sm"
             />
 
-            {/* OPEN MODAL BUTTON */}
             <button
-              onClick={() => setShowModal(true)}
-              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
             >
-              Create Account
+              {loading ? "Creating..." : "Create Account"}
             </button>
-
-            <p className="mt-5 text-center text-sm text-gray-600">
-              Already have an account?{" "}
-              <a href="/auth" className="font-medium text-[#FA5C5C] hover:underline">
-                Sign in
-              </a>
-            </p>
-
-            <div className="mt-8 flex justify-center gap-6 text-xs text-gray-400">
-              <a href="#">Terms of use</a>
-              <a href="#">Privacy policy</a>
-            </div>
-
           </div>
         </div>
       </div>
 
-      {/* 🔗 LINKED EXTERNAL MODAL */}
       <VerificationModal
         open={showModal}
         onClose={() => setShowModal(false)}
+        email={form.email}
+        type="signup"
+        onSuccess={() => {
+          window.location.href = "/auth";
+        }}
       />
     </div>
   );

@@ -1,25 +1,27 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  signupVerify,
+  forgotPasswordVerify,
+} from "../services/auth_service";
 
-export default function VerificationModal({ open, onClose, onSuccess }) {
+export default function VerificationModal({
+  open,
+  onClose,
+  email,
+  type = "signup", // 🔥 "signup" | "forgot"
+  onSuccess,
+}) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const inputsRef = useRef([]);
 
-  // Lock background scroll
   useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
+    if (open) {
+      document.body.style.overflow = "hidden";
+      inputsRef.current[0]?.focus();
+    }
     return () => (document.body.style.overflow = "auto");
-  }, [open]);
-
-  // ESC to close
-  useEffect(() => {
-    const handleEsc = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
-
-  // Focus first box
-  useEffect(() => {
-    if (open) inputsRef.current[0]?.focus();
   }, [open]);
 
   if (!open) return null;
@@ -32,62 +34,66 @@ export default function VerificationModal({ open, onClose, onSuccess }) {
     if (value && index < 5) inputsRef.current[index + 1]?.focus();
   };
 
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputsRef.current[index - 1]?.focus();
+  const handleConfirm = async () => {
+    const code = otp.join("");
+    if (code.length !== 6) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const payload = { email, code };
+
+      if (type === "signup") {
+        await signupVerify(payload);
+      } else {
+        await forgotPasswordVerify(payload);
+      }
+
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      setError(err.message || "Invalid verification code");
+    } finally {
+      setLoading(false);
     }
   };
-  const handleConfirm = () => {
-  const fullCode = otp.join("");
-
-  if (fullCode.length !== 6) return; // require all digits
-
-  onSuccess?.(); // 🔥 tell Login to open NewPasswordModal
-};
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white px-8 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
+      <div className="relative w-full max-w-md rounded-2xl bg-white px-8 py-10">
         <h2 className="mb-2 text-center text-xl font-medium">Verification</h2>
 
         <p className="mb-6 text-center text-sm text-gray-500">
-          Input the code we sent to your email account
+          Enter the 6-digit code sent to <b>{email}</b>
         </p>
 
-        <div className="mb-4 flex justify-center gap-3">
+        {error && (
+          <p className="mb-4 text-center text-sm text-red-500">{error}</p>
+        )}
+
+        <div className="mb-6 flex justify-center gap-3">
           {otp.map((digit, i) => (
             <input
               key={i}
               ref={(el) => (inputsRef.current[i] = el)}
               value={digit}
               onChange={(e) => handleChange(e.target.value, i)}
-              onKeyDown={(e) => handleKeyDown(e, i)}
               maxLength={1}
-              inputMode="numeric"
-              className="h-11 w-11 rounded-md bg-gray-200 text-center text-lg
-              focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+              className="h-11 w-11 rounded-md bg-gray-200 text-center text-lg"
             />
           ))}
         </div>
 
-        <p className="mb-6 text-center text-sm text-gray-500">
-          Did not receive the code?{" "}
-          <button className="text-[#FA824C] hover:underline">Resend</button>
-        </p>
-
         <button
-        onClick={handleConfirm}
-        className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
-      >
-        Confirm
-      </button>
-
+          onClick={handleConfirm}
+          disabled={loading}
+          className="w-full rounded-full bg-[#FA824C] py-3 text-white"
+        >
+          {loading ? "Verifying..." : "Confirm"}
+        </button>
       </div>
     </div>
   );
