@@ -16,12 +16,12 @@ function Navigation() {
             About us
           </button>
 
-          <button
+          <a href="/auth"
             onClick={() => setStarted(true)}
             className="bg-[#FA824C] text-base text-white px-6 py-3 rounded-3xl hover:bg-[#FF9768] font-bold"
           >
             Get Started
-          </button>
+          </a>
         </div>
       ) : (
         <div className="relative">

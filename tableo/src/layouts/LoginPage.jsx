@@ -1,14 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // ✅ added useEffect
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import VerificationModal from "../components/VerificationModal";
-import NewPasswordModal from "../components/NewPasswordModal"; // ✅ ADD
+import NewPasswordModal from "../components/NewPasswordModal";
 
 export default function Login() {
   const [showForgot, setShowForgot] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false); // ✅ ADD
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+
+  const [rememberMe, setRememberMe] = useState(false); // ✅ ADD
+
+  // ✅ Restore saved preference
+  useEffect(() => {
+    const saved = localStorage.getItem("rememberMe") === "true";
+    setRememberMe(saved);
+  }, []);
 
   const handleForgotConfirm = (email) => {
     setResetEmail(email);
@@ -16,17 +24,28 @@ export default function Login() {
     setShowVerification(true);
   };
 
-  // ✅ called after OTP confirm
   const handleVerificationSuccess = () => {
     setShowVerification(false);
     setShowNewPassword(true);
   };
 
-  // ✅ final step
   const handlePasswordReset = (newPassword) => {
     console.log("Reset email:", resetEmail);
     console.log("New password:", newPassword);
     setShowNewPassword(false);
+  };
+
+  // ✅ LOGIN HANDLER
+  const handleLogin = () => {
+    console.log("Remember me:", rememberMe);
+
+    if (rememberMe) {
+      localStorage.setItem("rememberMe", "true");
+    } else {
+      localStorage.removeItem("rememberMe");
+    }
+
+    // 🔜 Your real login API call here
   };
 
   return (
@@ -43,11 +62,30 @@ export default function Login() {
             <h1 className="text-2xl font-semibold text-gray-800">Welcome back to Tabléo</h1>
             <p className="mt-1 mb-8 text-sm text-gray-500">Sign in to continue</p>
 
-            <input type="email" placeholder="Email address" className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"/>
+            <input
+              type="email"
+              placeholder="Email address"
+              className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+            />
 
-            <input type="password" placeholder="Password" className="mb-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"/>
+            <input
+              type="password"
+              placeholder="Password"
+              className="mb-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+            />
 
-            <div className="mb-6 text-right">
+            {/* ✅ REMEMBER ME */}
+            <div className="flex items-center justify-between mb-4">
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-[#FA824C] focus:ring-[#FA824C]"
+                />
+                Remember me
+              </label>
+
               <button
                 type="button"
                 onClick={() => setShowForgot(true)}
@@ -57,13 +95,16 @@ export default function Login() {
               </button>
             </div>
 
-            <button className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]">
+            <button
+              onClick={handleLogin}
+              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
+            >
               Login
             </button>
 
             <p className="mt-5 text-center text-sm text-gray-600">
               Don&apos;t have an account?{" "}
-              <a href="/Register" className="font-medium text-[#FA5C5C] hover:underline">
+              <a href="/auth/register" className="font-medium text-[#FA5C5C] hover:underline">
                 Register here
               </a>
             </p>
@@ -85,7 +126,7 @@ export default function Login() {
       <VerificationModal
         open={showVerification}
         onClose={() => setShowVerification(false)}
-        onSuccess={handleVerificationSuccess}  // ✅ ADD
+        onSuccess={handleVerificationSuccess}
       />
 
       <NewPasswordModal
