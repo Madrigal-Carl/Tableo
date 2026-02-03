@@ -20,6 +20,12 @@ export default function Login() {
     setRememberMe(saved);
   }, []);
 
+  // ✅ Restore saved preference
+  useEffect(() => {
+    const saved = localStorage.getItem("rememberMe") === "true";
+    setRememberMe(saved);
+  }, []);
+
   const handleForgotConfirm = (email) => {
     setResetEmail(email);
     setShowForgot(false);
@@ -136,9 +142,23 @@ export default function Login() {
         </div>
       </div>
 
-      <ForgotPasswordModal open={showForgot} onClose={() => setShowForgot(false)} onConfirm={handleForgotConfirm} />
-      <VerificationModal open={showVerification} onClose={() => setShowVerification(false)} onSuccess={handleVerificationSuccess} />
-      <NewPasswordModal open={showNewPassword} onClose={() => setShowNewPassword(false)} onConfirm={handlePasswordReset} />
+      <ForgotPasswordModal
+        open={showForgot}
+        onClose={() => setShowForgot(false)}
+        onConfirm={handleForgotConfirm}
+      />
+
+      <VerificationModal
+        open={showVerification}
+        onClose={() => setShowVerification(false)}
+        onSuccess={handleVerificationSuccess}
+      />
+
+      <NewPasswordModal
+        open={showNewPassword}
+        onClose={() => setShowNewPassword(false)}
+        onConfirm={handlePasswordReset}
+      />
     </div>
   );
 }

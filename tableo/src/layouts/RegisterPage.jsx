@@ -2,9 +2,37 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
+import { signupRequest } from "../services/auth_service";
 
 export default function Register() {
   const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      await signupRequest(form);
+
+      // Open verification modal only if signup succeeds
+      setShowModal(true);
+    } catch (err) {
+      setError(err.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -89,10 +117,11 @@ export default function Register() {
             </div>
 
             <button
-              onClick={() => setShowModal(true)}
-              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
             >
-              Create Account
+              {loading ? "Creating..." : "Create Account"}
             </button>
 
             <p className="mt-5 text-center text-sm text-gray-600">
@@ -110,7 +139,15 @@ export default function Register() {
         </div>
       </div>
 
-      <VerificationModal open={showModal} onClose={() => setShowModal(false)} />
+      <VerificationModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        email={form.email}
+        type="signup"
+        onSuccess={() => {
+          window.location.href = "/auth";
+        }}
+      />
     </div>
   );
 }
