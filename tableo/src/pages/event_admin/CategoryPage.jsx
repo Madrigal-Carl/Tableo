@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import CategoryCard from "../components/CategoryCard";
+import CategoryCard from "../../components/CategoryCard";
 
 function CategoryPage() {
   const [categoryName, setCategoryName] = useState("");
@@ -96,11 +96,10 @@ function CategoryPage() {
             <button
               key={round}
               onClick={() => setActiveRound(round)}
-              className={`pb-3 text-sm font-medium transition ${
-                activeRound === round
+              className={`pb-3 text-sm font-medium transition ${activeRound === round
                   ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                   : "text-gray-400 hover:text-gray-600"
-              }`}
+                }`}
             >
               {round}
             </button>
