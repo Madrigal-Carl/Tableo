@@ -1,5 +1,5 @@
-import Navigation from "../components/Navigation";
-import CardEvent from "../components/CreateCardEvent";
+import Navigation from "../../components/Navigation";
+import CardEvent from "../../components/CreateCardEvent";
 import EventImage1 from "../assets/pg1.jpg";
 import React, { useState } from "react";
 import "../index.css";
@@ -7,54 +7,70 @@ import "../index.css";
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortAZ, setSortAZ] = useState(true); 
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Event data stored in state
+
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    location: "",
+    description: "",
+  });
+
   const [events, setEvents] = useState([
     {
+      id: 1,
       title: "Mr. & Ms. 2026",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+      description: "...",
       date: "Feb 01 2060 | 12:00pm – 5:00pm",
       location: "Araneta, USA",
       image: EventImage1
     },
     {
+      id: 2,
       title: "Tech Expo 2026",
-      description: "Innovation and technology showcase.",
+      description: "...",
       date: "Mar 10 2060 | 9:00am – 6:00pm",
       location: "Manila",
-      image: "" // add image if available
+      image: ""
     },
     {
+      id: 3,
       title: "Music Festival 2026",
-      description: "Annual music festival featuring local and international artists.",
+      description: "...",
       date: "Apr 15 2060 | 2:00pm – 11:00pm",
       location: "Central Park, NYC",
       image: ""
     },
     {
+      id: 4,
       title: "Art Fair 2026",
-      description: "Showcasing local artists and crafts.",
+      description: "...",
       date: "May 20 2060 | 10:00am – 6:00pm",
       location: "Cebu",
       image: ""
     },
     {
+      id: 5,
       title: "Art Fair 2026",
-      description: "Showcasing local artists and crafts.",
+      description: "...",
       date: "May 20 2060 | 10:00am – 6:00pm",
       location: "Cebu",
       image: ""
     },
   ]);
 
-  // Function to toggle sort
   const toggleSort = () => setSortAZ(!sortAZ);
 
-  // Sort events before rendering
-  const sortedEvents = [...events].sort((a, b) => {
-    if (sortAZ) return a.title.localeCompare(b.title);
-    else return b.title.localeCompare(a.title);
-  });
+  const filteredAndSortedEvents = [...events]
+    .filter((event) =>
+      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) =>
+      sortAZ
+        ? a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+        : b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
+    );
 
   return (
     <>
@@ -93,7 +109,9 @@ function HomePage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder=""
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="border border-gray-300 rounded-full pl-9 pr-3 py-2 text-sm w-[160px] focus:outline-none focus:ring-1 focus:ring-orange-400"
               />
               <svg
@@ -117,18 +135,26 @@ function HomePage() {
         </div>
 
         {/* CARD GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 p-4">
-          {sortedEvents.map((event, index) => (
+        <div className="w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {filteredAndSortedEvents.map((event) => (
             <CardEvent
-              key={index}
+              key={event.id}
               title={event.title}
               description={event.description}
               date={event.date}
               location={event.location}
             >
-              {event.image && <img src={event.image} alt={event.title} />}
+              {event.image && (
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  className="h-full w-full object-cover"
+                />
+              )}
             </CardEvent>
           ))}
+          </div>
         </div>
         
       </div>
@@ -155,21 +181,29 @@ function HomePage() {
             {/* EVENT NAME */}
             <div className="flex flex-col">
               <label className="text-sm text-gray-500 mb-1">Event Name</label>
-              <input
-                type="text"
-                placeholder="Enter event name"
-                className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-              />
+                <input
+                  type="text"
+                  placeholder="Enter event name"
+                  value={newEvent.title}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, title: e.target.value })
+                  }
+                  className="w-full rounded-full border border-orange-300 px-4 py-2"
+                />
             </div>
 
             {/* LOCATION */}
             <div className="flex flex-col">
               <label className="text-sm text-gray-500 mb-1">Location</label>
-              <input
-                type="text"
-                placeholder="Enter location"
-                className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-              />
+                <input
+                  type="text"
+                  placeholder="Enter location"
+                  value={newEvent.location}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, location: e.target.value })
+                  }
+                  className="w-full rounded-full border border-orange-300 px-4 py-2"
+                />
             </div>
 
             {/* TIME + DATE */}
@@ -247,11 +281,15 @@ function HomePage() {
             {/* DESCRIPTION */}
             <div className="flex flex-col">
               <label className="text-sm text-gray-500 mb-1">Description</label>
-              <textarea
-                rows="3"
-                placeholder="Enter description"
-                className="w-full rounded-2xl border border-orange-300 px-4 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-orange-400"
-              />
+                <textarea
+                  rows="3"
+                  placeholder="Enter description"
+                  value={newEvent.description}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, description: e.target.value })
+                  }
+                  className="w-full rounded-2xl border border-orange-300 px-4 py-2"
+                />
             </div>
 
             {/* ACTION BUTTONS */}
@@ -264,7 +302,24 @@ function HomePage() {
                 Cancel
               </button>
               <button
-                type="submit"
+                type="button"
+                onClick={() => {
+                  if (!newEvent.title.trim()) return;
+
+                  setEvents((prev) => [
+                    ...prev,
+                    {
+                      title: newEvent.title,
+                      description: newEvent.description || "No description provided.",
+                      date: "TBD",
+                      location: newEvent.location || "TBD",
+                      image: "",
+                    },
+                  ]);
+
+                  setNewEvent({ title: "", location: "", description: "" });
+                  setIsModalOpen(false);
+                }}
                 className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
               >
                 Confirm
