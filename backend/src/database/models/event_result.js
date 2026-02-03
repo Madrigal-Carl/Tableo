@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
         average: { type: DataTypes.FLOAT, allowNull: false },
         rank: { type: DataTypes.INTEGER, allowNull: false },
     }, {
+        paranoid: true,
         timestamps: true,
         underscored: true,
     });

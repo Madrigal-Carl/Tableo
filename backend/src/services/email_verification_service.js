@@ -9,25 +9,27 @@ function generateVerificationCode() {
 
 async function requestVerification({ email, password }) {
     const code = generateVerificationCode();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-    verificationStore.set(email, { code, password, expiresAt });
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+
+    verificationStore.set(email, { code, password: password || null, expiresAt });
 
     await sendVerificationEmail(email, code);
-
-    return { message: 'Verification code sent to email' };
 }
 
 function verifyCode({ email, code }) {
     const data = verificationStore.get(email);
-    if (!data) return false;
+    if (!data) return null;
+
     if (Date.now() > data.expiresAt) {
         verificationStore.delete(email);
-        return false;
+        return null;
     }
-    if (parseInt(code) !== data.code) return false;
+
+    if (parseInt(code) !== data.code) return null;
 
     verificationStore.delete(email);
-    return data.password;
+
+    return data.password || true;
 }
 
 module.exports = { requestVerification, verifyCode };
