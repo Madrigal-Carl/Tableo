@@ -26,6 +26,12 @@ export default function Login() {
     setRememberMe(saved);
   }, []);
 
+  // ✅ Restore saved preference
+  useEffect(() => {
+    const saved = localStorage.getItem("rememberMe") === "true";
+    setRememberMe(saved);
+  }, []);
+
   const handleForgotConfirm = (email) => {
     setResetEmail(email);
     setShowForgot(false);
