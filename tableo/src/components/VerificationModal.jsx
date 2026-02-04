@@ -102,7 +102,7 @@ export default function VerificationModal({
       if (type === "signup") await signupResend({ email });
       else await forgotPasswordRequest({ email });
 
-      setCooldown(30);
+      setCooldown(60);
       inputsRef.current[0]?.focus();
       showToast("success", "Verification code resent!");
     } catch (err) {
@@ -157,8 +157,8 @@ export default function VerificationModal({
               onClick={handleResend}
               disabled={cooldown > 0 || resending}
               className={`font-medium ${cooldown > 0
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-[#FA824C] hover:underline"
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-[#FA824C] hover:underline"
                 }`}
             >
               {cooldown > 0

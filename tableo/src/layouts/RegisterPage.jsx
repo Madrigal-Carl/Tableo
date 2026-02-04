@@ -59,8 +59,6 @@ export default function RegisterPage() {
               <h1 className="text-2xl font-semibold text-gray-800">Create Account</h1>
               <p className="mt-1 mb-8 text-sm text-gray-500">Sign up to get started</p>
 
-              {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
-
               {/* EMAIL */}
               <div className="mb-4">
                 <label className="block mb-1 text-sm font-medium text-gray-600">
