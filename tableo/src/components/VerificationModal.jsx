@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   signupVerify,
   forgotPasswordVerify,
-  signupRequest,
+  signupResend,
   forgotPasswordRequest,
 } from "../services/auth_service";
 
@@ -104,7 +104,7 @@ export default function VerificationModal({
       setOtp(["", "", "", "", "", ""]);
 
       if (type === "signup") {
-        await signupRequest({ email });
+        await signupResend({ email });
       } else {
         await forgotPasswordRequest({ email });
       }
@@ -153,8 +153,8 @@ export default function VerificationModal({
             onClick={handleResend}
             disabled={cooldown > 0 || resending}
             className={`font-medium ${cooldown > 0
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-[#FA824C] hover:underline"
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-[#FA824C] hover:underline"
               }`}
           >
             {cooldown > 0

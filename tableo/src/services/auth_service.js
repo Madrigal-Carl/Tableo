@@ -8,6 +8,10 @@ export const signupVerify = (data) => {
     return api.post("/auth/signup/verify", data);
 };
 
+export const signupResend = (data) => {
+    return api.post("/auth/signup/resend", data);
+};
+
 export const login = (data) => {
     return api.post("/auth/login", data);
 };
