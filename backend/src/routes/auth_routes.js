@@ -14,6 +14,7 @@ const {
 // Signup
 router.post('/signup', validateSignup, authController.signupRequest);
 router.post('/signup/verify', validateVerification, authController.signupVerify);
+router.post('/signup/resend', validateForgotPasswordRequest, authController.signupResend);
 
 // Login
 router.post('/login', validateLogin, authController.login);
