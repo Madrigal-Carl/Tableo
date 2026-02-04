@@ -9,7 +9,6 @@ import {
   forgotPasswordRequest,
   forgotPasswordReset,
 } from "../services/auth_service";
-import FullScreenLoader from "../components/FullScreenLoader"; // ✅ add this
 
 export default function LoginPage() {
   const [showForgot, setShowForgot] = useState(false);
@@ -24,7 +23,6 @@ export default function LoginPage() {
 
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // ✅ loader state
   const [error, setError] = useState("");
 
   // Restore rememberMe
@@ -38,7 +36,6 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      setLoading(true);
       setError("");
 
       await login({
@@ -53,14 +50,11 @@ export default function LoginPage() {
       window.location.href = "/dashboard";
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleForgotConfirm = async (email) => {
     try {
-      setLoading(true); // ✅ show loader
       await forgotPasswordRequest({ email });
 
       setForgotEmail(email);
@@ -68,8 +62,6 @@ export default function LoginPage() {
       setShowVerification(true);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send code");
-    } finally {
-      setLoading(false); // ✅ hide loader
     }
   };
 
@@ -80,7 +72,6 @@ export default function LoginPage() {
 
   const handleResetPassword = async (password) => {
     try {
-      setLoading(true); // ✅ show loader
       await forgotPasswordReset({
         email: forgotEmail,
         password,
@@ -91,8 +82,6 @@ export default function LoginPage() {
       setForgotEmail("");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to reset password");
-    } finally {
-      setLoading(false); // ✅ hide loader
     }
   };
 
@@ -184,10 +173,9 @@ export default function LoginPage() {
 
               <button
                 onClick={handleLogin}
-                disabled={loading}
                 className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
               >
-                {loading ? "Signing in..." : "Login"}
+                Login
               </button>
 
               <p className="mt-5 text-center text-sm text-gray-600">
@@ -220,9 +208,6 @@ export default function LoginPage() {
           onConfirm={handleResetPassword}
         />
       </div>
-
-      {/* FULL SCREEN LOADER */}
-      <FullScreenLoader show={loading} />
     </>
   );
 }

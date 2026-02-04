@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import FullScreenLoader from "../components/FullScreenLoader"; // ✅ add this
+import FullScreenLoader from "../components/FullScreenLoader";
 
 export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
-  const [loading, setLoading] = useState(false); // ✅ loader state
 
   // Prevent background scroll
   useEffect(() => {
@@ -37,16 +37,15 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
       return;
     }
 
-    try {
-      setLoading(true); // ✅ show loader
-      await onConfirm(email);
-    } finally {
-      setLoading(false); // ✅ hide loader
-    }
+    setLoading(true);
+    await onConfirm(email);
+    setLoading(false);
   };
 
   return (
     <>
+      <FullScreenLoader show={loading} />
+
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         {/* Overlay */}
         <div
@@ -91,9 +90,6 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
           </button>
         </div>
       </div>
-
-      {/* FULL SCREEN LOADER */}
-      <FullScreenLoader show={loading} />
     </>
   );
 }

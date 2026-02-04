@@ -5,6 +5,7 @@ import {
   signupResend,
   forgotPasswordRequest,
 } from "../services/auth_service";
+import FullScreenLoader from "../components/FullScreenLoader"; // ✅ added
 
 export default function VerificationModal({
   open,
@@ -119,61 +120,65 @@ export default function VerificationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+    <>
+      <FullScreenLoader show={loading || resending} />
 
-      <div className="relative w-full max-w-md rounded-2xl bg-white px-8 py-10">
-        <h2 className="mb-2 text-center text-xl font-medium">Verification</h2>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-        <p className="mb-6 text-center text-sm text-gray-500">
-          Enter the 6-digit code sent to <b>{email}</b>
-        </p>
+        <div className="relative w-full max-w-md rounded-2xl bg-white px-8 py-10">
+          <h2 className="mb-2 text-center text-xl font-medium">Verification</h2>
 
-        {error && (
-          <p className="mb-4 text-center text-sm text-red-500">{error}</p>
-        )}
+          <p className="mb-6 text-center text-sm text-gray-500">
+            Enter the 6-digit code sent to <b>{email}</b>
+          </p>
 
-        {/* OTP INPUTS */}
-        <div className="mb-4 flex justify-center gap-3">
-          {otp.map((digit, i) => (
-            <input
-              key={i}
-              ref={(el) => (inputsRef.current[i] = el)}
-              value={digit}
-              onChange={(e) => handleChange(e.target.value, i)}
-              maxLength={1}
-              className="h-11 w-11 rounded-md bg-gray-200 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
-            />
-          ))}
-        </div>
+          {error && (
+            <p className="mb-4 text-center text-sm text-red-500">{error}</p>
+          )}
 
-        {/* RESEND */}
-        <div className="mb-6 text-center text-sm">
+          {/* OTP INPUTS */}
+          <div className="mb-4 flex justify-center gap-3">
+            {otp.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => (inputsRef.current[i] = el)}
+                value={digit}
+                onChange={(e) => handleChange(e.target.value, i)}
+                maxLength={1}
+                className="h-11 w-11 rounded-md bg-gray-200 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+              />
+            ))}
+          </div>
+
+          {/* RESEND */}
+          <div className="mb-6 text-center text-sm">
+            <button
+              onClick={handleResend}
+              disabled={cooldown > 0 || resending}
+              className={`font-medium ${cooldown > 0
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-[#FA824C] hover:underline"
+                }`}
+            >
+              {cooldown > 0
+                ? `Resend code in ${cooldown}s`
+                : resending
+                  ? "Resending..."
+                  : "Resend code"}
+            </button>
+          </div>
+
+          {/* CONFIRM */}
           <button
-            onClick={handleResend}
-            disabled={cooldown > 0 || resending}
-            className={`font-medium ${cooldown > 0
-              ? "text-gray-400 cursor-not-allowed"
-              : "text-[#FA824C] hover:underline"
-              }`}
+            onClick={handleConfirm}
+            disabled={loading}
+            className="w-full rounded-full bg-[#FA824C] py-3 text-white"
           >
-            {cooldown > 0
-              ? `Resend code in ${cooldown}s`
-              : resending
-                ? "Resending..."
-                : "Resend code"}
+            {loading ? "Verifying..." : "Confirm"}
           </button>
         </div>
-
-        {/* CONFIRM */}
-        <button
-          onClick={handleConfirm}
-          disabled={loading}
-          className="w-full rounded-full bg-[#FA824C] py-3 text-white"
-        >
-          {loading ? "Verifying..." : "Confirm"}
-        </button>
       </div>
-    </div>
+    </>
   );
 }
