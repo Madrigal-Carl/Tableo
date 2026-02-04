@@ -13,10 +13,18 @@ function HomePage() {
     { id: 2, title: "Tech Expo 2026", description: "...", date: "Mar 10 2060", location: "Manila", image: "" },
   ]);
 
-  const [newEvent, setNewEvent] = useState({ title: "", location: "", description: "", date: "" });
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    location: "",
+    description: "",
+    date: "",
+    rounds: 1,
+    judges: 1,
+    candidates: 1,
+  });
 
   const toggleSort = () => setSortAZ(!sortAZ);
-  const [sortOption, setSortOption] = useState("today");
+  const [sortOption, setSortOption] = useState("all");
 
 
 
@@ -32,7 +40,9 @@ function HomePage() {
       let matchesDate = true;
 
       if (!isNaN(eventDate)) {
-        if (sortOption === "today") {
+        if (sortOption === "all") {
+          matchesDate = true;
+        } else if (sortOption === "today") {
           matchesDate = eventDate.toDateString() === now.toDateString();
         } else if (sortOption === "thisWeek") {
           const startOfWeek = new Date(now);
@@ -54,11 +64,11 @@ function HomePage() {
     );
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen">
       <SideNavigation />
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 ml-72 p-8 bg-gray-50 min-h-screen">
+      <main className="flex-1 ml-72 p-8 bg-gray-50 overflow-y-auto">
         {/* HEADER */}
         <h1 className="text-3xl font-bold border-b-2 pb-2 border-gray-300 mb-6">Your Events</h1>
 
@@ -73,6 +83,7 @@ function HomePage() {
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
             >
+              <option value="all">All</option>
               <option value="today">Today</option>
               <option value="thisWeek">This Week</option>
               <option value="thisYear">This Year</option>
@@ -200,20 +211,35 @@ function HomePage() {
                   {/* DATE */}
                   <div className="flex flex-col flex-1 min-w-0">
                     <label className="text-sm text-gray-500 mb-1">Date</label>
-                    <input
-                      type="date"
-                      className="w-full rounded-full border border-orange-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    />
+                      <input
+                        type="date"
+                        min={new Date().toISOString().split("T")[0]}
+                        value={newEvent.date}
+                          onChange={(e) => {
+                            const selected = new Date(e.target.value);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+
+                            if (selected < today) return;
+
+                            setNewEvent({ ...newEvent, date: e.target.value });
+                          }}
+                        className="w-full rounded-full border border-orange-300 px-3 py-2"
+                      />
                   </div>
 
                   {/* NUMBER OF ROUNDS */}
                   <div className="flex flex-col flex-1 min-w-0">
                     <label className="text-sm text-gray-500 mb-1">Number of Rounds</label>
-                    <input
-                      type="number"
-                      placeholder=""
-                      className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    />
+                      <input
+                        type="number"
+                        min="1"
+                        value={newEvent.rounds}
+                        onChange={(e) =>
+                          setNewEvent({ ...newEvent, rounds: Math.max(1, Number(e.target.value)) })
+                        }
+                        className="w-full rounded-full border border-orange-300 px-4 py-2"
+                      />
                   </div>
                 </div>
 
@@ -222,17 +248,33 @@ function HomePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
                     <label className="text-sm text-gray-500 mb-1">Total Judges</label>
-                    <input
-                      type="number"
-                      className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    />
+                      <input
+                        type="number"
+                        min="1"
+                        value={newEvent.judges}
+                        onChange={(e) =>
+                          setNewEvent({
+                            ...newEvent,
+                            judges: Math.max(1, Number(e.target.value)),
+                          })
+                        }
+                        className="w-full rounded-full border border-orange-300 px-4 py-2"
+                      />
                   </div>
                   <div className="flex flex-col">
                     <label className="text-sm text-gray-500 mb-1">Total Candidates</label>
-                    <input
-                      type="number"
-                      className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    />
+                      <input
+                        type="number"
+                        min="1"
+                        value={newEvent.candidates}
+                        onChange={(e) =>
+                          setNewEvent({
+                            ...newEvent,
+                            candidates: Math.max(1, Number(e.target.value)),
+                          })
+                        }
+                        className="w-full rounded-full border border-orange-300 px-4 py-2"
+                      />
                   </div>
                 </div>
 
@@ -266,6 +308,7 @@ function HomePage() {
                 <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
+                    disabled={!newEvent.title.trim() || !newEvent.date}
                     onClick={() => setIsModalOpen(false)}
                     className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
                   >
@@ -275,19 +318,27 @@ function HomePage() {
                     type="button"
                     onClick={() => {
                       if (!newEvent.title.trim()) return;
+                          setEvents((prev) => [
+                            ...prev,
+                            {
+                              id: Date.now(),
+                              title: newEvent.title,
+                              description: newEvent.description || "No description provided.",
+                              date: newEvent.date,
+                              location: newEvent.location || "TBD",
+                              image: "",
+                            },
+                          ]);
 
-                      setEvents((prev) => [
-                        ...prev,
-                        {
-                          title: newEvent.title,
-                          description: newEvent.description || "No description provided.",
-                          date: "TBD",
-                          location: newEvent.location || "TBD",
-                          image: "",
-                        },
-                      ]);
-
-                      setNewEvent({ title: "", location: "", description: "" });
+                      setNewEvent({
+                        title: "",
+                        location: "",
+                        description: "",
+                        date: "",
+                        rounds: 1,
+                        judges: 1,
+                        candidates: 1,
+                      });
                       setIsModalOpen(false);
                     }}
                     className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
