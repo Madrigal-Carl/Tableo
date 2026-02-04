@@ -1,94 +1,184 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  signupVerify,
+  forgotPasswordVerify,
+  signupResend,
+  forgotPasswordRequest,
+} from "../services/auth_service";
+import FullScreenLoader from "../components/FullScreenLoader"; // ✅ added
 
-export default function VerificationModal({ open, onClose, onSuccess }) {
+export default function VerificationModal({
+  open,
+  onClose,
+  email,
+  type = "signup", // "signup" | "forgot"
+  onSuccess,
+}) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(30);
+
   const inputsRef = useRef([]);
 
-  // Lock background scroll
+  /* =========================
+     MODAL OPEN / RESET
+  ========================== */
   useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
+    if (open) {
+      document.body.style.overflow = "hidden";
+      setOtp(["", "", "", "", "", ""]);
+      setCooldown(30);
+      inputsRef.current[0]?.focus();
+    }
     return () => (document.body.style.overflow = "auto");
   }, [open]);
 
-  // ESC to close
+  /* =========================
+     COOLDOWN TIMER
+  ========================== */
   useEffect(() => {
-    const handleEsc = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
+    if (!open || cooldown <= 0) return;
 
-  // Focus first box
-  useEffect(() => {
-    if (open) inputsRef.current[0]?.focus();
-  }, [open]);
+    const timer = setTimeout(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [cooldown, open]);
 
   if (!open) return null;
 
+  /* =========================
+     OTP INPUT
+  ========================== */
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    if (value && index < 5) inputsRef.current[index + 1]?.focus();
-  };
 
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputsRef.current[index - 1]?.focus();
+    if (value && index < 5) {
+      inputsRef.current[index + 1]?.focus();
     }
   };
-  const handleConfirm = () => {
-  const fullCode = otp.join("");
 
-  if (fullCode.length !== 6) return; // require all digits
+  /* =========================
+     VERIFY CODE
+  ========================== */
+  const handleConfirm = async () => {
+    const code = otp.join("");
+    if (code.length !== 6) return;
 
-  onSuccess?.(); // 🔥 tell Login to open NewPasswordModal
-};
+    try {
+      setLoading(true);
+      setError("");
 
+      const payload = { email, code };
+
+      if (type === "signup") {
+        await signupVerify(payload);
+      } else {
+        await forgotPasswordVerify(payload);
+      }
+
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid verification code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =========================
+     RESEND CODE
+  ========================== */
+  const handleResend = async () => {
+    if (cooldown > 0) return;
+
+    try {
+      setResending(true);
+      setError("");
+      setOtp(["", "", "", "", "", ""]);
+
+      if (type === "signup") {
+        await signupResend({ email });
+      } else {
+        await forgotPasswordRequest({ email });
+      }
+
+      setCooldown(30);
+      inputsRef.current[0]?.focus();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to resend code");
+    } finally {
+      setResending(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <>
+      <FullScreenLoader show={loading || resending} />
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white px-8 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
-        <h2 className="mb-2 text-center text-xl font-medium">Verification</h2>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-        <p className="mb-6 text-center text-sm text-gray-500">
-          Input the code we sent to your email account
-        </p>
+        <div className="relative w-full max-w-md rounded-2xl bg-white px-8 py-10">
+          <h2 className="mb-2 text-center text-xl font-medium">Verification</h2>
 
-        <div className="mb-4 flex justify-center gap-3">
-          {otp.map((digit, i) => (
-            <input
-              key={i}
-              ref={(el) => (inputsRef.current[i] = el)}
-              value={digit}
-              onChange={(e) => handleChange(e.target.value, i)}
-              onKeyDown={(e) => handleKeyDown(e, i)}
-              maxLength={1}
-              inputMode="numeric"
-              className="h-11 w-11 rounded-md bg-gray-200 text-center text-lg
-              focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
-            />
-          ))}
+          <p className="mb-6 text-center text-sm text-gray-500">
+            Enter the 6-digit code sent to <b>{email}</b>
+          </p>
+
+          {error && (
+            <p className="mb-4 text-center text-sm text-red-500">{error}</p>
+          )}
+
+          {/* OTP INPUTS */}
+          <div className="mb-4 flex justify-center gap-3">
+            {otp.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => (inputsRef.current[i] = el)}
+                value={digit}
+                onChange={(e) => handleChange(e.target.value, i)}
+                maxLength={1}
+                className="h-11 w-11 rounded-md bg-gray-200 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+              />
+            ))}
+          </div>
+
+          {/* RESEND */}
+          <div className="mb-6 text-center text-sm">
+            <button
+              onClick={handleResend}
+              disabled={cooldown > 0 || resending}
+              className={`font-medium ${cooldown > 0
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-[#FA824C] hover:underline"
+                }`}
+            >
+              {cooldown > 0
+                ? `Resend code in ${cooldown}s`
+                : resending
+                  ? "Resending..."
+                  : "Resend code"}
+            </button>
+          </div>
+
+          {/* CONFIRM */}
+          <button
+            onClick={handleConfirm}
+            disabled={loading}
+            className="w-full rounded-full bg-[#FA824C] py-3 text-white"
+          >
+            {loading ? "Verifying..." : "Confirm"}
+          </button>
         </div>
-
-        <p className="mb-6 text-center text-sm text-gray-500">
-          Did not receive the code?{" "}
-          <button className="text-[#FA824C] hover:underline">Resend</button>
-        </p>
-
-        <button
-        onClick={handleConfirm}
-        className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e04a4a]"
-      >
-        Confirm
-      </button>
-
       </div>
-    </div>
+    </>
   );
 }

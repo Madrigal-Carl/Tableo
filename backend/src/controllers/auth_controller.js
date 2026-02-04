@@ -1,4 +1,8 @@
 const authService = require('../services/auth_service');
+const { requestVerification, verifyCode } = require('../services/email_verification_service');
+const userRepository = require('../repositories/user_repository');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 async function signupRequest(req, res, next) {
     try {
@@ -12,6 +16,15 @@ async function signupVerify(req, res, next) {
         const result = await authService.signupVerify(req.body, res);
         res.status(201).json(result);
     } catch (err) { next(err); }
+}
+
+async function signupResend(req, res, next) {
+    try {
+        await authService.signupResend(req.body);
+        res.json({ message: 'Verification code resent' });
+    } catch (err) {
+        next(err);
+    }
 }
 
 async function login(req, res, next) {
@@ -45,6 +58,7 @@ async function forgotPasswordReset(req, res, next) {
 module.exports = {
     signupRequest,
     signupVerify,
+    signupResend,
     login,
     logout,
     forgotPasswordRequest,
