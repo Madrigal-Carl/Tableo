@@ -44,7 +44,6 @@ export default function VerificationModal({
 
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
-
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -72,7 +71,6 @@ export default function VerificationModal({
     try {
       setLoading(true);
       setError("");
-
       const payload = { email, code };
 
       if (type === "signup") {
@@ -84,7 +82,6 @@ export default function VerificationModal({
       }
 
       onSuccess?.();
-      onClose();
     } catch (err) {
       const msg = err.response?.data?.message || "Invalid verification code";
       setError(msg);
@@ -102,11 +99,8 @@ export default function VerificationModal({
       setError("");
       setOtp(["", "", "", "", "", ""]);
 
-      if (type === "signup") {
-        await signupResend({ email });
-      } else {
-        await forgotPasswordRequest({ email });
-      }
+      if (type === "signup") await signupResend({ email });
+      else await forgotPasswordRequest({ email });
 
       setCooldown(30);
       inputsRef.current[0]?.focus();
@@ -125,9 +119,14 @@ export default function VerificationModal({
       <FullScreenLoader show={loading || resending} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+        {/* Overlay without onClick so modal won't close */}
+        <div className="absolute inset-0 bg-black/40" />
 
-        <div className="relative w-full max-w-md rounded-2xl bg-white px-8 py-10">
+        {/* Modal */}
+        <div
+          className="relative z-10 w-full max-w-md rounded-2xl bg-white px-8 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.15)]"
+          onClick={(e) => e.stopPropagation()} // prevent clicks inside from bubbling
+        >
           <h2 className="mb-2 text-center text-xl font-medium">Verification</h2>
 
           <p className="mb-6 text-center text-sm text-gray-500">
@@ -147,7 +146,7 @@ export default function VerificationModal({
                 value={digit}
                 onChange={(e) => handleChange(e.target.value, i)}
                 maxLength={1}
-                className="h-11 w-11 rounded-md bg-gray-200 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+                className="h-11 w-11 rounded-lg border border-gray-300 bg-gray-100 text-center text-lg focus:border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]/30 focus:outline-none"
               />
             ))}
           </div>
@@ -158,8 +157,8 @@ export default function VerificationModal({
               onClick={handleResend}
               disabled={cooldown > 0 || resending}
               className={`font-medium ${cooldown > 0
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-[#FA824C] hover:underline"
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-[#FA824C] hover:underline"
                 }`}
             >
               {cooldown > 0
@@ -170,11 +169,11 @@ export default function VerificationModal({
             </button>
           </div>
 
-          {/* CONFIRM */}
+          {/* CONFIRM BUTTON */}
           <button
             onClick={() => handleConfirm()}
             disabled={loading}
-            className="w-full rounded-full bg-[#FA824C] py-3 text-white"
+            className="w-full rounded-full bg-[#FA824C] py-3 text-white font-semibold hover:bg-[#e04a4a] transition"
           >
             {loading ? "Verifying..." : "Confirm"}
           </button>

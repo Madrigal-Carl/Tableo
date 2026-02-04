@@ -77,8 +77,8 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full rounded-full border border-[#FA824C] px-4 py-2 text-sm
-            focus:outline-none focus:ring-2 focus:ring-[#FA824C]/40"
+            className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
+             focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
           />
 
           <button
