@@ -66,19 +66,6 @@ function validateLogin(req, res, next) {
     next();
 }
 
-// Refresh token validation
-function validateRefreshToken(req, res, next) {
-    const schema = Joi.object({
-        refreshToken: Joi.string().required().messages({
-            'string.empty': 'Refresh token is required',
-            'any.required': 'Refresh token is required'
-        })
-    });
-    const { error } = schema.validate(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message });
-    next();
-}
-
 // Forgot password steps
 function validateForgotPasswordRequest(req, res, next) {
     const schema = Joi.object({
@@ -138,7 +125,6 @@ module.exports = {
     validateSignup,
     validateVerification,
     validateLogin,
-    validateRefreshToken,
     validateForgotPasswordRequest,
     validateForgotPasswordVerify,
     validateForgotPasswordReset
