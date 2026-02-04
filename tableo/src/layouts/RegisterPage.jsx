@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
+import FullScreenLoader from "../components/FullScreenLoader";
 import { signupRequest } from "../services/auth_service";
-import FullScreenLoader from "../components/FullScreenLoader"; // ✅ add this
+
+import { validateRegister } from "../validations/auth_validation";
+import { showToast } from "../utils/swal";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -11,31 +14,35 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle signup submit
   const handleSubmit = async () => {
-    setError("");
-    if (!form.email || !form.password || !form.confirmPassword) {
-      setError("All fields are required");
-      return;
+    // ✅ Frontend validation
+    const validationError = validateRegister(form);
+    if (validationError) {
+      return showToast("error", validationError);
     }
 
     try {
       setLoading(true);
+
       await signupRequest(form);
-      setShowModal(true); // open verification modal
+
+      showToast("success", "Verification code sent");
+      setShowModal(true);
     } catch (err) {
-      setError(err.message || "Signup failed");
+      showToast(
+        "error",
+        err.message || "Signup failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -47,7 +54,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-6">
 
-            {/* Left side image */}
+            {/* LEFT IMAGE */}
             <div className="hidden md:block">
               <div className="relative h-full w-full overflow-hidden rounded-2xl">
                 <img
@@ -59,14 +66,16 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Signup form */}
+            {/* FORM */}
             <div className="flex flex-col justify-center px-8 py-10 md:px-12">
-              <h1 className="text-2xl font-semibold text-gray-800">Create Account</h1>
-              <p className="mt-1 mb-8 text-sm text-gray-500">Sign up to get started</p>
+              <h1 className="text-2xl font-semibold text-gray-800">
+                Create Account
+              </h1>
+              <p className="mt-1 mb-8 text-sm text-gray-500">
+                Sign up to get started
+              </p>
 
-              {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
-
-              {/* Email */}
+              {/* EMAIL */}
               <div className="mb-4">
                 <label className="block mb-1 text-sm font-medium text-gray-600">
                   Email
@@ -78,11 +87,11 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   placeholder="Enter your email"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                  focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                 />
               </div>
 
-              {/* Password */}
+              {/* PASSWORD */}
               <div className="mb-4">
                 <label className="block mb-1 text-sm font-medium text-gray-600">
                   Password
@@ -95,7 +104,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     placeholder="Enter your password"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
-                      focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                   />
                   <button
                     type="button"
@@ -107,7 +116,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Confirm Password */}
+              {/* CONFIRM PASSWORD */}
               <div className="mb-6">
                 <label className="block mb-1 text-sm font-medium text-gray-600">
                   Confirm Password
@@ -120,7 +129,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     placeholder="Re-enter your password"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
-                      focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                   />
                   <button
                     type="button"
@@ -132,7 +141,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Submit */}
               <button
                 onClick={handleSubmit}
                 disabled={loading}
@@ -147,28 +155,22 @@ export default function RegisterPage() {
                   Sign in
                 </a>
               </p>
-
-              <div className="mt-8 flex justify-center gap-6 text-xs text-gray-400">
-                <a href="#">Terms of use</a>
-                <a href="#">Privacy policy</a>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Verification Modal */}
         <VerificationModal
           open={showModal}
           onClose={() => setShowModal(false)}
           email={form.email}
           type="signup"
           onSuccess={() => {
-            window.location.href = "/auth"; // redirect to login after verification
+            showToast("success", "Account verified successfully");
+            window.location.href = "/auth";
           }}
         />
       </div>
 
-      {/* FULL SCREEN LOADER */}
       <FullScreenLoader show={loading} />
     </>
   );

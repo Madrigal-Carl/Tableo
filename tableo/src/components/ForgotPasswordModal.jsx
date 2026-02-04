@@ -1,25 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import FullScreenLoader from "../components/FullScreenLoader";
+import { showToast } from "../utils/swal";
+import { validateForgotPasswordRequest } from "../validations/auth_validation";
 
 export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
-  // Prevent background scroll
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     return () => (document.body.style.overflow = "auto");
   }, [open]);
 
-  // Close on ESC
   useEffect(() => {
     const handleEsc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
-  // Autofocus input
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
@@ -27,19 +26,26 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
   if (!open) return null;
 
   const handleSubmit = async () => {
-    if (!email) {
-      alert("Email is required");
-      return;
-    }
+    // ✅ Frontend validation
+    const errorMsg = validateForgotPasswordRequest(email);
+    if (errorMsg) return showToast("error", errorMsg);
 
     if (!onConfirm) {
       console.error("ForgotPasswordModal: onConfirm is missing");
       return;
     }
 
-    setLoading(true);
-    await onConfirm(email);
-    setLoading(false);
+    try {
+      setLoading(true);
+      await onConfirm(email);
+      showToast("success", "Verification code sent!");
+      setEmail("");
+      onClose();
+    } catch (err) {
+      showToast("error", err.response?.data?.message || "Failed to send code");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
