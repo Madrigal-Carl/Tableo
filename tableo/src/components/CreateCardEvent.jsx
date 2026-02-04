@@ -2,7 +2,7 @@ import React from "react";
 
 function CreateCardEvent({ title, description, date, location, children }) {
   return (
-    <div className="relative w-full h-full min-h-[360px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col">
+    <div className="relative w-full h-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col">
       
       {/* IMAGE / MEDIA SLOT */}
       <div className="absolute inset-0 w-full h-full">
@@ -27,9 +27,9 @@ function CreateCardEvent({ title, description, date, location, children }) {
 
       {/* CONTENT */}
       <div className="absolute bottom-0 p-5 text-white">
-        <h2 className="text-xl font-bold mb-1">{title}</h2>
+        <h2 className="text-xl font-bold mb-2">{title}</h2>
 
-        <p className="text-sm text-gray-200 mb-3 line-clamp-3">
+        <p className="text-sm text-gray-200 mb-3 line-clamp-4">
           {description}
         </p>
 

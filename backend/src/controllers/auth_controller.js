@@ -18,6 +18,15 @@ async function signupVerify(req, res, next) {
     } catch (err) { next(err); }
 }
 
+async function signupResend(req, res, next) {
+    try {
+        await authService.signupResend(req.body);
+        res.json({ message: 'Verification code resent' });
+    } catch (err) {
+        next(err);
+    }
+}
+
 async function login(req, res, next) {
     try {
         const result = await authService.login(req.body, res);
@@ -49,6 +58,7 @@ async function forgotPasswordReset(req, res, next) {
 module.exports = {
     signupRequest,
     signupVerify,
+    signupResend,
     login,
     logout,
     forgotPasswordRequest,
