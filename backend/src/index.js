@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const errorHandler = require('./middlewares/error_handler');
 
 const app = express();
 
@@ -29,6 +30,8 @@ app.use('/api/events', eventRoutes);
 app.use('/api/events', eventCategoryRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/candidates', candidateRoutes);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
