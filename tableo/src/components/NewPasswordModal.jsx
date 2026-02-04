@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react"; // install if needed
-import FullScreenLoader from "../components/FullScreenLoader"; // ✅ add this
+import FullScreenLoader from "../components/FullScreenLoader";
 
 export default function NewPasswordModal({ open, onClose, onConfirm, loading }) {
   const [password, setPassword] = useState("");
@@ -32,10 +32,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         {/* Overlay */}
-        <div
-          className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-          onClick={onClose}
-        />
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
         {/* Modal */}
         <div
@@ -54,8 +51,8 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
                 type={showPass ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-full border border-[#FA824C] px-4 py-2 pr-10 text-sm
-                focus:outline-none focus:ring-2 focus:ring-[#FA824C]/40"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-sm
+                focus:outline-none focus:border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]/30"
               />
               <button
                 type="button"
@@ -75,8 +72,8 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
                 type={showConfirm ? "text" : "password"}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="w-full rounded-full border border-[#FA824C] px-4 py-2 pr-10 text-sm
-                focus:outline-none focus:ring-2 focus:ring-[#FA824C]/40"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-sm
+                focus:outline-none focus:border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]/30"
               />
               <button
                 type="button"
@@ -91,7 +88,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
           {/* Confirm Button */}
           <button
             onClick={handleSubmit}
-            className="w-full rounded-full bg-[#FA824C] py-2.5 text-sm font-semibold text-white transition hover:bg-[#e46d3a]"
+            className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e46d3a]"
           >
             Confirm
           </button>

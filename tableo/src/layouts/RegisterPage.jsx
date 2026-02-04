@@ -3,7 +3,7 @@ import { Eye, EyeOff } from "lucide-react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
 import { signupRequest } from "../services/auth_service";
-import FullScreenLoader from "../components/FullScreenLoader"; // ✅ add this
+import FullScreenLoader from "../components/FullScreenLoader";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -17,12 +17,10 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle signup submit
   const handleSubmit = async () => {
     setError("");
     if (!form.email || !form.password || !form.confirmPassword) {
@@ -33,7 +31,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       await signupRequest(form);
-      setShowModal(true); // open verification modal
+      setShowModal(true);
     } catch (err) {
       setError(err.message || "Signup failed");
     } finally {
@@ -47,20 +45,8 @@ export default function RegisterPage() {
         <div className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-6">
 
-            {/* Left side image */}
-            <div className="hidden md:block">
-              <div className="relative h-full w-full overflow-hidden rounded-2xl">
-                <img
-                  src={goldenDrops}
-                  alt="signup"
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/10" />
-              </div>
-            </div>
-
-            {/* Signup form */}
-            <div className="flex flex-col justify-center px-8 py-10 md:px-12">
+            {/* Signup form - now on the LEFT */}
+            <div className="flex flex-col justify-center px-8 py-10 md:px-12 order-1 md:order-1">
               <h1 className="text-2xl font-semibold text-gray-800">Create Account</h1>
               <p className="mt-1 mb-8 text-sm text-gray-500">Sign up to get started</p>
 
@@ -151,6 +137,18 @@ export default function RegisterPage() {
               <div className="mt-8 flex justify-center gap-6 text-xs text-gray-400">
                 <a href="#">Terms of use</a>
                 <a href="#">Privacy policy</a>
+              </div>
+            </div>
+
+            {/* Right side image - now on the RIGHT */}
+            <div className="hidden md:block order-2 md:order-2">
+              <div className="relative h-full w-full overflow-hidden rounded-2xl">
+                <img
+                  src={goldenDrops}
+                  alt="signup"
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/10" />
               </div>
             </div>
           </div>

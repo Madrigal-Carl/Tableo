@@ -98,7 +98,7 @@ export default function LoginPage() {
 
             <div className="flex flex-col justify-center px-8 py-10 md:px-12">
               <h1 className="text-2xl font-semibold text-gray-800">
-                Welcome back to Tabléo
+                Welcome back to <span className="text-[#FA824C] font-bold">Tabléo</span>
               </h1>
               <p className="mt-1 mb-8 text-sm text-gray-500">
                 Sign in to continue
@@ -146,7 +146,7 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FA824C]"
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                   </button>
                 </div>
               </div>
