@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
-import { signupRequest } from "../services/auth_service";
 import FullScreenLoader from "../components/FullScreenLoader";
+import { signupRequest } from "../services/auth_service";
+
+import { validateRegister } from "../validations/auth_validation";
+import { showToast } from "../utils/swal";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -11,10 +14,10 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   const handleChange = (e) => {
@@ -22,18 +25,24 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async () => {
-    setError("");
-    if (!form.email || !form.password || !form.confirmPassword) {
-      setError("All fields are required");
-      return;
+    // ✅ Frontend validation
+    const validationError = validateRegister(form);
+    if (validationError) {
+      return showToast("error", validationError);
     }
 
     try {
       setLoading(true);
+
       await signupRequest(form);
+
+      showToast("success", "Verification code sent");
       setShowModal(true);
     } catch (err) {
-      setError(err.message || "Signup failed");
+      showToast(
+        "error",
+        err.message || "Signup failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -52,7 +61,7 @@ export default function RegisterPage() {
 
               {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
 
-              {/* Email */}
+              {/* EMAIL */}
               <div className="mb-4">
                 <label className="block mb-1 text-sm font-medium text-gray-600">
                   Email
@@ -64,11 +73,11 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   placeholder="Enter your email"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                  focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                 />
               </div>
 
-              {/* Password */}
+              {/* PASSWORD */}
               <div className="mb-4">
                 <label className="block mb-1 text-sm font-medium text-gray-600">
                   Password
@@ -81,7 +90,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     placeholder="Enter your password"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
-                      focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                   />
                   <button
                     type="button"
@@ -93,7 +102,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Confirm Password */}
+              {/* CONFIRM PASSWORD */}
               <div className="mb-6">
                 <label className="block mb-1 text-sm font-medium text-gray-600">
                   Confirm Password
@@ -106,7 +115,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     placeholder="Re-enter your password"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
-                      focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                   />
                   <button
                     type="button"
@@ -118,7 +127,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Submit */}
               <button
                 onClick={handleSubmit}
                 disabled={loading}
@@ -133,11 +141,6 @@ export default function RegisterPage() {
                   Sign in
                 </a>
               </p>
-
-              <div className="mt-8 flex justify-center gap-6 text-xs text-gray-400">
-                <a href="#">Terms of use</a>
-                <a href="#">Privacy policy</a>
-              </div>
             </div>
 
             {/* Right side image - now on the RIGHT */}
@@ -154,19 +157,18 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Verification Modal */}
         <VerificationModal
           open={showModal}
           onClose={() => setShowModal(false)}
           email={form.email}
           type="signup"
           onSuccess={() => {
-            window.location.href = "/auth"; // redirect to login after verification
+            showToast("success", "Account verified successfully");
+            window.location.href = "/auth";
           }}
         />
       </div>
 
-      {/* FULL SCREEN LOADER */}
       <FullScreenLoader show={loading} />
     </>
   );

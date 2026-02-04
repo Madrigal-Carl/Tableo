@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react"; // install if needed
+import { Eye, EyeOff } from "lucide-react";
 import FullScreenLoader from "../components/FullScreenLoader";
+import { showToast } from "../utils/swal";
+import { validateResetPassword } from "../validations/auth_validation";
 
 export default function NewPasswordModal({ open, onClose, onConfirm, loading }) {
   const [password, setPassword] = useState("");
@@ -8,13 +10,13 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Lock scroll
+  // Lock scroll when modal is open
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     return () => (document.body.style.overflow = "auto");
   }, [open]);
 
-  // ESC close
+  // ESC to close modal
   useEffect(() => {
     const handleEsc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handleEsc);
@@ -24,12 +26,18 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
   if (!open) return null;
 
   const handleSubmit = () => {
-    if (!password || password !== confirm) return;
+    // Frontend validation
+    const errorMsg = validateResetPassword({ password, confirmPassword: confirm });
+    if (errorMsg) return showToast("error", errorMsg);
+
+    // Call the confirm handler
     onConfirm?.(password);
   };
 
   return (
     <>
+      <FullScreenLoader show={loading} />
+
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
@@ -45,7 +53,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
 
           {/* New Password */}
           <div className="mb-4">
-            <label className="text-sm text-gray-600">Enter new password</label>
+            <label className="text-sm text-gray-600">New password</label>
             <div className="relative mt-1">
               <input
                 type={showPass ? "text" : "password"}
@@ -94,9 +102,6 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
           </button>
         </div>
       </div>
-
-      {/* FULL SCREEN LOADER */}
-      <FullScreenLoader show={loading} />
     </>
   );
 }

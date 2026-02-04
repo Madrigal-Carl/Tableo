@@ -6,6 +6,7 @@ import {
   forgotPasswordRequest,
 } from "../services/auth_service";
 import FullScreenLoader from "../components/FullScreenLoader";
+import { showToast } from "../utils/swal"; // ✅ toast
 
 export default function VerificationModal({
   open,
@@ -22,22 +23,17 @@ export default function VerificationModal({
 
   const inputsRef = useRef([]);
 
-  // =========================
-  // MODAL OPEN / RESET
-  // =========================
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
       setOtp(["", "", "", "", "", ""]);
-      setCooldown(30);
+      setCooldown(60);
       inputsRef.current[0]?.focus();
+      setError("");
     }
     return () => (document.body.style.overflow = "auto");
   }, [open]);
 
-  // =========================
-  // COOLDOWN TIMER
-  // =========================
   useEffect(() => {
     if (!open || cooldown <= 0) return;
     const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
@@ -46,43 +42,55 @@ export default function VerificationModal({
 
   if (!open) return null;
 
-  // =========================
-  // OTP INPUT HANDLING
-  // =========================
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    if (value && index < 5) inputsRef.current[index + 1]?.focus();
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
+
+    // Auto-submit if last digit
+    if (index === 5 && newOtp.every((d) => d !== "")) {
+      handleConfirm(newOtp.join(""));
+    }
   };
 
-  // =========================
-  // VERIFY OTP
-  // =========================
-  const handleConfirm = async () => {
-    const code = otp.join("");
-    if (code.length !== 6) return;
+  const handleConfirm = async (codeInput) => {
+    const code = codeInput || otp.join("");
+
+    // Frontend validation
+    if (code.length !== 6) {
+      setError("Please enter the 6-digit code");
+      return;
+    }
 
     try {
       setLoading(true);
       setError("");
       const payload = { email, code };
 
-      if (type === "signup") await signupVerify(payload);
-      else await forgotPasswordVerify(payload);
+      if (type === "signup") {
+        await signupVerify(payload);
+        showToast("success", "Account verified successfully!");
+      } else {
+        await forgotPasswordVerify(payload);
+        showToast("success", "Verification successful!");
+      }
 
       onSuccess?.();
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid verification code");
+      const msg = err.response?.data?.message || "Invalid verification code";
+      setError(msg);
+      showToast("error", msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // =========================
-  // RESEND OTP
-  // =========================
   const handleResend = async () => {
     if (cooldown > 0) return;
 
@@ -96,8 +104,11 @@ export default function VerificationModal({
 
       setCooldown(30);
       inputsRef.current[0]?.focus();
+      showToast("success", "Verification code resent!");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to resend code");
+      const msg = err.response?.data?.message || "Failed to resend code";
+      setError(msg);
+      showToast("error", msg);
     } finally {
       setResending(false);
     }
@@ -160,7 +171,7 @@ export default function VerificationModal({
 
           {/* CONFIRM BUTTON */}
           <button
-            onClick={handleConfirm}
+            onClick={() => handleConfirm()}
             disabled={loading}
             className="w-full rounded-full bg-[#FA824C] py-3 text-white font-semibold hover:bg-[#e04a4a] transition"
           >
