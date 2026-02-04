@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/user_repository');
-const { requestVerification, verifyCode } = require('./email_verification_service');
+const { requestVerification, verifyCode, hasActiveVerification } = require('./email_verification_service');
 const { getCookieOptions } = require('../utils/auth_cookies');
 
 function generateAccessToken(payload) {
@@ -58,29 +58,20 @@ async function signupVerify({ email, code }, res) {
 
     return { message: 'Signup successful', user };
 }
-async function login({ email, password }) {
 
-    const user = await userRepository.findByEmail(email);
-    if (!user) throw new Error("Invalid email or password");
+async function signupResend({ email }) {
+    const data = hasActiveVerification(email);
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error("Invalid email or password");
+    if (!data || !data.password) {
+        throw new Error('Signup session expired. Please register again.');
+    }
 
-    const payload = { id: user.id, email: user.email };
-
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN || "15m",
+    await requestVerification({
+        email,
+        password: data.password,
     });
 
-    const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
-    });
-
-    return {
-        user,
-        accessToken,
-        refreshToken,
-    };
+    return { message: 'Verification code resent' };
 }
 
 async function login({ email, password, rememberMe }, res) {
@@ -127,6 +118,7 @@ async function forgotPasswordReset({ email, password }) {
 module.exports = {
     signupRequest,
     signupVerify,
+    signupResend,
     login,
     logout,
     forgotPasswordRequest,

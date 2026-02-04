@@ -32,4 +32,16 @@ function verifyCode({ email, code }) {
     return data.password || true;
 }
 
-module.exports = { requestVerification, verifyCode };
+function hasActiveVerification(email) {
+    const data = verificationStore.get(email);
+    if (!data) return null;
+
+    if (Date.now() > data.expiresAt) {
+        verificationStore.delete(email);
+        return null;
+    }
+
+    return data;
+}
+
+module.exports = { requestVerification, verifyCode, hasActiveVerification };

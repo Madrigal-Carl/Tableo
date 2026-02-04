@@ -1,6 +1,6 @@
-import SideNavigation from "../components/SideNavigation";
-import CardEvent from "../components/CreateCardEvent";
-import EventImage1 from "../assets/pg1.jpg";
+import SideNavigation from "../../components/SideNavigation";
+import CardEvent from "../../components/CreateCardEvent";
+import EventImage1 from "../../assets/pg1.jpg";
 import React, { useState } from "react";
 import { CalendarPlus } from "lucide-react";
 
@@ -47,11 +47,11 @@ function HomePage() {
 
       return matchesSearch && matchesDate;
     })
-  .sort((a, b) =>
-    sortAZ
-      ? a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
-      : b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
-  );
+    .sort((a, b) =>
+      sortAZ
+        ? a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+        : b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
+    );
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -59,7 +59,7 @@ function HomePage() {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 ml-72 p-8 bg-gray-50 min-h-screen">
-         {/* HEADER */}
+        {/* HEADER */}
         <h1 className="text-3xl font-bold border-b-2 pb-2 border-gray-300 mb-6">Your Events</h1>
 
         {/* SORT + SEARCH BAR + ADD EVENT */}
@@ -140,7 +140,7 @@ function HomePage() {
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
             <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto scrollbar-hide">
-              
+
               {/* TITLE */}
               <h2 className="text-center text-xl font-semibold mb-6">
                 Add Event
@@ -151,29 +151,29 @@ function HomePage() {
                 {/* EVENT NAME */}
                 <div className="flex flex-col">
                   <label className="text-sm text-gray-500 mb-1">Event Name</label>
-                    <input
-                      type="text"
-                      placeholder="Enter event name"
-                      value={newEvent.title}
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, title: e.target.value })
-                      }
-                      className="w-full rounded-full border border-orange-300 px-4 py-2"
-                    />
+                  <input
+                    type="text"
+                    placeholder="Enter event name"
+                    value={newEvent.title}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, title: e.target.value })
+                    }
+                    className="w-full rounded-full border border-orange-300 px-4 py-2"
+                  />
                 </div>
 
                 {/* LOCATION */}
                 <div className="flex flex-col">
                   <label className="text-sm text-gray-500 mb-1">Location</label>
-                    <input
-                      type="text"
-                      placeholder="Enter location"
-                      value={newEvent.location}
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, location: e.target.value })
-                      }
-                      className="w-full rounded-full border border-orange-300 px-4 py-2"
-                    />
+                  <input
+                    type="text"
+                    placeholder="Enter location"
+                    value={newEvent.location}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, location: e.target.value })
+                    }
+                    className="w-full rounded-full border border-orange-300 px-4 py-2"
+                  />
                 </div>
 
                 {/* TIME + DATE */}
@@ -195,27 +195,27 @@ function HomePage() {
                   </div>
                 </div>
 
-                  {/* DATE + NUMBER OF ROUNDS */}
-                  <div className="flex flex-col sm:flex-row sm:gap-4 gap-3 w-full">
-                    {/* DATE */}
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <label className="text-sm text-gray-500 mb-1">Date</label>
-                      <input
-                        type="date"
-                        className="w-full rounded-full border border-orange-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                      />
-                    </div>
-
-                    {/* NUMBER OF ROUNDS */}
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <label className="text-sm text-gray-500 mb-1">Number of Rounds</label>
-                      <input
-                        type="number"
-                        placeholder=""
-                        className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                      />
-                    </div>
+                {/* DATE + NUMBER OF ROUNDS */}
+                <div className="flex flex-col sm:flex-row sm:gap-4 gap-3 w-full">
+                  {/* DATE */}
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <label className="text-sm text-gray-500 mb-1">Date</label>
+                    <input
+                      type="date"
+                      className="w-full rounded-full border border-orange-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    />
                   </div>
+
+                  {/* NUMBER OF ROUNDS */}
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <label className="text-sm text-gray-500 mb-1">Number of Rounds</label>
+                    <input
+                      type="number"
+                      placeholder=""
+                      className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    />
+                  </div>
+                </div>
 
 
                 {/* JUDGES + CANDIDATES */}
@@ -237,29 +237,29 @@ function HomePage() {
                 </div>
 
                 {/* OPTIONAL IMAGE */}
-              <div className="flex flex-col gap-2">
-                <span className="text-xs text-gray-400">Optional</span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs text-gray-400">Optional</span>
 
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-center gap-2 rounded-full border border-orange-300 px-4 py-2 text-sm text-orange-500 hover:bg-orange-50 transition"
-                >
-                  + Add Image
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-center gap-2 rounded-full border border-orange-300 px-4 py-2 text-sm text-orange-500 hover:bg-orange-50 transition"
+                  >
+                    + Add Image
+                  </button>
+                </div>
 
                 {/* DESCRIPTION */}
                 <div className="flex flex-col">
                   <label className="text-sm text-gray-500 mb-1">Description</label>
-                    <textarea
-                      rows="3"
-                      placeholder="Enter description"
-                      value={newEvent.description}
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, description: e.target.value })
-                      }
-                      className="w-full rounded-2xl border border-orange-300 px-4 py-2"
-                    />
+                  <textarea
+                    rows="3"
+                    placeholder="Enter description"
+                    value={newEvent.description}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, description: e.target.value })
+                    }
+                    className="w-full rounded-2xl border border-orange-300 px-4 py-2"
+                  />
                 </div>
 
                 {/* ACTION BUTTONS */}
