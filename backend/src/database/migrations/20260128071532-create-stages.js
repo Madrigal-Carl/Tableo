@@ -26,10 +26,13 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      round: {
+      sequence: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 1,
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       created_at: {
         type: Sequelize.DATE,

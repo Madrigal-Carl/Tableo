@@ -25,11 +25,11 @@ function validateEvent(req, res, next) {
             'string.empty': 'Location is required',
             'any.required': 'Location is required'
         }),
-        rounds: Joi.number().integer().min(1).required().messages({
-            'number.base': 'Rounds must be a number',
-            'number.integer': 'Rounds must be an integer',
-            'number.min': 'Rounds must be at least 1',
-            'any.required': 'Rounds is required'
+        stages: Joi.number().integer().min(1).required().messages({
+            'number.base': 'Stages must be a number',
+            'number.integer': 'Stages must be an integer',
+            'number.min': 'Stages must be at least 1',
+            'any.required': 'Stages is required'
         }),
         judges: Joi.number().integer().min(1).required().messages({
             'number.base': 'Judges must be a number',

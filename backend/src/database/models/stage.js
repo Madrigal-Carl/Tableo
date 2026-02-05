@@ -2,7 +2,8 @@
 
 module.exports = (sequelize, DataTypes) => {
     const Stage = sequelize.define('Stage', {
-        round: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+        name: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+        sequence: { type: DataTypes.INTEGER, allowNull: false, unique: true },
     }, {
         paranoid: true,
         timestamps: true,
