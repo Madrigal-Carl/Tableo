@@ -38,7 +38,7 @@ export default function LoginPage() {
         : localStorage.removeItem("rememberMe");
 
       showToast("success", "Signed in successfully");
-      window.location.href = "/home";
+      window.location.href = "/dashboard";
     } catch (err) {
       showToast(
         "error",
