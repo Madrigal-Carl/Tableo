@@ -9,6 +9,8 @@ import {
   forgotPasswordRequest,
   forgotPasswordReset,
 } from "../services/auth_service";
+import { validateLogin } from "../validations/auth_validation";
+import { showToast } from "../utils/swal";
 
 export default function LoginPage() {
   const [showForgot, setShowForgot] = useState(false);
@@ -16,97 +18,107 @@ export default function LoginPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ email: "", password: "" });
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   // Restore rememberMe
   useEffect(() => {
     setRememberMe(localStorage.getItem("rememberMe") === "true");
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
+  // 🔐 LOGIN
   const handleLogin = async () => {
+    const validationError = validateLogin(form);
+    if (validationError) return showToast("error", validationError);
+
     try {
-      setLoading(true);
-      setError("");
+      await login({ ...form, rememberMe });
 
-      await login({
-        email: form.email,
-        password: form.password,
-        rememberMe,
-      });
+      rememberMe
+        ? localStorage.setItem("rememberMe", "true")
+        : localStorage.removeItem("rememberMe");
 
-      // Save rememberMe preference
-      if (rememberMe) localStorage.setItem("rememberMe", "true");
-      else localStorage.removeItem("rememberMe");
-
-      // Redirect on success
-      window.location.href = "/dashboard";
+      showToast("success", "Signed in successfully");
+      window.location.href = "/home";
     } catch (err) {
-      setError(
+      showToast(
+        "error",
         err.response?.data?.message || "Invalid email or password"
       );
-    } finally {
-      setLoading(false);
     }
   };
 
+  // 🔁 FORGOT PASSWORD – SEND CODE
   const handleForgotConfirm = async (email) => {
-    await forgotPasswordRequest({ email });
-    setForgotEmail(email);
-    setShowForgot(false);
-    setShowVerification(true);
+    try {
+      await forgotPasswordRequest({ email });
+      setForgotEmail(email);
+      setShowForgot(false);
+      setShowVerification(true);
+      showToast("success", "Verification code sent");
+    } catch (err) {
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to send verification code"
+      );
+    }
   };
 
+  // ✅ VERIFICATION SUCCESS
   const handleVerificationSuccess = () => {
     setShowVerification(false);
     setShowNewPassword(true);
   };
 
+  // 🔑 RESET PASSWORD
   const handleResetPassword = async (password) => {
-    await forgotPasswordReset({
-      email: forgotEmail,
-      password,
-      confirmPassword: password,
-    });
-
-    setShowNewPassword(false);
-    setForgotEmail("");
+    try {
+      await forgotPasswordReset({
+        email: forgotEmail,
+        password,
+        confirmPassword: password,
+      });
+      setShowNewPassword(false);
+      setForgotEmail("");
+      showToast("success", "Password reset successfully");
+    } catch (err) {
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to reset password"
+      );
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white shadow-2xl">
+      <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-6">
 
-          <div className="relative h-full w-full overflow-hidden rounded-2xl">
-            <img src={goldenDrops} alt="login" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-black/10" />
+          {/* LEFT IMAGE (MATCHES REGISTER DESIGN) */}
+          <div className="hidden md:block order-1">
+            <div className="relative h-full w-full overflow-hidden rounded-2xl">
+              <img
+                src={goldenDrops}
+                alt="login"
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/10" />
+            </div>
           </div>
 
-          <div className="flex flex-col justify-center px-8 py-10 md:px-12">
-            <h1 className="text-2xl font-semibold text-gray-800">
-              Welcome back to Tabléo
+          {/* RIGHT FORM */}
+          <div className="flex flex-col justify-center px-8 py-10 md:px-12 order-2">
+            <h1 className="text-2xl font-semibold text-gray-800 mb-1">
+              Welcome back to{" "}
+              <span className="text-[#FA824C] font-bold">Tabléo</span>
             </h1>
-            <p className="mt-1 mb-8 text-sm text-gray-500">
+            <p className="text-sm text-gray-500 mb-8">
               Sign in to continue
             </p>
-
-            {error && (
-              <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
-                {error}
-              </div>
-            )}
 
             {/* EMAIL */}
             <div className="mb-4">
@@ -125,7 +137,7 @@ export default function LoginPage() {
             </div>
 
             {/* PASSWORD */}
-            <div className="mb-2">
+            <div className="mb-4">
               <label className="block mb-1 text-sm font-medium text-gray-600">
                 Password
               </label>
@@ -142,14 +154,16 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FA824C]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2
+                  flex items-center justify-center text-gray-400 hover:text-[#FA824C]"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between mb-4 mt-2">
+            {/* REMEMBER & FORGOT */}
+            <div className="flex items-center justify-between mb-6">
               <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
@@ -169,17 +183,21 @@ export default function LoginPage() {
               </button>
             </div>
 
+            {/* LOGIN BUTTON */}
             <button
               onClick={handleLogin}
-              disabled={loading}
               className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
             >
-              {loading ? "Signing in..." : "Login"}
+              Login
             </button>
 
+            {/* REGISTER LINK */}
             <p className="mt-5 text-center text-sm text-gray-600">
-              Don&apos;t have an account?{" "}
-              <a href="/auth/register" className="font-medium text-[#FA5C5C] hover:underline">
+              Don't have an account?{" "}
+              <a
+                href="/auth/register"
+                className="font-medium text-[#FA5C5C] hover:underline"
+              >
                 Register here
               </a>
             </p>
@@ -187,12 +205,12 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* MODALS */}
       <ForgotPasswordModal
         open={showForgot}
         onClose={() => setShowForgot(false)}
         onConfirm={handleForgotConfirm}
       />
-
       <VerificationModal
         open={showVerification}
         onClose={() => setShowVerification(false)}
@@ -200,7 +218,6 @@ export default function LoginPage() {
         type="forgot"
         onSuccess={handleVerificationSuccess}
       />
-
       <NewPasswordModal
         open={showNewPassword}
         onClose={() => setShowNewPassword(false)}

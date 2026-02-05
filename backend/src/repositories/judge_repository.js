@@ -13,7 +13,7 @@ function findByInvitationCode(invitationCode) {
 function findByEvent(eventId, transaction) {
     return Judge.findAll({
         where: { event_id: eventId },
-        order: [['id', 'ASC']],
+        order: [['sequence', 'ASC']],
         transaction,
     });
 }
@@ -23,7 +23,24 @@ function findByEventIncludingSoftDeleted(eventId, transaction) {
         where: { event_id: eventId },
         paranoid: false,
         transaction,
-        order: [["id", "ASC"]],
+        order: [['sequence', 'ASC']],
+    });
+}
+
+async function findEventByJudgeId(judgeId, transaction) {
+    const judge = await Judge.findByPk(judgeId, { transaction });
+
+    if (!judge) {
+        throw new Error('Judge not found');
+    }
+
+    return judge.event_id;
+}
+
+function update(id, data, transaction) {
+    return Judge.update(data, {
+        where: { id },
+        transaction,
     });
 }
 
@@ -32,4 +49,6 @@ module.exports = {
     findByInvitationCode,
     findByEvent,
     findByEventIncludingSoftDeleted,
+    findEventByJudgeId,
+    update,
 };

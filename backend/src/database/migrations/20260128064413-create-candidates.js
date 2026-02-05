@@ -29,6 +29,7 @@ module.exports = {
       sequence: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        unique: true,
       },
       name: {
         type: Sequelize.STRING,
