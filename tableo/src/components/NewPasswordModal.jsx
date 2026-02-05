@@ -67,7 +67,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
                 onClick={() => setShowPass(!showPass)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
               >
-                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPass ? <Eye size={16} /> : <EyeOff size={16} />}
               </button>
             </div>
           </div>
