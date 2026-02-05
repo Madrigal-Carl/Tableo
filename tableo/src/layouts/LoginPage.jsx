@@ -22,11 +22,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Restore rememberMe
-  useEffect(() => {
-    setRememberMe(localStorage.getItem("rememberMe") === "true");
-  }, []);
-
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
