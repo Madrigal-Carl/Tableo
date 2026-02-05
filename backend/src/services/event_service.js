@@ -2,31 +2,10 @@ const sequelize = require('../database/models').sequelize;
 
 const eventRepo = require('../repositories/event_repository');
 const stageRepo = require('../repositories/stage_repository');
-const judgeRepo = require('../repositories/judge_repository');
 const candidateService = require('./candidate_service');
+const judgeService = require('./judge_service');
 
 const crypto = require('crypto');
-
-function generateInvitationCode(length = 6) {
-    return crypto
-        .randomBytes(length)
-        .toString('base64')
-        .replace(/[^A-Z0-9]/gi, '')
-        .substring(0, length)
-        .toUpperCase();
-}
-
-async function generateUniqueInvitationCode() {
-    let code;
-    let exists = true;
-
-    while (exists) {
-        code = `JDG-${generateInvitationCode(6)}`;
-        exists = await judgeRepo.findByInvitationCode(code);
-    }
-
-    return code;
-}
 
 async function createEvent({
     title,
@@ -64,18 +43,7 @@ async function createEvent({
             );
         }
 
-        for (let i = 0; i < judges; i++) {
-            const invitationCode = await generateUniqueInvitationCode();
-            await judgeRepo.create(
-                {
-                    name: `Judge ${i + 1}`,
-                    invitationCode,
-                    event_id: event.id,
-                },
-                t
-            );
-        }
-
+        await judgeService.createOrUpdate(event.id, judges, t);
         await candidateService.createOrUpdate(event.id, candidates, t);
 
         return event;
@@ -111,46 +79,11 @@ async function updateEvent(eventId, userId, payload) {
         await eventRepo.update(eventId, payload, t);
 
         await candidateService.createOrUpdate(eventId, payload.candidates, t);
-        await syncJudges(eventId, payload.judges, t);
+        await judgeService.createOrUpdate(eventId, payload.judges, t);
         await syncStages(eventId, payload.rounds, t);
 
         return event;
     });
-}
-
-async function syncJudges(eventId, newCount, transaction) {
-    const allJudges = await judgeRepo.findByEventIncludingSoftDeleted(
-        eventId,
-        transaction
-    );
-
-    for (let i = 1; i <= newCount; i++) {
-        let judge = allJudges.find(j => j.name === `Judge ${i}`);
-
-        if (judge) {
-            if (judge.deletedAt) {
-                await judge.restore({ transaction });
-            }
-        } else {
-            const invitationCode = await generateUniqueInvitationCode();
-
-            await judgeRepo.create(
-                {
-                    name: `Judge ${i}`,
-                    invitationCode,
-                    event_id: eventId,
-                },
-                transaction
-            );
-        }
-    }
-
-    for (const judge of allJudges) {
-        const index = parseInt(judge.name.replace("Judge ", ""), 10);
-        if (index > newCount && !judge.deletedAt) {
-            await judge.destroy({ transaction });
-        }
-    }
 }
 
 async function syncStages(eventId, newRounds, transaction) {
