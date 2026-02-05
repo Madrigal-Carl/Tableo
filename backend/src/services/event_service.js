@@ -1,7 +1,7 @@
 const sequelize = require('../database/models').sequelize;
 
 const eventRepo = require('../repositories/event_repository');
-const stageRepo = require('../repositories/stage_repository');
+const stageService = require('./stage_service');
 const candidateService = require('./candidate_service');
 const judgeService = require('./judge_service');
 
@@ -14,7 +14,7 @@ async function createEvent({
     timeStart,
     timeEnd,
     location,
-    rounds,
+    stages,
     judges,
     candidates,
     userId,
@@ -33,16 +33,7 @@ async function createEvent({
             t
         );
 
-        for (let i = 1; i <= rounds; i++) {
-            await stageRepo.create(
-                {
-                    round: i,
-                    event_id: event.id,
-                },
-                t
-            );
-        }
-
+        await stageService.createOrUpdate(event.id, stages, t);
         await judgeService.createOrUpdate(event.id, judges, t);
         await candidateService.createOrUpdate(event.id, candidates, t);
 
@@ -80,45 +71,10 @@ async function updateEvent(eventId, userId, payload) {
 
         await candidateService.createOrUpdate(eventId, payload.candidates, t);
         await judgeService.createOrUpdate(eventId, payload.judges, t);
-        await syncStages(eventId, payload.rounds, t);
+        await stageService.createOrUpdate(eventId, payload.stages, t);
 
         return event;
     });
-}
-
-async function syncStages(eventId, newRounds, transaction) {
-    const allStages = await stageRepo.findByEventIncludingSoftDeleted(
-        eventId,
-        transaction
-    );
-
-    const stageByRound = new Map();
-    for (const stage of allStages) {
-        stageByRound.set(stage.round, stage);
-    }
-
-    // Ensure required rounds exist
-    for (let round = 1; round <= newRounds; round++) {
-        const stage = stageByRound.get(round);
-
-        if (stage) {
-            if (stage.deletedAt) {
-                await stage.restore({ transaction });
-            }
-        } else {
-            await stageRepo.create(
-                { round, event_id: eventId },
-                transaction
-            );
-        }
-    }
-
-    // Soft delete extra rounds
-    for (const stage of allStages) {
-        if (stage.round > newRounds && !stage.deletedAt) {
-            await stage.destroy({ transaction });
-        }
-    }
 }
 
 module.exports = { createEvent, getEvent, deleteEvent, updateEvent };
