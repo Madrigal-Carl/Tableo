@@ -28,4 +28,7 @@ router.post('/password/reset', requireGuest, validateForgotPasswordReset, authCo
 // Logout
 router.post('/logout', requireAuth, authController.logout);
 
+// Get current authenticated user
+router.get('/me', requireAuth, authController.me);
+
 module.exports = router;

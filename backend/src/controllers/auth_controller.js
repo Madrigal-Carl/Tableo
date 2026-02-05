@@ -55,6 +55,15 @@ async function forgotPasswordReset(req, res, next) {
     catch (err) { next(err); }
 }
 
+async function me(req, res) {
+    res.json({
+        user: {
+            id: req.user.id,
+            email: req.user.email,
+        },
+    });
+}
+
 module.exports = {
     registerRequest,
     registerVerify,
@@ -63,5 +72,6 @@ module.exports = {
     logout,
     forgotPasswordRequest,
     forgotPasswordVerify,
-    forgotPasswordReset
+    forgotPasswordReset,
+    me,
 };
