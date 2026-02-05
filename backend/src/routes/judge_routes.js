@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middlewares/auth');
+const requireAuth = require('../middlewares/auth');
 const {
     validateJudge,
     validateJudgeCount
@@ -8,9 +8,9 @@ const {
 const judgeController = require('../controllers/judge_controller');
 
 // Update judge attributes
-router.put('/:id', auth, validateJudge, judgeController.updateJudge);
+router.put('/:id', requireAuth, validateJudge, judgeController.updateJudge);
 
 // Create or update judges by count for an event
-router.post('/event/:eventId', auth, validateJudgeCount, judgeController.createOrUpdateJudges);
+router.post('/event/:eventId', requireAuth, validateJudgeCount, judgeController.createOrUpdateJudges);
 
 module.exports = router;

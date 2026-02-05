@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const authenticate = require("../middlewares/auth"); // middleware
+const requireAuth = require("../middlewares/auth"); // middleware
 const {
   createCriterionController,
   getCriteriaController,
-  updateCriteriaController, // renamed for multi-update
+  updateCriteriaController,
 } = require("../controllers/criterion_controller");
 
 // Async wrapper to handle errors and avoid crashing nodemon
@@ -18,7 +18,7 @@ function asyncHandler(fn) {
 // CREATE CRITERIA
 router.post(
   "/:categoryId/",
-  authenticate,
+  requireAuth,
   asyncHandler(async (req, res) => {
     req.body.category_id = parseInt(req.params.categoryId, 10);
     await createCriterionController(req, res);
@@ -28,7 +28,7 @@ router.post(
 // READ CRITERIA
 router.get(
   "/:categoryId",
-  authenticate,
+  requireAuth,
   asyncHandler(async (req, res) => {
     await getCriteriaController(req, res);
   })
@@ -37,7 +37,7 @@ router.get(
 // UPDATE CRITERIA (multi-update)
 router.put(
   "/:categoryId/",
-  authenticate,
+  requireAuth,
   asyncHandler(async (req, res) => {
     await updateCriteriaController(req, res);
   })

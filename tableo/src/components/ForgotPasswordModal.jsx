@@ -42,7 +42,7 @@ export default function ForgotPasswordModal({ open, onClose, onConfirm }) {
       setEmail("");
       onClose();
     } catch (err) {
-      showToast("error", err.response?.data?.message || "Failed to send code");
+      showToast("error", err.message || "Failed to send code");
     } finally {
       setLoading(false);
     }

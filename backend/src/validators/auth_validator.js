@@ -4,7 +4,7 @@ const passwordRegex =
 
 
 // Signup Validation
-function validateSignup(req, res, next) {
+function validateRegister(req, res, next) {
     const schema = Joi.object({
         email: Joi.string().email().required().messages({
             'string.empty': 'Email is required',
@@ -133,7 +133,7 @@ function validateForgotPasswordReset(req, res, next) {
 }
 
 module.exports = {
-    validateSignup,
+    validateRegister,
     validateVerification,
     validateLogin,
     validateForgotPasswordRequest,
