@@ -120,7 +120,7 @@ export default function VerificationModal({
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Invalid verification code"
+        err.message || "Invalid verification code"
       );
     } finally {
       setLoading(false);
@@ -144,7 +144,7 @@ export default function VerificationModal({
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Failed to resend code"
+        err.message || "Failed to resend code"
       );
     } finally {
       setResending(false);

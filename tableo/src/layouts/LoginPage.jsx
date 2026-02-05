@@ -42,7 +42,7 @@ export default function LoginPage() {
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Invalid email or password"
+        err.message || "Invalid email or password"
       );
     }
   };
@@ -58,7 +58,7 @@ export default function LoginPage() {
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Failed to send verification code"
+        err.message || "Failed to send verification code"
       );
     }
   };
@@ -83,7 +83,7 @@ export default function LoginPage() {
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Failed to reset password"
+        err.message || "Failed to reset password"
       );
     }
   };
