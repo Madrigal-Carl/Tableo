@@ -14,7 +14,6 @@ function validateBulkScores(req, res, next) {
   const { error } = bulkScoresSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
 
-  // Validate categoryId from URL
   const categoryId = Number(req.params.categoryId);
   if (!categoryId || categoryId <= 0) {
     return res.status(400).json({ error: "Invalid categoryId in URL" });
