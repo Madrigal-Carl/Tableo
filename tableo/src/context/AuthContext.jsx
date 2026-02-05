@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
 
@@ -15,8 +14,17 @@ export function AuthProvider({ children }) {
             .finally(() => setLoading(false));
     }, []);
 
+    const logout = async () => {
+        try {
+            await api.post("/auth/logout");
+            setUser(null);
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, isAuth: !!user, setUser }}>
+        <AuthContext.Provider value={{ user, loading, isAuth: !!user, setUser, logout }}>
             {children}
         </AuthContext.Provider>
     );
