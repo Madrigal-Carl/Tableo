@@ -120,7 +120,7 @@ export default function RegisterPage() {
                     onClick={() => setShowConfirm(!showConfirm)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FA824C]"
                   >
-                    {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showConfirm ? <Eye size={18} /> : <EyeOff size={18} />}
                   </button>
                 </div>
               </div>
