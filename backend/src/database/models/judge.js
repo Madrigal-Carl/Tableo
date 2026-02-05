@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
         invitationCode: { type: DataTypes.STRING, allowNull: false, unique: true },
         name: { type: DataTypes.STRING, allowNull: false },
         sex: { type: DataTypes.ENUM('male', 'female'), allowNull: true },
+        sequence: { type: DataTypes.INTEGER, allowNull: false, unique: true },
     }, {
         paranoid: true,
         timestamps: true,
