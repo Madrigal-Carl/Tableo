@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth_controller');
-const authMiddleware = require('../middlewares/auth');
+const requireAuth = require('../middlewares/auth');
+const requireGuest = require('../middlewares/guest');
 const {
-    validateSignup,
+    validateRegister,
     validateVerification,
     validateLogin,
     validateForgotPasswordRequest,
@@ -12,19 +13,19 @@ const {
 } = require('../validators/auth_validator');
 
 // Signup
-router.post('/signup', validateSignup, authController.signupRequest);
-router.post('/signup/verify', validateVerification, authController.signupVerify);
-router.post('/signup/resend', validateForgotPasswordRequest, authController.signupResend);
+router.post('/register', requireGuest, validateRegister, authController.registerRequest);
+router.post('/register/verify', requireGuest, validateVerification, authController.registerVerify);
+router.post('/register/resend', requireGuest, validateForgotPasswordRequest, authController.registerResend);
 
 // Login
-router.post('/login', validateLogin, authController.login);
+router.post('/login', requireGuest, validateLogin, authController.login);
 
 // Forgot Password
-router.post('/password/forgot', validateForgotPasswordRequest, authController.forgotPasswordRequest);
-router.post('/password/verify', validateForgotPasswordVerify, authController.forgotPasswordVerify);
-router.post('/password/reset', validateForgotPasswordReset, authController.forgotPasswordReset);
+router.post('/password/forgot', requireGuest, validateForgotPasswordRequest, authController.forgotPasswordRequest);
+router.post('/password/verify', requireGuest, validateForgotPasswordVerify, authController.forgotPasswordVerify);
+router.post('/password/reset', requireGuest, validateForgotPasswordReset, authController.forgotPasswordReset);
 
 // Logout
-router.post('/logout', authMiddleware, authController.logout);
+router.post('/logout', requireAuth, authController.logout);
 
 module.exports = router;

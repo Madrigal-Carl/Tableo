@@ -4,23 +4,23 @@ const userRepository = require('../repositories/user_repository');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-async function signupRequest(req, res, next) {
+async function registerRequest(req, res, next) {
     try {
-        const result = await authService.signupRequest(req.body);
+        const result = await authService.registerRequest(req.body);
         res.status(200).json(result);
     } catch (err) { next(err); }
 }
 
-async function signupVerify(req, res, next) {
+async function registerVerify(req, res, next) {
     try {
-        const result = await authService.signupVerify(req.body, res);
+        const result = await authService.registerVerify(req.body, res);
         res.status(201).json(result);
     } catch (err) { next(err); }
 }
 
-async function signupResend(req, res, next) {
+async function registerResend(req, res, next) {
     try {
-        await authService.signupResend(req.body);
+        await authService.registerResend(req.body);
         res.json({ message: 'Verification code resent' });
     } catch (err) {
         next(err);
@@ -56,9 +56,9 @@ async function forgotPasswordReset(req, res, next) {
 }
 
 module.exports = {
-    signupRequest,
-    signupVerify,
-    signupResend,
+    registerRequest,
+    registerVerify,
+    registerResend,
     login,
     logout,
     forgotPasswordRequest,

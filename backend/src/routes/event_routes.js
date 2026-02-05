@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 
-const auth = require('../middlewares/auth');
+const requireAuth = require('../middlewares/auth');
 const { validateEvent } = require('../validators/event_validator');
 const eventController = require('../controllers/event_controller');
 
 // Create Event
-router.post('/', auth, validateEvent, eventController.createEvent);
+router.post('/', requireAuth, validateEvent, eventController.createEvent);
 
 // Get Event Details
-router.get('/:eventId', auth, eventController.getEvent);
+router.get('/:eventId', requireAuth, eventController.getEvent);
 
 // Delete Event
-router.delete('/:eventId', auth, eventController.deleteEvent);
+router.delete('/:eventId', requireAuth, eventController.deleteEvent);
 
 // Update Event
-router.put('/:eventId', auth, validateEvent, eventController.updateEvent);
+router.put('/:eventId', requireAuth, validateEvent, eventController.updateEvent);
 
 module.exports = router;
