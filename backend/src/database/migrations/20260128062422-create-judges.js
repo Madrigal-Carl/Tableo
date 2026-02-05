@@ -31,6 +31,11 @@ module.exports = {
         allowNull: false,
         unique: true,
       },
+      sequence: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        unique: true,
+      },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
