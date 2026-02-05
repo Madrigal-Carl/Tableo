@@ -27,6 +27,7 @@ const eventCategoryRoutes = require('./routes/event_category_routes');
 const candidateRoutes = require('./routes/candidate_routes');
 const competitionScoreRoutes = require('./routes/competition_score_routes');
 const judgeRoutes = require('./routes/judge_routes');
+const stageRoutes = require('./routes/stage_routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
@@ -36,6 +37,7 @@ app.use('/api/criterion', criterionRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/competition', competitionScoreRoutes);
 app.use('/api/judges', judgeRoutes);
+app.use('/api/stages', stageRoutes);
 
 app.use(errorHandler);
 
