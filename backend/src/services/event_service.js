@@ -18,6 +18,7 @@ async function createEvent({
     judges,
     candidates,
     userId,
+    path,
 }) {
     return sequelize.transaction(async (t) => {
         const event = await eventRepo.create(
@@ -28,6 +29,7 @@ async function createEvent({
                 timeStart,
                 timeEnd,
                 location,
+                path,
                 user_id: userId,
             },
             t
@@ -77,4 +79,9 @@ async function updateEvent(eventId, userId, payload) {
     });
 }
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent };
+async function getAllEvents(userId) {
+    const events = await eventRepo.findByUser(userId);
+    return events;
+}
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };

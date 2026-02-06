@@ -2,6 +2,10 @@ const Joi = require('joi');
 
 function validateEvent(req, res, next) {
     const schema = Joi.object({
+        path: Joi.string().uri().optional().messages({
+            'string.base': 'Image path must be a string',
+            'string.uri': 'Image must be a valid URL',
+        }),
         title: Joi.string().required().messages({
             'string.empty': 'Title is required',
             'any.required': 'Title is required'
@@ -44,6 +48,13 @@ function validateEvent(req, res, next) {
             'any.required': 'Candidates is required'
         }),
     });
+
+    const data = {
+        ...req.body,
+        stages: Number(req.body.stages),
+        judges: Number(req.body.judges),
+        candidates: Number(req.body.candidates),
+    };
 
     const { error } = schema.validate(req.body);
     if (error) return res.status(400).json({ message: error.details[0].message });

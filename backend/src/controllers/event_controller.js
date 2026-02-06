@@ -3,8 +3,10 @@ const eventService = require('../services/event_service');
 async function createEvent(req, res, next) {
     try {
         const userId = req.user.id;
+
         const event = await eventService.createEvent({
             ...req.body,
+            path: req.file ? `/uploads/events/${req.file.filename}` : null,
             userId,
         });
 
@@ -16,6 +18,7 @@ async function createEvent(req, res, next) {
         next(err);
     }
 }
+
 
 async function getEvent(req, res, next) {
     try {
@@ -44,7 +47,12 @@ async function updateEvent(req, res, next) {
         const userId = req.user.id;
         const eventId = req.params.eventId;
 
-        const result = await eventService.updateEvent(eventId, userId, req.body);
+        const payload = {
+            ...req.body,
+            ...(req.file && { path: `/uploads/events/${req.file.filename}` }),
+        };
+
+        const result = await eventService.updateEvent(eventId, userId, payload);
 
         res.json({ message: 'Event updated successfully', event: result });
     } catch (err) {
@@ -52,4 +60,15 @@ async function updateEvent(req, res, next) {
     }
 }
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent };
+async function getAllEvents(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const events = await eventService.getAllEvents(userId);
+        res.json({ events });
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };
