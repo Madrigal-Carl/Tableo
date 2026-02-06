@@ -49,6 +49,13 @@ function validateEvent(req, res, next) {
         }),
     });
 
+    const data = {
+        ...req.body,
+        stages: Number(req.body.stages),
+        judges: Number(req.body.judges),
+        candidates: Number(req.body.candidates),
+    };
+
     const { error } = schema.validate(req.body);
     if (error) return res.status(400).json({ message: error.details[0].message });
     next();

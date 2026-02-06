@@ -18,6 +18,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 
 const authRoutes = require('./routes/auth_routes');
 const eventRoutes = require('./routes/event_routes');
