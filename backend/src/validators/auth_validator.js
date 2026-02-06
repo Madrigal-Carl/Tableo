@@ -1,17 +1,24 @@
 const Joi = require('joi');
+const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#\-])[A-Za-z\d@$!%*?&#\-]{8,}$/;
+
 
 // Signup Validation
-function validateSignup(req, res, next) {
+function validateRegister(req, res, next) {
     const schema = Joi.object({
         email: Joi.string().email().required().messages({
             'string.empty': 'Email is required',
             'string.email': 'Email must be valid',
             'any.required': 'Email is required'
         }),
-        password: Joi.string().min(6).required().messages({
+        password: Joi.string()
+        .pattern(passwordRegex)
+        .required()
+        .messages({
             'string.empty': 'Password is required',
-            'string.min': 'Password must be at least 6 characters',
-            'any.required': 'Password is required'
+            'string.pattern.base':
+            'Password must be at least 8 characters and include uppercase, lowercase, number, and special character',
+            'any.required': 'Password is required',
         }),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
             'any.only': 'Password and confirm password must match',
@@ -105,10 +112,14 @@ function validateForgotPasswordReset(req, res, next) {
             'string.email': 'Email must be valid',
             'any.required': 'Email is required'
         }),
-        password: Joi.string().min(6).required().messages({
+        password: Joi.string()
+        .pattern(passwordRegex)
+        .required()
+        .messages({
             'string.empty': 'Password is required',
-            'string.min': 'Password must be at least 6 characters',
-            'any.required': 'Password is required'
+            'string.pattern.base':
+            'Password must be at least 8 characters and include uppercase, lowercase, number, and special character',
+            'any.required': 'Password is required',
         }),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
             'any.only': 'Password and confirm password must match',
@@ -122,7 +133,7 @@ function validateForgotPasswordReset(req, res, next) {
 }
 
 module.exports = {
-    validateSignup,
+    validateRegister,
     validateVerification,
     validateLogin,
     validateForgotPasswordRequest,

@@ -35,7 +35,7 @@ function setAuthCookies(res, payload, rememberMe) {
     }
 }
 
-async function signupRequest({ email, password }) {
+async function registerRequest({ email, password }) {
     const exists = await userRepository.findByEmail(email);
     if (exists) throw new Error('Email already registered');
 
@@ -43,7 +43,7 @@ async function signupRequest({ email, password }) {
     return { message: 'Verification code sent' };
 }
 
-async function signupVerify({ email, code }, res) {
+async function registerVerify({ email, code }, res) {
     const password = verifyCode({ email, code });
     if (!password) throw new Error('Invalid or expired code');
 
@@ -59,7 +59,7 @@ async function signupVerify({ email, code }, res) {
     return { message: 'Signup successful', user };
 }
 
-async function signupResend({ email }) {
+async function registerResend({ email }) {
     const data = hasActiveVerification(email);
 
     if (!data || !data.password) {
@@ -116,9 +116,9 @@ async function forgotPasswordReset({ email, password }) {
 }
 
 module.exports = {
-    signupRequest,
-    signupVerify,
-    signupResend,
+    registerRequest,
+    registerVerify,
+    registerResend,
     login,
     logout,
     forgotPasswordRequest,

@@ -11,6 +11,8 @@ import {
 } from "../services/auth_service";
 import { validateLogin } from "../validations/auth_validation";
 import { showToast } from "../utils/swal";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const [showForgot, setShowForgot] = useState(false);
@@ -21,11 +23,8 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  // Restore rememberMe
-  useEffect(() => {
-    setRememberMe(localStorage.getItem("rememberMe") === "true");
-  }, []);
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -36,18 +35,19 @@ export default function LoginPage() {
     if (validationError) return showToast("error", validationError);
 
     try {
-      await login({ ...form, rememberMe });
+      const res = await login({ ...form, rememberMe });
 
       rememberMe
         ? localStorage.setItem("rememberMe", "true")
         : localStorage.removeItem("rememberMe");
 
+      setUser(res.data.user);
       showToast("success", "Signed in successfully");
-      window.location.href = "/home";
+      navigate("/dashboard");
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Invalid email or password"
+        err.message || "Invalid email or password"
       );
     }
   };
@@ -63,7 +63,7 @@ export default function LoginPage() {
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Failed to send verification code"
+        err.message || "Failed to send verification code"
       );
     }
   };
@@ -88,7 +88,7 @@ export default function LoginPage() {
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Failed to reset password"
+        err.message || "Failed to reset password"
       );
     }
   };
@@ -194,12 +194,12 @@ export default function LoginPage() {
             {/* REGISTER LINK */}
             <p className="mt-5 text-center text-sm text-gray-600">
               Don't have an account?{" "}
-              <a
-                href="/auth/register"
+              <Link
+                to="/auth/register"
                 className="font-medium text-[#FA5C5C] hover:underline"
               >
                 Register here
-              </a>
+              </Link>
             </p>
           </div>
         </div>
