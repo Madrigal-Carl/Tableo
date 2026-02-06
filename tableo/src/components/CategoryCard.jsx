@@ -1,49 +1,54 @@
 function CategoryCard({ categories, openCriteriaId, setOpenCriteriaId }) {
   if (!categories || categories.length === 0) {
     return (
-      <h1 className="text-4xl font-bold text-gray-300 mb-8">
+      <h1 className="text-4xl font-bold text-gray-300 mt-20 text-center">
         Create Category
       </h1>
     );
   }
 
   return (
-      <div className="bg-white rounded-2xl shadow-lg p-6 w-full h-[520px] overflow-y-auto">
-      {categories.map(cat => {
+    <div className="w-full">
+      {categories.map((cat) => {
         const judges = cat.judges || [];
         const contestants = cat.contestants || [];
 
         return (
           <div key={cat.id} className="mb-8">
 
-            {/* CATEGORY HEADER */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-700">
+            {/* CATEGORY TITLE ROW */}
+            <div className="flex items-center justify-between py-3 border-b border-gray-200">
+              <h2 className="text-2xl font-semibold text-gray-700">
                 {cat.name || "Category Name"}
               </h2>
 
-              {/* CRITERIA DROPDOWN */}
+              {/* CRITERIA */}
               <div className="relative">
                 <button
                   onClick={() =>
-                    setOpenCriteriaId(openCriteriaId === cat.id ? null : cat.id)
+                    setOpenCriteriaId(
+                      openCriteriaId === cat.id ? null : cat.id
+                    )
                   }
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 bg-white shadow-sm"
+                  className="text-sm text-gray-600 hover:text-black"
                 >
                   Criteria ▾
                 </button>
 
                 {openCriteriaId === cat.id && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg p-3 text-sm z-20">
-                    {cat.criteria && cat.criteria.length > 0 ? (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 p-3 text-xs z-20">
+                    {cat.criteria?.length ? (
                       cat.criteria.map((c, i) => (
-                        <div key={i} className="flex justify-between text-xs">
+                        <div
+                          key={i}
+                          className="flex justify-between py-1"
+                        >
                           <span>{c.name}</span>
                           <span>{c.weight}%</span>
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-gray-400 text-center">
+                      <p className="text-gray-400 text-center">
                         No criteria added
                       </p>
                     )}
@@ -53,50 +58,69 @@ function CategoryCard({ categories, openCriteriaId, setOpenCriteriaId }) {
             </div>
 
             {/* TABLE */}
-              <table className="w-full table-fixed border-separate border-spacing-y-2"> 
-              <thead>
-                <tr className="text-sm text-gray-500">
-                  <th className="text-left px-4 w-64">Contestant</th>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="text-sm text-gray-500">
+                    <th className="text-left py-3 w-64">
+                      Contestant
+                    </th>
 
-                  {judges.length > 0
-                    ? judges.map(judge => (
-                        <th key={judge.id} className="text-center">
+                    {judges.length ? (
+                      judges.map((judge) => (
+                        <th
+                          key={judge.id}
+                          className="text-center py-3"
+                        >
                           {judge.name}
                         </th>
                       ))
-                    : (
-                      <th className="text-center text-gray-300" colSpan={4}>
+                    ) : (
+                      <th
+                        className="text-center text-gray-300"
+                        colSpan={5}
+                      >
                         Judges will appear here
                       </th>
-                    )
-                  }
-                </tr>
-              </thead>
-
-              <tbody>
-                {contestants.length > 0 ? (
-                  contestants.map(contestant => (
-                    <tr key={contestant.id} className="bg-gray-50">
-                      <td className="px-4 py-3">
-                        {contestant.name}
-                      </td>
-
-                      {judges.map(judge => (
-                        <td key={judge.id} className="text-center">
-                          <div className="w-6 h-6 mx-auto bg-gray-200 rounded" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr className="bg-gray-50">
-                    <td className="px-4 py-6 text-gray-400" colSpan={judges.length + 1}>
-                      Contestants will appear here
-                    </td>
+                    )}
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+                  {contestants.length ? (
+                    contestants.map((contestant) => (
+                      <tr
+                        key={contestant.id}
+                        className="border-b last:border-b-0"
+                      >
+                        <td className="py-4 text-sm text-gray-700">
+                          {contestant.name}
+                        </td>
+
+                        {judges.map((judge) => (
+                          <td
+                            key={judge.id}
+                            className="py-4 text-center"
+                          >
+                            {/* SCORE PLACEHOLDER */}
+                            <div className="w-6 h-6 mx-auto bg-gray-200" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={judges.length + 1}
+                        className="py-6 text-sm text-gray-400 border-b"
+                      >
+                        Contestants will appear here
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
           </div>
         );
