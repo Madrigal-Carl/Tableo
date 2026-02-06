@@ -2,6 +2,10 @@ const Joi = require('joi');
 
 function validateEvent(req, res, next) {
     const schema = Joi.object({
+        path: Joi.string().uri().optional().messages({
+            'string.base': 'Image path must be a string',
+            'string.uri': 'Image must be a valid URL',
+        }),
         title: Joi.string().required().messages({
             'string.empty': 'Title is required',
             'any.required': 'Title is required'

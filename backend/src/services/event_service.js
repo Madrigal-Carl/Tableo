@@ -14,6 +14,7 @@ async function createEvent({
     timeStart,
     timeEnd,
     location,
+    path,
     stages,
     judges,
     candidates,
@@ -28,6 +29,7 @@ async function createEvent({
                 timeStart,
                 timeEnd,
                 location,
+                path,
                 user_id: userId,
             },
             t
