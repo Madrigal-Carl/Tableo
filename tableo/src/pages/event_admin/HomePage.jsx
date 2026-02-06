@@ -4,29 +4,75 @@ import EventImage1 from "../../assets/pg1.jpg";
 import React, { useState } from "react";
 import { CalendarPlus } from "lucide-react";
 
+import { createEvent } from "../../services/event_service";
+import { validateEvent } from "../../validations/event_validation";
+import { showToast } from "../../utils/swal";
+
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortAZ, setSortAZ] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [events, setEvents] = useState([
-    { id: 1, title: "Mr. & Ms. 2026", description: "...", date: "Feb 01 2060", location: "Araneta, USA", image: EventImage1 },
-    { id: 2, title: "Tech Expo 2026", description: "...", date: "Mar 10 2060", location: "Manila", image: "" },
-  ]);
+  const [events, setEvents] = useState([]);
 
   const [newEvent, setNewEvent] = useState({
     title: "",
     location: "",
     description: "",
     date: "",
-    rounds: 1,
+    timeStart: "",
+    timeEnd: "",
+    stages: 1,
     judges: 1,
     candidates: 1,
+    image: null,
   });
 
   const toggleSort = () => setSortAZ(!sortAZ);
   const [sortOption, setSortOption] = useState("all");
 
+  const handleCreateEvent = async () => {
+    const error = validateEvent(newEvent);
+    if (error) return showToast("error", error);
 
+    try {
+      const formData = new FormData();
+
+      formData.append("title", newEvent.title);
+      formData.append("location", newEvent.location);
+      formData.append("description", newEvent.description);
+      formData.append("date", newEvent.date);
+      formData.append("timeStart", newEvent.timeStart);
+      formData.append("timeEnd", newEvent.timeEnd);
+      formData.append("stages", newEvent.stages);
+      formData.append("judges", newEvent.judges);
+      formData.append("candidates", newEvent.candidates);
+
+      if (newEvent.image) {
+        formData.append("image", newEvent.image);
+      }
+
+      const res = await createEvent(formData);
+
+      setEvents((prev) => [...prev, res.data.event]);
+      showToast("success", "Event created successfully");
+
+      setIsModalOpen(false);
+      setNewEvent({
+        title: "",
+        location: "",
+        description: "",
+        date: "",
+        timeStart: "",
+        timeEnd: "",
+        stages: 1,
+        judges: 1,
+        candidates: 1,
+        image: null,
+      });
+    } catch (err) {
+      showToast("error", err.message || "Failed to create event");
+    }
+  };
 
   const filteredAndSortedEvents = [...events]
     .filter((event) => {
@@ -195,86 +241,95 @@ function HomePage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="time"
-                        className="w-[140px] rounded-full border border-orange-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                        value={newEvent.timeStart}
+                        onChange={(e) =>
+                          setNewEvent({ ...newEvent, timeStart: e.target.value })
+                        }
+                        className="w-[140px] rounded-full border border-orange-300 px-3 py-2"
                       />
+
                       <span className="text-sm text-gray-500">to</span>
+
                       <input
                         type="time"
-                        className="w-[140px] rounded-full border border-orange-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                        value={newEvent.timeEnd}
+                        onChange={(e) =>
+                          setNewEvent({ ...newEvent, timeEnd: e.target.value })
+                        }
+                        className="w-[140px] rounded-full border border-orange-300 px-3 py-2"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* DATE + NUMBER OF ROUNDS */}
+                {/* DATE + NUMBER OF STAGES */}
                 <div className="flex flex-col sm:flex-row sm:gap-4 gap-3 w-full">
                   {/* DATE */}
                   <div className="flex flex-col flex-1 min-w-0">
                     <label className="text-sm text-gray-500 mb-1">Date</label>
-                      <input
-                        type="date"
-                        min={new Date().toISOString().split("T")[0]}
-                        value={newEvent.date}
-                          onChange={(e) => {
-                            const selected = new Date(e.target.value);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split("T")[0]}
+                      value={newEvent.date}
+                      onChange={(e) => {
+                        const selected = new Date(e.target.value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
 
-                            if (selected < today) return;
+                        if (selected < today) return;
 
-                            setNewEvent({ ...newEvent, date: e.target.value });
-                          }}
-                        className="w-full rounded-full border border-orange-300 px-3 py-2"
-                      />
+                        setNewEvent({ ...newEvent, date: e.target.value });
+                      }}
+                      className="w-full rounded-full border border-orange-300 px-3 py-2"
+                    />
                   </div>
 
-                  {/* NUMBER OF ROUNDS */}
+                  {/* NUMBER OF STAGES */}
                   <div className="flex flex-col flex-1 min-w-0">
-                    <label className="text-sm text-gray-500 mb-1">Number of Rounds</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={newEvent.rounds}
-                        onChange={(e) =>
-                          setNewEvent({ ...newEvent, rounds: Math.max(1, Number(e.target.value)) })
-                        }
-                        className="w-full rounded-full border border-orange-300 px-4 py-2"
-                      />
+                    <label className="text-sm text-gray-500 mb-1">Number of Stages</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={newEvent.stages}
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, stages: Math.max(1, Number(e.target.value)) })
+                      }
+                      className="w-full rounded-full border border-orange-300 px-4 py-2"
+                    />
                   </div>
                 </div>
-
 
                 {/* JUDGES + CANDIDATES */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
                     <label className="text-sm text-gray-500 mb-1">Total Judges</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={newEvent.judges}
-                        onChange={(e) =>
-                          setNewEvent({
-                            ...newEvent,
-                            judges: Math.max(1, Number(e.target.value)),
-                          })
-                        }
-                        className="w-full rounded-full border border-orange-300 px-4 py-2"
-                      />
+                    <input
+                      type="number"
+                      min="1"
+                      value={newEvent.judges}
+                      onChange={(e) =>
+                        setNewEvent({
+                          ...newEvent,
+                          judges: Math.max(1, Number(e.target.value)),
+                        })
+                      }
+                      className="w-full rounded-full border border-orange-300 px-4 py-2"
+                    />
                   </div>
                   <div className="flex flex-col">
                     <label className="text-sm text-gray-500 mb-1">Total Candidates</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={newEvent.candidates}
-                        onChange={(e) =>
-                          setNewEvent({
-                            ...newEvent,
-                            candidates: Math.max(1, Number(e.target.value)),
-                          })
-                        }
-                        className="w-full rounded-full border border-orange-300 px-4 py-2"
-                      />
+                    <input
+                      type="number"
+                      min="1"
+                      value={newEvent.candidates}
+                      onChange={(e) =>
+                        setNewEvent({
+                          ...newEvent,
+                          candidates: Math.max(1, Number(e.target.value)),
+                        })
+                      }
+                      className="w-full rounded-full border border-orange-300 px-4 py-2"
+                    />
                   </div>
                 </div>
 
@@ -282,12 +337,22 @@ function HomePage() {
                 <div className="flex flex-col gap-2">
                   <span className="text-xs text-gray-400">Optional</span>
 
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2 rounded-full border border-orange-300 px-4 py-2 text-sm text-orange-500 hover:bg-orange-50 transition"
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="eventImage"
+                    hidden
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, image: e.target.files[0] })
+                    }
+                  />
+
+                  <label
+                    htmlFor="eventImage"
+                    className="w-full flex items-center justify-center gap-2 rounded-full border border-orange-300 px-4 py-2 text-sm text-orange-500 hover:bg-orange-50 transition cursor-pointer"
                   >
                     + Add Image
-                  </button>
+                  </label>
                 </div>
 
                 {/* DESCRIPTION */}
@@ -316,31 +381,7 @@ function HomePage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (!newEvent.title.trim()) return;
-                          setEvents((prev) => [
-                            ...prev,
-                            {
-                              id: Date.now(),
-                              title: newEvent.title,
-                              description: newEvent.description || "No description provided.",
-                              date: newEvent.date,
-                              location: newEvent.location || "TBD",
-                              image: "",
-                            },
-                          ]);
-
-                      setNewEvent({
-                        title: "",
-                        location: "",
-                        description: "",
-                        date: "",
-                        rounds: 1,
-                        judges: 1,
-                        candidates: 1,
-                      });
-                      setIsModalOpen(false);
-                    }}
+                    onClick={handleCreateEvent}
                     className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
                   >
                     Confirm
