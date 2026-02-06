@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  signupVerify,
+  registerVerify,
   forgotPasswordVerify,
-  signupResend,
+  registerResend,
   forgotPasswordRequest,
 } from "../services/auth_service";
 import FullScreenLoader from "../components/FullScreenLoader";
@@ -109,7 +109,7 @@ export default function VerificationModal({
       setLoading(true);
 
       if (type === "signup") {
-        await signupVerify({ email, code });
+        await registerVerify({ email, code });
         showToast("success", "Account verified successfully!");
       } else {
         await forgotPasswordVerify({ email, code });
@@ -136,7 +136,7 @@ export default function VerificationModal({
       setResending(true);
       clearAll();
 
-      if (type === "signup") await signupResend({ email });
+      if (type === "signup") await registerResend({ email });
       else await forgotPasswordRequest({ email });
 
       setCooldown(60);
