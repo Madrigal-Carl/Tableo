@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import CategoryCard from "../../components/CategoryCard";
+import SideNavigation from "../../components/SideNavigation";
+import { ChevronLeft } from "lucide-react";
 
 function CategoryPage() {
   const [categoryName, setCategoryName] = useState("");
@@ -12,6 +14,10 @@ function CategoryPage() {
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
   const [pendingCategory, setPendingCategory] = useState(null);
   const [openCriteriaId, setOpenCriteriaId] = useState(null);
+  const [activeTopTab, setActiveTopTab] = useState("Rounds");
+  const tabs = ["Rounds", "Participants", "Judges"];
+
+  const activeIndex = tabs.indexOf(activeTopTab);
 
   const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
   const [activeRound, setActiveRound] = useState("Round 1");
@@ -74,37 +80,75 @@ function CategoryPage() {
 
   return (
     <>
-      {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 w-full flex justify-between items-center p-4 bg-white shadow-md z-50">
-        <button className="bg-[#FA824C] text-base text-white px-6 py-3 rounded-3xl hover:bg-[#FF9768] font-bold">
-          Back
-        </button>
-        <h1 className="text-4xl font-bold text-gray-800">Event Title</h1>
-        <button
-          className="bg-[#FA824C] text-base text-white px-6 py-3 rounded-3xl hover:bg-[#FF9768] font-bold"
-          onClick={() => setIsCategoryModalOpen(true)}
-        >
-          Add Category
-        </button>
-      </nav>
+    <div className="flex h-screen bg-gray-100">
+            <SideNavigation />
 
       {/* MAIN SECTION */}
-      <section className="w-full h-screen flex flex-col bg-white pt-24 overflow-auto">
-        {/* ROUND TABS */}
-        <div className="flex gap-6 border-b-2 border-gray-200 mb-6 px-6">
-          {rounds.map((round) => (
-            <button
-              key={round}
-              onClick={() => setActiveRound(round)}
-              className={`pb-3 text-sm font-medium transition ${activeRound === round
-                  ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                  : "text-gray-400 hover:text-gray-600"
-                }`}
-            >
-              {round}
-            </button>
-          ))}
+      <section className="flex-1 ml-72 p-8 overflow-y-auto">
+        
+      {/* PAGE HEADER */}
+      <div className="flex items-center justify-between mt-5 mb-14">
+        <div className="flex items-center gap-3 text-gray-700">
+          <ChevronLeft size={30} className="cursor-pointer hover:text-gray-900" />
+          <h1 className="text-4xl font-semibold">Mr. & Mrs. 2026</h1>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between ml-3 mb-8">
+        {/* LEFT TABS */}
+      <div className="relative flex w-fit bg-[#FA824C] p-1 rounded-md overflow-hidden">
+        
+        {/* SLIDING INDICATOR */}
+        <div
+          className="absolute top-1 left-1 h-[40px] bg-white rounded-sm transition-transform duration-300 ease-out"
+          style={{
+            width: "110px",
+            transform: `translateX(${activeIndex * 110}px)`,
+          }}
+        />
+
+        {/* BUTTONS */}
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTopTab(tab)}
+            className={`relative z-10 w-[110px] h-[40px] text-base font-medium transition-colors
+              ${
+                activeTopTab === tab
+                  ? "text-gray-600"
+                  : "text-white"
+              }
+            `}
+          >
+            {tab}
+          </button>
+        ))}
+
+      </div>
+        <button
+          onClick={() => setIsCategoryModalOpen(true)}
+          className="w-fit bg-[#FA824C] p-3 rounded-lg h-[50px] text-white font-medium hover:bg-orange-600 transition"
+        >
+          + Add Category
+        </button>
+      </div>
+
+      {/* ROUND TABS */}
+      <div className="flex gap-6 border-b border-gray-300 mb-6 pl-25">
+        {rounds.map(round => (
+          <button
+            key={round}
+            onClick={() => setActiveRound(round)}
+            className={`pb-3 text-lg font-medium ${
+              activeRound === round
+                ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                : "text-gray-400"
+            }`}
+          >
+            {round}
+          </button>
+        ))}
+      </div>
 
         {/* CATEGORY TABLE */}
         <div className="flex-1 px-6">
@@ -293,6 +337,7 @@ function CategoryPage() {
           </div>
         </div>
       )}
+    </div>
     </>
   );
 }

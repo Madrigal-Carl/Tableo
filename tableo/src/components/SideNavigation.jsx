@@ -1,12 +1,12 @@
 import { useState } from "react";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.svg";
 import { Calendar, Archive, Settings, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 function SideNavigation() {
   const [active, setActive] = useState("Events");
-  const { logout } = useAuth(); // get logout from context
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const navItem = (label, Icon, action) => {
@@ -34,7 +34,7 @@ function SideNavigation() {
     <aside className="fixed top-0 left-0 h-screen w-72 bg-white shadow-xl z-50 flex flex-col p-6">
 
       {/* Logo */}
-      <img src={logo} alt="Tableo Logo" className="w-32 mb-10 self-center" />
+      <img src={logo} alt="Tableo Logo" className="w-50 mt-10 mb-10 self-center" />
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
