@@ -4,7 +4,9 @@ import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
 import FullScreenLoader from "../components/FullScreenLoader";
 import { registerRequest } from "../services/auth_service";
-
+import { me } from "../services/auth_service";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { validateRegister } from "../validations/auth_validation";
 import { showToast } from "../utils/swal";
 
@@ -19,6 +21,8 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -160,9 +164,12 @@ export default function RegisterPage() {
           onClose={() => setShowModal(false)}
           email={form.email}
           type="signup"
-          onSuccess={() => {
-            showToast("success", "Account verified successfully");
-            window.location.href = "/auth";
+          onSuccess={async () => {
+            setShowModal(false);
+            showToast("success", "Account has been successfully created");
+
+            await refreshUser(); // ✅ refresh auth state
+            navigate("/dashboard"); // now ProtectedRoute sees user is authenticated
           }}
         />
       </div>
