@@ -110,7 +110,6 @@ export default function VerificationModal({
 
       if (type === "signup") {
         await registerVerify({ email, code });
-        showToast("success", "Account verified successfully!");
       } else {
         await forgotPasswordVerify({ email, code });
         showToast("success", "Verification successful!");
