@@ -73,3 +73,8 @@ input[type="password"]::-webkit-credentials-auto-fill-button,
 input[type="password"]::-webkit-textfield-decoration-container {
   display: none !important;
 }
+
+.card-cut {
+  clip-path: polygon(70% 0, 100% 0, 100% 100%, 0 100%);
+}
+
