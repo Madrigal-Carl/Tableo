@@ -1,12 +1,12 @@
 import { useState } from "react";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.svg";
 import { Calendar, Archive, Settings, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 function SideNavigation() {
   const [active, setActive] = useState("Events");
-  const { logout } = useAuth(); // get logout from context
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const navItem = (label, Icon, action) => {
