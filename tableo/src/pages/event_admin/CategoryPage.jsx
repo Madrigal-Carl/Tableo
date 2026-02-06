@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CategoryCard from "../../components/CategoryCard";
 import SideNavigation from "../../components/SideNavigation";
+import { ChevronLeft } from "lucide-react";
 
 function CategoryPage() {
   const [categoryName, setCategoryName] = useState("");
@@ -86,26 +87,20 @@ function CategoryPage() {
       <section className="flex-1 ml-72 p-8 overflow-y-auto">
         
       {/* PAGE HEADER */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mt-5 mb-14">
         <div className="flex items-center gap-3 text-gray-700">
-          <button className="text-xl">←</button>
-          <h1 className="text-2xl font-semibold">Mr. & Mrs. 2026</h1>
+          <ChevronLeft size={30} className="cursor-pointer hover:text-gray-900" />
+          <h1 className="text-4xl font-semibold">Mr. & Mrs. 2026</h1>
         </div>
-
-        <button
-          onClick={() => setIsCategoryModalOpen(true)}
-          className="px-4 py-2 rounded-full bg-[#FA824C] text-white text-sm font-medium hover:bg-orange-600"
-        >
-          + Add Category
-        </button>
       </div>
 
-      {/* TOP TABS */}
-      <div className="relative flex w-fit bg-[#FA824C] p-1 mb-4 rounded-md overflow-hidden">
+      <div className="flex items-center justify-between ml-3 mb-8">
+        {/* LEFT TABS */}
+      <div className="relative flex w-fit bg-[#FA824C] p-1 rounded-md overflow-hidden">
         
         {/* SLIDING INDICATOR */}
         <div
-          className="absolute top-1 left-1 h-[32px] bg-white rounded-sm transition-transform duration-300 ease-out"
+          className="absolute top-1 left-1 h-[40px] bg-white rounded-sm transition-transform duration-300 ease-out"
           style={{
             width: "110px",
             transform: `translateX(${activeIndex * 110}px)`,
@@ -117,7 +112,7 @@ function CategoryPage() {
           <button
             key={tab}
             onClick={() => setActiveTopTab(tab)}
-            className={`relative z-10 w-[110px] h-[32px] text-sm font-medium transition-colors
+            className={`relative z-10 w-[110px] h-[40px] text-base font-medium transition-colors
               ${
                 activeTopTab === tab
                   ? "text-gray-600"
@@ -128,15 +123,23 @@ function CategoryPage() {
             {tab}
           </button>
         ))}
+
+      </div>
+        <button
+          onClick={() => setIsCategoryModalOpen(true)}
+          className="w-fit bg-[#FA824C] p-3 rounded-lg h-[50px] text-white font-medium hover:bg-orange-600 transition"
+        >
+          + Add Category
+        </button>
       </div>
 
       {/* ROUND TABS */}
-      <div className="flex gap-6 border-b mb-6">
+      <div className="flex gap-6 border-b border-gray-300 mb-6 pl-25">
         {rounds.map(round => (
           <button
             key={round}
             onClick={() => setActiveRound(round)}
-            className={`pb-3 text-sm font-medium ${
+            className={`pb-3 text-lg font-medium ${
               activeRound === round
                 ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                 : "text-gray-400"

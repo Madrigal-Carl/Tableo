@@ -34,7 +34,7 @@ function SideNavigation() {
     <aside className="fixed top-0 left-0 h-screen w-72 bg-white shadow-xl z-50 flex flex-col p-6">
 
       {/* Logo */}
-      <img src={logo} alt="Tableo Logo" className="w-32 mb-10 self-center" />
+      <img src={logo} alt="Tableo Logo" className="w-50 mt-10 mb-10 self-center" />
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
