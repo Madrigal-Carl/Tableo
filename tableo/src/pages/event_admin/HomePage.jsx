@@ -3,6 +3,7 @@ import CardEvent from "../../components/CreateCardEvent";
 import EventImage1 from "../../assets/pg1.jpg";
 import React, { useState } from "react";
 import { CalendarPlus } from "lucide-react";
+import { addEvent } from "../../services/auth_service";
 
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -211,35 +212,35 @@ function HomePage() {
                   {/* DATE */}
                   <div className="flex flex-col flex-1 min-w-0">
                     <label className="text-sm text-gray-500 mb-1">Date</label>
-                      <input
-                        type="date"
-                        min={new Date().toISOString().split("T")[0]}
-                        value={newEvent.date}
-                          onChange={(e) => {
-                            const selected = new Date(e.target.value);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split("T")[0]}
+                      value={newEvent.date}
+                      onChange={(e) => {
+                        const selected = new Date(e.target.value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
 
-                            if (selected < today) return;
+                        if (selected < today) return;
 
-                            setNewEvent({ ...newEvent, date: e.target.value });
-                          }}
-                        className="w-full rounded-full border border-orange-300 px-3 py-2"
-                      />
+                        setNewEvent({ ...newEvent, date: e.target.value });
+                      }}
+                      className="w-full rounded-full border border-orange-300 px-3 py-2"
+                    />
                   </div>
 
                   {/* NUMBER OF ROUNDS */}
                   <div className="flex flex-col flex-1 min-w-0">
                     <label className="text-sm text-gray-500 mb-1">Number of Rounds</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={newEvent.rounds}
-                        onChange={(e) =>
-                          setNewEvent({ ...newEvent, rounds: Math.max(1, Number(e.target.value)) })
-                        }
-                        className="w-full rounded-full border border-orange-300 px-4 py-2"
-                      />
+                    <input
+                      type="number"
+                      min="1"
+                      value={newEvent.rounds}
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, rounds: Math.max(1, Number(e.target.value)) })
+                      }
+                      className="w-full rounded-full border border-orange-300 px-4 py-2"
+                    />
                   </div>
                 </div>
 
@@ -248,33 +249,33 @@ function HomePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
                     <label className="text-sm text-gray-500 mb-1">Total Judges</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={newEvent.judges}
-                        onChange={(e) =>
-                          setNewEvent({
-                            ...newEvent,
-                            judges: Math.max(1, Number(e.target.value)),
-                          })
-                        }
-                        className="w-full rounded-full border border-orange-300 px-4 py-2"
-                      />
+                    <input
+                      type="number"
+                      min="1"
+                      value={newEvent.judges}
+                      onChange={(e) =>
+                        setNewEvent({
+                          ...newEvent,
+                          judges: Math.max(1, Number(e.target.value)),
+                        })
+                      }
+                      className="w-full rounded-full border border-orange-300 px-4 py-2"
+                    />
                   </div>
                   <div className="flex flex-col">
                     <label className="text-sm text-gray-500 mb-1">Total Candidates</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={newEvent.candidates}
-                        onChange={(e) =>
-                          setNewEvent({
-                            ...newEvent,
-                            candidates: Math.max(1, Number(e.target.value)),
-                          })
-                        }
-                        className="w-full rounded-full border border-orange-300 px-4 py-2"
-                      />
+                    <input
+                      type="number"
+                      min="1"
+                      value={newEvent.candidates}
+                      onChange={(e) =>
+                        setNewEvent({
+                          ...newEvent,
+                          candidates: Math.max(1, Number(e.target.value)),
+                        })
+                      }
+                      className="w-full rounded-full border border-orange-300 px-4 py-2"
+                    />
                   </div>
                 </div>
 
@@ -318,17 +319,17 @@ function HomePage() {
                     type="button"
                     onClick={() => {
                       if (!newEvent.title.trim()) return;
-                          setEvents((prev) => [
-                            ...prev,
-                            {
-                              id: Date.now(),
-                              title: newEvent.title,
-                              description: newEvent.description || "No description provided.",
-                              date: newEvent.date,
-                              location: newEvent.location || "TBD",
-                              image: "",
-                            },
-                          ]);
+                      setEvents((prev) => [
+                        ...prev,
+                        {
+                          id: Date.now(),
+                          title: newEvent.title,
+                          description: newEvent.description || "No description provided.",
+                          date: newEvent.date,
+                          location: newEvent.location || "TBD",
+                          image: "",
+                        },
+                      ]);
 
                       setNewEvent({
                         title: "",

@@ -31,3 +31,7 @@ export const forgotPasswordVerify = (data) => {
 export const forgotPasswordReset = (data) => {
     return api.post("/auth/password/reset", data);
 };
+
+export const addEvent = (data) => {
+    return api.post("/events", data);
+};
