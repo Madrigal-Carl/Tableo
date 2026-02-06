@@ -31,7 +31,7 @@ function SideNavigation() {
       <img
         src={logo}
         alt="Tableo Logo"
-        className="w-32 mb-10 self-center"
+        className="w-36 mb-10 self-center mt-10"
       />
 
       {/* Navigation */}

@@ -8,7 +8,7 @@ function CategoryCard({ categories, openCriteriaId, setOpenCriteriaId }) {
   }
 
   return (
-      <div className="bg-white rounded-2xl shadow-lg p-6 w-full h-[520px] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-lg p-6 w-full h-[700px] overflow-y-auto">
       {categories.map(cat => {
         const judges = cat.judges || [];
         const contestants = cat.contestants || [];

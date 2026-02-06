@@ -1,11 +1,11 @@
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.svg";
 
 function Navigation() {
 
   return (
     <nav className="fixed top-0 left-0 w-full flex justify-between items-center p-4 bg-white shadow-md z-50">
       {/* Logo */}
-      <img src={logo} alt="Tableo Logo" className="w-30" />
+      <img src={logo} alt="Tableo Logo" className="w-50" />
 
       {/* RIGHT SIDE */}
         <div className="flex space-x-6 items-center">
