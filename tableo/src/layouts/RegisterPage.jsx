@@ -4,9 +4,9 @@ import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
 import FullScreenLoader from "../components/FullScreenLoader";
 import { registerRequest } from "../services/auth_service";
-import { me } from "../services/auth_service";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+
 import { validateRegister } from "../validations/auth_validation";
 import { showToast } from "../utils/swal";
 
