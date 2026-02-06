@@ -5,7 +5,6 @@ async function createEvent(req, res, next) {
         const userId = req.user.id;
         const event = await eventService.createEvent({
             ...req.body,
-            path: req.file?.path || null,
             userId,
         });
 
@@ -45,12 +44,7 @@ async function updateEvent(req, res, next) {
         const userId = req.user.id;
         const eventId = req.params.eventId;
 
-        const payload = {
-            ...req.body,
-            ...(req.file?.path && { path: req.file.path }),
-        };
-
-        const result = await eventService.updateEvent(eventId, userId, payload);
+        const result = await eventService.updateEvent(eventId, userId, req.body);
 
         res.json({ message: 'Event updated successfully', event: result });
     } catch (err) {

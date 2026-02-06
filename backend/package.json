@@ -16,7 +16,6 @@
   "type": "commonjs",
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
@@ -24,8 +23,6 @@
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
-    "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^2.2.1",
     "mysql2": "^3.16.2",
     "nodemailer": "^7.0.13",
     "sequelize": "^6.37.7",
