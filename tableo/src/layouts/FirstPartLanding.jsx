@@ -16,11 +16,11 @@ function FirstPartLanding() {
           {/* LEFT CONTENT */}
           <div className="w-[55%] flex items-center ml-5">
             <div className="max-w-xl ml-2">
-              <p className="text-lg tracking-widest text-gray-500 mb-4">
+              <p className="tracking-widest text-gray-500 mb-4">
                 TABLEO EVENT TABULATION SYSTEM
               </p>
 
-              <h1 className="flex flex-col text-9xl font-medium leading-tight text-gray-900 mb-5">
+              <h1 className="flex flex-col text-9xl font-medium text-gray-900 mb-5">
                 <p>Fast.</p>
                 <p>Fair.</p>
                 <p>Flawless.</p>
@@ -50,7 +50,7 @@ function FirstPartLanding() {
                 className="px-8 py-4 text-base text-gray-700 focus:outline-none rounded-4xl bg-white text-center"
               />
               <button className="px-8 py-4 text-sm font-semibold hover:cursor-pointer ">
-                JOIN JUDGING
+                JOIN EVENT
               </button>
             </div>
           </div>
