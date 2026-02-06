@@ -23,3 +23,7 @@ export const updateEvent = (eventId, data) => {
         },
     });
 };
+
+export const getAllEvents = () => {
+    return api.get("/events");
+};

@@ -60,5 +60,15 @@ async function updateEvent(req, res, next) {
     }
 }
 
+async function getAllEvents(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const events = await eventService.getAllEvents(userId);
+        res.json({ events });
+    } catch (err) {
+        next(err);
+    }
+}
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent };
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };

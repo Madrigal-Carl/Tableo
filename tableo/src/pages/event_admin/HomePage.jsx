@@ -1,10 +1,9 @@
 import SideNavigation from "../../components/SideNavigation";
 import CardEvent from "../../components/CreateCardEvent";
-import EventImage1 from "../../assets/pg1.jpg";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CalendarPlus } from "lucide-react";
 
-import { createEvent } from "../../services/event_service";
+import { createEvent, getAllEvents } from "../../services/event_service";
 import { validateEvent } from "../../validations/event_validation";
 import { showToast } from "../../utils/swal";
 
@@ -29,6 +28,24 @@ function HomePage() {
 
   const toggleSort = () => setSortAZ(!sortAZ);
   const [sortOption, setSortOption] = useState("all");
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await getAllEvents();
+        // Fix image URL if backend returns relative path
+        const formattedEvents = res.data.events.map((ev) => ({
+          ...ev,
+          image: ev.path ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}` : null
+        }));
+        setEvents(formattedEvents);
+      } catch (err) {
+        showToast("error", err.message || "Failed to load events");
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const handleCreateEvent = async () => {
     const error = validateEvent(newEvent);

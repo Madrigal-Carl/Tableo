@@ -79,4 +79,9 @@ async function updateEvent(eventId, userId, payload) {
     });
 }
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent };
+async function getAllEvents(userId) {
+    const events = await eventRepo.findByUser(userId);
+    return events;
+}
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };

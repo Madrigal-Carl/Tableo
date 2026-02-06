@@ -18,4 +18,7 @@ router.delete('/:eventId', requireAuth, eventController.deleteEvent);
 // Update Event
 router.put('/:eventId', requireAuth, upload.single('image'), validateEvent, eventController.updateEvent);
 
+// Get All Events
+router.get('/', requireAuth, eventController.getAllEvents);
+
 module.exports = router;
