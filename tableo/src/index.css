@@ -75,6 +75,6 @@ input[type="password"]::-webkit-textfield-decoration-container {
 }
 
 .card-cut {
-  clip-path: polygon(70% 0, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(75% 0, 100% 0, 100% 100%, 0 100%);
 }
 

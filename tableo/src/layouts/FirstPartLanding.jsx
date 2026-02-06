@@ -2,7 +2,7 @@ import Crown from "../assets/Crown pic.svg";
 
 function FirstPartLanding() {
   return (
-    <section className="w-full  min-h-screen flex items-center justify-center">
+    <section className="w-full  min-h-screen flex items-center justify-center px-12">
 
       {/* FULL PAGE CARD */}
       <div className="relative w-[96%] h-[86vh] mt-14 bg-white rounded-2xl overflow-hidden">
@@ -14,16 +14,16 @@ function FirstPartLanding() {
         <div className="relative z-10 flex h-full">
 
           {/* LEFT CONTENT */}
-          <div className="w-[55%] flex items-center px-16">
-            <div className="max-w-xl">
-              <p className="text-lg tracking-widest text-gray-500 mb-8">
+          <div className="w-[55%] flex items-center ml-5">
+            <div className="max-w-xl ml-2">
+              <p className="text-lg tracking-widest text-gray-500 mb-4">
                 TABLEO EVENT TABULATION SYSTEM
               </p>
 
-              <h1 className="text-8xl font-medium leading-tight text-gray-900 mb-10">
-                Fast.<br />
-                Fair.<br />
-                Flawless.
+              <h1 className="flex flex-col text-9xl font-medium leading-tight text-gray-900 mb-5">
+                <p>Fast.</p>
+                <p>Fair.</p>
+                <p>Flawless.</p>
               </h1>
 
               <p className="text-gray-500 text-lg leading-relaxed">
@@ -37,7 +37,7 @@ function FirstPartLanding() {
 
           {/* RIGHT CONTENT */}
           <div className="w-[45%] flex flex-col items-center justify-center text-white px-18 py-4">
-            <img src={Crown} alt="Crown" className="w-[600px] " />
+            <img src={Crown} alt="Crown" className="w-[650px] -mt-10" />
 
             <p className="text-5xl font-semibold mt-6">
               Enter Code Here
