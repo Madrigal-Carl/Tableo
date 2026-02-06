@@ -3,7 +3,7 @@ import { Eye, EyeOff } from "lucide-react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import VerificationModal from "../components/VerificationModal";
 import FullScreenLoader from "../components/FullScreenLoader";
-import { signupRequest } from "../services/auth_service";
+import { registerRequest } from "../services/auth_service";
 
 import { validateRegister } from "../validations/auth_validation";
 import { showToast } from "../utils/swal";
@@ -34,7 +34,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      await signupRequest(form);
+      await registerRequest(form);
 
       showToast("success", "Verification code sent");
       setShowModal(true);

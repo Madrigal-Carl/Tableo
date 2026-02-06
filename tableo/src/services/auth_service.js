@@ -1,15 +1,15 @@
 import api from "./api";
 
-export const signupRequest = (data) => {
-    return api.post("/auth/signup", data);
+export const registerRequest = (data) => {
+    return api.post("/auth/register", data);
 };
 
-export const signupVerify = (data) => {
-    return api.post("/auth/signup/verify", data);
+export const registerVerify = (data) => {
+    return api.post("/auth/register/verify", data);
 };
 
-export const signupResend = (data) => {
-    return api.post("/auth/signup/resend", data);
+export const registerResend = (data) => {
+    return api.post("/auth/register/resend", data);
 };
 
 export const login = (data) => {
