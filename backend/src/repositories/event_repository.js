@@ -45,6 +45,18 @@ function update(id, data, transaction) {
     });
 }
 
+async function findByUser(userId) {
+    return Event.findAll({
+        where: { user_id: userId },
+        include: [
+            { model: sequelize.models.Stage, as: 'stages' },
+            { model: sequelize.models.Judge, as: 'judges' },
+            { model: sequelize.models.Candidate, as: 'candidates' },
+        ],
+        order: [['date', 'ASC']],
+    });
+}
+
 module.exports = {
     create,
     findById,

@@ -81,7 +81,14 @@ async function updateEvent(eventId, userId, payload) {
 
 async function getAllEvents(userId) {
     const events = await eventRepo.findByUser(userId);
-    return events;
+
+    return events.map(ev => ({
+        ...ev.toJSON(),
+        stages: ev.stages.length,
+        judges: ev.judges.length,
+        candidates: ev.candidates.length,
+    }));
 }
+
 
 module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };
