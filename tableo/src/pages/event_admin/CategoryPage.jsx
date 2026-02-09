@@ -2,13 +2,8 @@ import React, { useEffect, useState } from "react";
 import CategoryCard from "../../components/CategoryCard";
 import SideNavigation from "../../components/SideNavigation";
 import { ChevronLeft } from "lucide-react";
-<<<<<<< HEAD
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getEvent } from "../../services/event_service"; // optional if fetching API
-=======
-import ViewOnlyTable from "../../components/ViewOnlyTable";
-
->>>>>>> main
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -168,23 +163,9 @@ function CategoryPage() {
     setIsCriteriaModalOpen(false);
   };
 
-<<<<<<< HEAD
   // ============================
   // RENDER
   // ============================
-=======
-  const participants = [
-    { id: 1, name: "Juan Dela Cruz", gender: "Male" },
-    { id: 2, name: "Maria Clara", gender: "Female" },
-  ];
-
-  const judges = [
-    { id: 1, name: "Judge A", gender: "Male" },
-    { id: 2, name: "Judge B", gender: "Female" },
-  ];
-
-
->>>>>>> main
   return (
     <div className="flex h-screen bg-gray-100">
       <SideNavigation />
@@ -209,7 +190,6 @@ function CategoryPage() {
           </p>
         </div>
 
-<<<<<<< HEAD
         {/* TOP TABS */}
         <div className="flex items-center justify-between mb-8">
           <div className="relative flex bg-[#FA824C] p-1 rounded-md overflow-hidden">
@@ -231,20 +211,6 @@ function CategoryPage() {
               </button>
             ))}
           </div>
-=======
-      <div className="flex items-center justify-between ml-3 mb-8">
-        {/* LEFT TABS */}
-      <div className="relative flex w-fit bg-[#FA824C] p-1 rounded-2xl overflow-hidden">
-        
-        {/* SLIDING INDICATOR */}
-        <div
-          className="absolute top-1 left-1 h-[40px] bg-white rounded-2xl transition-transform duration-300 ease-out"
-          style={{
-            width: "110px",
-            transform: `translateX(${activeIndex * 110}px)`,
-          }}
-        />
->>>>>>> main
 
           <button
             onClick={() => {
@@ -258,7 +224,6 @@ function CategoryPage() {
           </button>
         </div>
 
-<<<<<<< HEAD
         {/* ROUND TABS */}
         <div className="flex gap-6 border-b border-gray-300 mb-6 pl-6">
           {rounds.map((round) => (
@@ -281,68 +246,6 @@ function CategoryPage() {
           openCriteriaId={openCriteriaId}
           setOpenCriteriaId={setOpenCriteriaId}
         />
-=======
-      </div>
-        <button
-          onClick={() => setIsCategoryModalOpen(true)}
-          className="w-fit bg-[#FA824C] p-3 rounded-lg h-[50px] text-white font-medium hover:bg-orange-600 transition"
-        >
-          + Add Category
-        </button>
-      </div>
-
-        {/* TAB CONTENT */}
-
-        {activeTopTab === "Rounds" && (
-          <>
-            {/* ROUND SELECTOR */}
-            <div className="flex gap-3 mb-6 px-6 border-b border-gray-200">
-              {rounds.map((round) => (
-                <button
-                  key={round}
-                  onClick={() => setActiveRound(round)}
-                  className={`px-4 py-2 text-sm font-medium transition
-                    ${
-                      activeRound === round
-                        ? "text-[#FA824C] border-b-2 border-[#FA824C]"
-                        : "text-gray-500 hover:text-[#FA824C] hover:border-b-2"
-                    }`}
-                >
-                  {round}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex-1 px-6">
-              <CategoryCard
-                categories={filteredCategories}
-                openCriteriaId={openCriteriaId}
-                setOpenCriteriaId={setOpenCriteriaId}
-              />
-            </div>
-          </>
-        )}
-
-        {activeTopTab === "Participants" && (
-          <ViewOnlyTable
-            title="Participants"
-            data={participants}
-            nameLabel="Name"
-            editable
-            onEdit={(p) => console.log("Edit", p)}
-            onDelete={(p) => console.log("Delete", p)}
-          />
-        )}
-
-        {activeTopTab === "Judges" && (
-          <ViewOnlyTable
-            title="Judges"
-            data={judges}
-            nameLabel="Judge Name"
-          />
-        )}
-
->>>>>>> main
       </section>
 
       {/* CATEGORY MODAL */}
