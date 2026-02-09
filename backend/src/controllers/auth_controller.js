@@ -36,7 +36,7 @@ async function login(req, res, next) {
 
 async function logout(req, res, next) {
     try {
-        await authService.logout(res);
+        await authService.logout(res, req.user.id);
         res.status(200).json({ message: 'Logged out successfully' });
     } catch (err) { next(err); }
 }
