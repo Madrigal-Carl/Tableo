@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import { createEvent, getAllEvents, deleteEvent, updateEvent } from "../../services/event_service";
 import { validateEvent } from "../../validations/event_validation";
 import { showToast } from "../../utils/swal";
+import { useNavigate } from "react-router-dom";
 
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,6 +15,7 @@ function HomePage() {
   const [sortAZ, setSortAZ] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState([]);
+  const navigate = useNavigate();
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -327,7 +329,7 @@ function HomePage() {
               description={event.description}
               date={event.date}
               location={event.location}
-              onClick={() => { }}
+              onClick={() => navigate(`/categories/${event.id}`)}
               onEdit={() => openEditModal(event)}
               onDelete={() => handleDeleteEvent(event.id)}
             >
