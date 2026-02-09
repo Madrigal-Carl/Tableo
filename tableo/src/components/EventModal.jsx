@@ -91,7 +91,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                             <input
                                 type="number"
                                 min="1"
-                                value={eventData.stages || 1}
+                                value={eventData.stages ?? 1}
                                 onChange={e => setEventData({ ...eventData, stages: Math.max(1, Number(e.target.value)) })}
                                 className="w-full rounded-full border border-orange-300 px-4 py-2"
                             />
@@ -101,7 +101,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                             <input
                                 type="number"
                                 min="1"
-                                value={eventData.judges || 1}
+                                value={eventData.judges ?? 1}
                                 onChange={e => setEventData({ ...eventData, judges: Math.max(1, Number(e.target.value)) })}
                                 className="w-full rounded-full border border-orange-300 px-4 py-2"
                             />
@@ -111,7 +111,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                             <input
                                 type="number"
                                 min="1"
-                                value={eventData.candidates || 1}
+                                value={eventData.candidates ?? 1}
                                 onChange={e => setEventData({ ...eventData, candidates: Math.max(1, Number(e.target.value)) })}
                                 className="w-full rounded-full border border-orange-300 px-4 py-2"
                             />
