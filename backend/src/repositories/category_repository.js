@@ -12,7 +12,7 @@ function findByEvent(eventId) {
         model: Stage,
         as: "stages",
         through: { attributes: [] },
-        attributes: ["id", "round"],
+        attributes: ["id", "name"],
       },
     ],
     order: [["id", "ASC"]],

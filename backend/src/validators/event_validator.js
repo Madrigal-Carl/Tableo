@@ -6,11 +6,14 @@ function validateEvent(req, res, next) {
             'string.base': 'Image path must be a string',
             'string.uri': 'Image must be a valid URL',
         }),
-        title: Joi.string().required().messages({
+        title: Joi.string().max(100).required().messages({
             'string.empty': 'Title is required',
+            'string.max': 'Title cannot exceed 100 characters',
             'any.required': 'Title is required'
         }),
-        description: Joi.string().allow('', null),
+        description: Joi.string().max(500).allow('', null).messages({
+            'string.max': 'Description cannot exceed 500 characters'
+        }),
         date: Joi.date()
             .required()
             .custom((value, helpers) => {
@@ -38,8 +41,9 @@ function validateEvent(req, res, next) {
             'string.pattern.base': 'End time must be in HH:MM 24-hour format',
             'any.required': 'End time is required'
         }),
-        location: Joi.string().required().messages({
+        location: Joi.string().max(200).required().messages({
             'string.empty': 'Location is required',
+            'string.max': 'Location cannot exceed 200 characters',
             'any.required': 'Location is required'
         }),
         stages: Joi.number().integer().min(1).max(20).required().messages({
