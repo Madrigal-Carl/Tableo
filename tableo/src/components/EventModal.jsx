@@ -39,23 +39,18 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                         />
                     </div>
 
-                    {/* IMAGE UPLOAD */}
+                    {/* LOCATION */}
                     <div className="flex flex-col">
-                        <label className="text-sm text-gray-500 mb-1">Event Image</label>
+                        <label className="text-sm text-gray-500 mb-1">Location</label>
                         <input
-                            type="file"
-                            accept="image/*"
-                            onChange={e =>
-                                setEventData({ ...eventData, image: e.target.files[0] || null })
+                            type="text"
+                            value={eventData.location || ""}
+                            onChange={(e) =>
+                                setEventData({ ...eventData, location: e.target.value })
                             }
-                            className="text-sm"
+                            className="w-full rounded-full border border-orange-300 px-4 py-2"
+                            placeholder="Event location"
                         />
-
-                        {preview && (
-                            <div className="mt-3 w-full h-40 rounded-xl overflow-hidden border border-orange-200">
-                                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                            </div>
-                        )}
                     </div>
 
                     {/* DATE */}
@@ -121,6 +116,25 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                                 className="w-full rounded-full border border-orange-300 px-4 py-2"
                             />
                         </div>
+                    </div>
+
+                    {/* IMAGE UPLOAD */}
+                    <div className="flex flex-col">
+                        <label className="text-sm text-gray-500 mb-1">Event Image</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={e =>
+                                setEventData({ ...eventData, image: e.target.files[0] || null })
+                            }
+                            className="text-sm"
+                        />
+
+                        {preview && (
+                            <div className="mt-3 w-full h-40 rounded-xl overflow-hidden border border-orange-200">
+                                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                            </div>
+                        )}
                     </div>
 
                     {/* DESCRIPTION */}

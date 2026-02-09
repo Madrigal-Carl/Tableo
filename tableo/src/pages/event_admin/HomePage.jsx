@@ -4,7 +4,7 @@ import EventModal from "../../components/EventModal";
 import React, { useState, useEffect } from "react";
 import { CalendarPlus } from "lucide-react";
 import Swal from "sweetalert2";
-import { createEvent, getAllEvents, deleteEvent } from "../../services/event_service";
+import { createEvent, getAllEvents, deleteEvent, updateEvent } from "../../services/event_service";
 import { validateEvent } from "../../validations/event_validation";
 import { showToast } from "../../utils/swal";
 
@@ -51,6 +51,7 @@ function HomePage() {
       ? new Date(event.date).toISOString().split("T")[0]
       : "";
     setNewEvent({
+      id: event.id,
       title: event.title,
       location: event.location,
       description: event.description,
@@ -66,8 +67,44 @@ function HomePage() {
   };
 
   const handleUpdateEvent = async () => {
-    showToast("info", "Update logic not implemented yet");
-    setIsModalOpen(false);
+    const error = validateEvent(newEvent);
+    if (error) return showToast("error", error);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("title", newEvent.title);
+      formData.append("location", newEvent.location);
+      formData.append("description", newEvent.description);
+      formData.append("date", newEvent.date);
+      formData.append("timeStart", newEvent.timeStart);
+      formData.append("timeEnd", newEvent.timeEnd);
+      formData.append("stages", newEvent.stages);
+      formData.append("judges", newEvent.judges);
+      formData.append("candidates", newEvent.candidates);
+
+      if (newEvent.image && typeof newEvent.image !== "string") {
+        formData.append("image", newEvent.image);
+      }
+
+      const res = await updateEvent(newEvent.id, formData);
+
+      const updatedEvent = {
+        ...res.data.event,
+        image: res.data.event.path
+          ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${res.data.event.path}`
+          : newEvent.image,
+      };
+
+      setEvents((prev) =>
+        prev.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
+      );
+
+      showToast("success", "Event updated successfully");
+      setIsModalOpen(false);
+    } catch (err) {
+      showToast("error", err.message || "Failed to update event");
+    }
   };
 
   const toggleSort = () => setSortAZ(!sortAZ);

@@ -64,7 +64,7 @@ async function getEvent(eventId, userId) {
 
 async function updateEvent(eventId, userId, payload) {
     return sequelize.transaction(async (t) => {
-        const event = await eventRepo.findById(eventId, t);
+        const event = await eventRepo.findByIdWithRelations(eventId, t);
 
         if (!event) throw new Error('Event not found');
         if (event.user_id !== userId) throw new Error('Unauthorized');
@@ -75,9 +75,18 @@ async function updateEvent(eventId, userId, payload) {
         await judgeService.createOrUpdate(eventId, payload.judges, t);
         await stageService.createOrUpdate(eventId, payload.stages, t);
 
-        return event;
+        // 🔥 REFRESH relations
+        const updated = await eventRepo.findByIdWithRelations(eventId, t);
+
+        return {
+            ...updated.toJSON(),
+            stages: updated.stages.length,
+            judges: updated.judges.length,
+            candidates: updated.candidates.length,
+        };
     });
 }
+
 
 async function getAllEvents(userId) {
     const events = await eventRepo.findByUser(userId);
