@@ -76,7 +76,7 @@ function ViewOnlyTable({
                     {nameLabel}
                   </th>
                   <th className="text-left py-3 w-32">
-                    Gender
+                    Sex
                   </th>
                   <th className="text-center py-3 w-32">
                     Actions
