@@ -29,7 +29,7 @@ createRoot(document.getElementById('root')).render(
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<HomePage />} />
             <Route path="/judge" element={<JudgePage />} />
-            <Route path="/categories" element={<CategoryPage />} />
+            <Route path="/categories/:eventId" element={<CategoryPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
