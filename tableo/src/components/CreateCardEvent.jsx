@@ -41,17 +41,18 @@ function CreateCardEvent({
         </button>
       </div>
 
-      {/* IMAGE */}
       <div className="absolute inset-0 w-full h-full">
         <div className="w-full h-full">
-          {children && (
-            <div className="w-full h-full">
-              {React.isValidElement(children)
-                ? React.cloneElement(children, {
-                  className: `${children.props.className ?? ""} w-full h-full object-cover`,
-                })
-                : children}
-            </div>
+          {children && React.isValidElement(children) ? (
+            React.cloneElement(children, {
+              className: `${children.props.className ?? ""} w-full h-full object-cover`,
+            })
+          ) : (
+            <img
+              src={`${import.meta.env.VITE_ASSET_URL}/uploads/images/default_event_img.jpg`}
+              alt="Default Event"
+              className="w-full h-full object-cover"
+            />
           )}
         </div>
 

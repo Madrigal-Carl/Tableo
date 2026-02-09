@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import CategoryCard from "../../components/CategoryCard";
 import SideNavigation from "../../components/SideNavigation";
+import ViewOnlyTable from "../../components/ViewOnlyTable";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getEvent } from "../../services/event_service"; // optional if fetching API
+import { getEvent } from "../../services/event_service";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -216,40 +217,79 @@ function CategoryPage() {
             ))}
           </div>
 
-          <button
-            onClick={() => {
-              resetCategoryForm();
-              resetCriteriaForm();
-              setIsCategoryModalOpen(true);
-            }}
-            className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
-          >
-            + Add Category
-          </button>
-        </div>
-
-        {/* ROUND TABS */}
-        <div className="flex gap-6 border-b border-gray-300 mb-6 pl-6">
-          {rounds.map((round) => (
+          {activeTopTab === "Rounds" && (
             <button
-              key={round}
-              onClick={() => setActiveRound(round)}
-              className={`pb-3 text-lg font-medium ${activeRound === round
-                  ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                  : "text-gray-400"
-                }`}
+              onClick={() => {
+                resetCategoryForm();
+                resetCriteriaForm();
+                setIsCategoryModalOpen(true);
+              }}
+              className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
             >
-              {round}
+              + Add Category
             </button>
-          ))}
+          )}
         </div>
 
-        {/* CATEGORY LIST */}
-        <CategoryCard
-          categories={filteredCategories}
-          openCriteriaId={openCriteriaId}
-          setOpenCriteriaId={setOpenCriteriaId}
-        />
+        {/* ROUND TABS & CATEGORY LIST only for Rounds */}
+        {activeTopTab === "Rounds" && (
+          <>
+            {/* ROUND TABS */}
+            <div className="flex gap-6 border-b border-gray-300 mb-6 pl-6">
+              {rounds.map((round, idx) => {
+                const isActive = activeRound === round || (!activeRound && idx === 0);
+                return (
+                  <button  
+                    key={round}
+                    onClick={() => setActiveRound(round)}
+                    className={`pb-3 text-lg font-medium ${
+                      isActive
+                        ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {round}
+                  </button>
+                );
+              })}
+    </div>
+
+    {/* CATEGORY LIST */}
+    <CategoryCard
+      categories={filteredCategories}
+      openCriteriaId={openCriteriaId}
+      setOpenCriteriaId={setOpenCriteriaId}
+    />
+  </>
+)}
+
+{/* Participants Tab */}
+{activeTopTab === "Participants" && (
+  <div className="px-6">
+    <ViewOnlyTable
+      title="Participants"
+      data={event.participants || []}
+      nameLabel="Name"
+      editable
+      onEdit={(p) => console.log("Edit", p)}
+      onDelete={(p) => console.log("Delete", p)}
+    />
+  </div>
+)}
+
+{/* Judges Tab */}
+{activeTopTab === "Judges" && (
+  <div className="px-6">
+    <ViewOnlyTable
+      title="Judges"
+      data={event.judges || []}
+      nameLabel="Judge Name"
+      editable
+      onEdit={(j) => console.log("Edit", j)}
+      onDelete={(j) => console.log("Delete", j)}
+    />
+  </div>
+)}
       </section>
 
       {/* CATEGORY MODAL */}
