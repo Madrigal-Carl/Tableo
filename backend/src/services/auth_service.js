@@ -91,9 +91,15 @@ async function login({ email, password, rememberMe }, res) {
     return { message: 'Login successful', user };
 }
 
-async function logout(res) {
+async function logout(res, userId) {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
+    if (userId) {
+        const user = await userRepository.findById(userId);
+        if (user) {
+            await user.update({ rememberMe: false });
+        }
+    }
     return { message: 'Logged out successfully' };
 }
 
