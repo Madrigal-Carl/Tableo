@@ -39,8 +39,8 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      sex: {
-        type: Sequelize.ENUM('male', 'female'),
+      suffix: {
+        type: Sequelize.ENUM('mr', 'mrs', 'ms'),
         allowNull: true,
       },
       created_at: {

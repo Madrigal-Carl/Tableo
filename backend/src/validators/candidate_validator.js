@@ -6,9 +6,9 @@ function validateCandidate(req, res, next) {
             'string.empty': 'Candidate name is required',
             'any.required': 'Candidate name is required',
         }),
-        sex: Joi.string().valid('male', 'female').required().messages({
-            'any.only': 'Sex must be either "male" or "female"',
-            'any.required': 'Sex is required',
+        suffix: Joi.string().valid('mr', 'mrs', 'ms').required().messages({
+            'any.only': 'Suffix must be either "male" or "female"',
+            'any.required': 'Suffix is required',
         })
     });
 
