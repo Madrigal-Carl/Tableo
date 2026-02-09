@@ -11,11 +11,23 @@ function validateEvent(req, res, next) {
             'any.required': 'Title is required'
         }),
         description: Joi.string().allow('', null),
-        date: Joi.date().min('now').required().messages({
-            'date.base': 'Date must be a valid date',
-            'date.min': 'Event date must be today or later',
-            'any.required': 'Date is required',
-        }),
+        date: Joi.date()
+            .required()
+            .custom((value, helpers) => {
+                const inputDate = new Date(value);
+                const today = new Date();
+                inputDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+                if (inputDate < today) {
+                    return helpers.error('date.min');
+                }
+                return value;
+            })
+            .messages({
+                'date.base': 'Date must be a valid date',
+                'date.min': 'Event date must be today or later',
+                'any.required': 'Date is required',
+            }),
         timeStart: Joi.string().pattern(/^([01]\d|2[0-3]):[0-5]\d$/).required().messages({
             'string.empty': 'Start time is required',
             'string.pattern.base': 'Start time must be in HH:MM 24-hour format',
