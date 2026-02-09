@@ -26,6 +26,7 @@ function CategoryPage() {
   const [categoryName, setCategoryName] = useState("");
   const [categoryWeight, setCategoryWeight] = useState("");
   const [maxScore, setMaxScore] = useState("");
+  const [selectedRound, setSelectedRound] = useState("");
 
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
   const [pendingCategory, setPendingCategory] = useState(null);
@@ -48,7 +49,10 @@ function CategoryPage() {
         setEvent(evt);
 
         if (evt.categories?.length) setCategories(evt.categories);
-        if (evt.stages?.length) setActiveRound(evt.stages[0].name);
+        if (evt.stages?.length) {
+          setActiveRound(evt.stages[0].name);
+          setSelectedRound(evt.stages[0].name);
+        }
       } catch (err) {
         console.error("Failed to load event", err);
       } finally {
@@ -84,6 +88,7 @@ function CategoryPage() {
     setCategoryName("");
     setCategoryWeight("");
     setMaxScore("");
+    setSelectedRound(rounds[0] || "");
   };
 
   const resetCriteriaForm = () => {
@@ -91,7 +96,7 @@ function CategoryPage() {
   };
 
   const handleAddCategory = () => {
-    if (!categoryName.trim() || !categoryWeight || !maxScore) return;
+    if (!categoryName.trim() || !categoryWeight || !maxScore || !selectedRound) return;
 
     const alreadyExists = categories.some(
       (c) =>
@@ -108,7 +113,7 @@ function CategoryPage() {
       id: Date.now(),
       eventId: event.id,
       name: categoryName.trim(),
-      round: activeRound,
+      round: selectedRound,
       weight: Number(categoryWeight),
       maxScore: Number(maxScore),
       criteria: [],
@@ -116,13 +121,12 @@ function CategoryPage() {
 
     setPendingCategory(newCategory);
 
-    // 🔥 IMPORTANT: switch to the selected round
+    // 🔥 Switch to the selected round
     setActiveRound(selectedRound);
 
     setIsCategoryModalOpen(false);
     setIsCriteriaModalOpen(true);
   };
-
 
   const handleAddCriteriaRow = () => {
     setCriteriaList([...criteriaList, { name: "", weight: "" }]);
@@ -231,8 +235,8 @@ function CategoryPage() {
               key={round}
               onClick={() => setActiveRound(round)}
               className={`pb-3 text-lg font-medium ${activeRound === round
-                ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                : "text-gray-400"
+                  ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                  : "text-gray-400"
                 }`}
             >
               {round}
@@ -250,51 +254,91 @@ function CategoryPage() {
 
       {/* CATEGORY MODAL */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-md rounded-2xl p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
             <h2 className="text-center text-xl font-semibold mb-6">
               Add Category
             </h2>
+            <form className="space-y-5">
+              {/* CATEGORY NAME */}
+              <div className="flex flex-col">
+                <label className="text-sm text-gray-500 mb-1">Category Name</label>
+                <input
+                  type="text"
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                />
+              </div>
 
-            <div className="space-y-4">
-              <input
-                placeholder="Category Name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full rounded-full border px-4 py-2"
-              />
+              {/* ROUND SELECT */}
+              <div className="flex flex-col">
+                <label className="text-sm text-gray-500 mb-1">Round</label>
+                <select
+                  value={selectedRound}
+                  onChange={(e) => setSelectedRound(e.target.value)}
+                  className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                >
+                  <option value="" disabled>
+                    Select a round
+                  </option>
+                  {rounds.map((round) => (
+                    <option key={round} value={round}>
+                      {round}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <input
-                type="number"
-                placeholder="Category Weight (%)"
-                value={categoryWeight}
-                onChange={(e) => setCategoryWeight(e.target.value)}
-                className="w-full rounded-full border px-4 py-2"
-              />
+              {/* WEIGHT + MAX SCORE */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label className="text-sm text-gray-500 mb-1">
+                    Category Weight (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={categoryWeight}
+                    onChange={(e) => setCategoryWeight(e.target.value)}
+                    placeholder="Enter weight %"
+                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                  />
+                  <span className="text-xs text-gray-400 mt-1">
+                    All category weights must total 100%.
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm text-gray-500 mb-1">Max Score</label>
+                  <input
+                    type="number"
+                    value={maxScore}
+                    onChange={(e) => setMaxScore(e.target.value)}
+                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                  />
+                  <span className="text-xs text-gray-400 mt-1">
+                    Maximum points available for this category.
+                  </span>
+                </div>
+              </div>
 
-              <input
-                type="number"
-                placeholder="Max Score"
-                value={maxScore}
-                onChange={(e) => setMaxScore(e.target.value)}
-                className="w-full rounded-full border px-4 py-2"
-              />
-
-              <div className="flex justify-between pt-4">
+              {/* ACTION BUTTONS */}
+              <div className="flex justify-between pt-6">
                 <button
+                  type="button"
                   onClick={() => setIsCategoryModalOpen(false)}
-                  className="px-6 py-2 border rounded-full"
+                  className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleAddCategory}
-                  className="px-6 py-2 bg-[#FA824C] text-white rounded-full"
+                  className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
                 >
-                  Next
+                  Confirm
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
