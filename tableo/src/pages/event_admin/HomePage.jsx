@@ -1,14 +1,16 @@
 import SideNavigation from "../../components/SideNavigation";
 import CardEvent from "../../components/CreateCardEvent";
+import EventModal from "../../components/EventModal";
 import React, { useState, useEffect } from "react";
 import { CalendarPlus } from "lucide-react";
-
-import { createEvent, getAllEvents } from "../../services/event_service";
+import Swal from "sweetalert2";
+import { createEvent, getAllEvents, deleteEvent, updateEvent } from "../../services/event_service";
 import { validateEvent } from "../../validations/event_validation";
 import { showToast } from "../../utils/swal";
 
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
   const [sortAZ, setSortAZ] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState([]);
@@ -25,6 +27,85 @@ function HomePage() {
     candidates: 1,
     image: null,
   });
+
+  const openCreateModal = () => {
+    setModalMode("create");
+    setNewEvent({
+      title: "",
+      location: "",
+      description: "",
+      date: "",
+      timeStart: "",
+      timeEnd: "",
+      stages: 1,
+      judges: 1,
+      candidates: 1,
+      image: null,
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (event) => {
+    setModalMode("edit");
+    const formattedDate = event.date
+      ? new Date(event.date).toISOString().split("T")[0]
+      : "";
+    setNewEvent({
+      id: event.id,
+      title: event.title,
+      location: event.location,
+      description: event.description,
+      date: formattedDate,
+      timeStart: event.timeStart || "",
+      timeEnd: event.timeEnd || "",
+      stages: event.stages,
+      judges: event.judges,
+      candidates: event.candidates,
+      image: event.image || null,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateEvent = async () => {
+    const error = validateEvent(newEvent);
+    if (error) return showToast("error", error);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("title", newEvent.title);
+      formData.append("location", newEvent.location);
+      formData.append("description", newEvent.description);
+      formData.append("date", newEvent.date);
+      formData.append("timeStart", newEvent.timeStart);
+      formData.append("timeEnd", newEvent.timeEnd);
+      formData.append("stages", newEvent.stages);
+      formData.append("judges", newEvent.judges);
+      formData.append("candidates", newEvent.candidates);
+
+      if (newEvent.image && typeof newEvent.image !== "string") {
+        formData.append("image", newEvent.image);
+      }
+
+      const res = await updateEvent(newEvent.id, formData);
+
+      const updatedEvent = {
+        ...res.data.event,
+        image: res.data.event.path
+          ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${res.data.event.path}`
+          : newEvent.image,
+      };
+
+      setEvents((prev) =>
+        prev.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
+      );
+
+      showToast("success", "Event updated successfully");
+      setIsModalOpen(false);
+    } catch (err) {
+      showToast("error", err.message || "Failed to update event");
+    }
+  };
 
   const toggleSort = () => setSortAZ(!sortAZ);
   const [sortOption, setSortOption] = useState("all");
@@ -46,6 +127,42 @@ function HomePage() {
 
     fetchEvents();
   }, []);
+
+  const handleDeleteEvent = async (eventId) => {
+    const result = await Swal.fire({
+      title: "Delete Event?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteEvent(eventId);
+
+      setEvents((prev) => prev.filter((ev) => ev.id !== eventId));
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Event has been deleted successfully.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "Failed to delete event",
+      });
+    }
+  };
+
 
   const handleCreateEvent = async () => {
     const error = validateEvent(newEvent);
@@ -70,7 +187,14 @@ function HomePage() {
 
       const res = await createEvent(formData);
 
-      setEvents((prev) => [...prev, res.data.event]);
+      const newFormattedEvent = {
+        ...res.data.event,
+        image: res.data.event.path
+          ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${res.data.event.path}`
+          : null,
+      };
+
+      setEvents((prev) => [...prev, newFormattedEvent]);
       showToast("success", "Event created successfully");
 
       setIsModalOpen(false);
@@ -186,7 +310,7 @@ function HomePage() {
           <div>
             <button
               className="w-32 flex items-center justify-center gap-3 bg-[#FA824C] text-white py-3 rounded-2xl font-bold hover:bg-[#FF9768]"
-              onClick={() => setIsModalOpen(true)}
+              onClick={openCreateModal}
             >
               <CalendarPlus size={18} />
               Add Event
@@ -203,6 +327,9 @@ function HomePage() {
               description={event.description}
               date={event.date}
               location={event.location}
+              onClick={() => { }}
+              onEdit={() => openEditModal(event)}
+              onDelete={() => handleDeleteEvent(event.id)}
             >
               {event.image && (
                 <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
@@ -211,203 +338,14 @@ function HomePage() {
           ))}
         </div>
 
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto scrollbar-hide">
-
-              {/* TITLE */}
-              <h2 className="text-center text-xl font-semibold mb-6">
-                Add Event
-              </h2>
-
-              <form className="space-y-5">
-
-                {/* EVENT NAME */}
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-500 mb-1">Event Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter event name"
-                    value={newEvent.title}
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, title: e.target.value })
-                    }
-                    className="w-full rounded-full border border-orange-300 px-4 py-2"
-                  />
-                </div>
-
-                {/* LOCATION */}
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-500 mb-1">Location</label>
-                  <input
-                    type="text"
-                    placeholder="Enter location"
-                    value={newEvent.location}
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, location: e.target.value })
-                    }
-                    className="w-full rounded-full border border-orange-300 px-4 py-2"
-                  />
-                </div>
-
-                {/* TIME + DATE */}
-                <div className="flex flex-col w-full gap-3">
-                  {/* TIME RANGE */}
-                  <div className="flex flex-col">
-                    <label className="text-sm text-gray-500 mb-1">Time</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="time"
-                        value={newEvent.timeStart}
-                        onChange={(e) =>
-                          setNewEvent({ ...newEvent, timeStart: e.target.value })
-                        }
-                        className="w-[140px] rounded-full border border-orange-300 px-3 py-2"
-                      />
-
-                      <span className="text-sm text-gray-500">to</span>
-
-                      <input
-                        type="time"
-                        value={newEvent.timeEnd}
-                        onChange={(e) =>
-                          setNewEvent({ ...newEvent, timeEnd: e.target.value })
-                        }
-                        className="w-[140px] rounded-full border border-orange-300 px-3 py-2"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* DATE + NUMBER OF STAGES */}
-                <div className="flex flex-col sm:flex-row sm:gap-4 gap-3 w-full">
-                  {/* DATE */}
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <label className="text-sm text-gray-500 mb-1">Date</label>
-                    <input
-                      type="date"
-                      min={new Date().toISOString().split("T")[0]}
-                      value={newEvent.date}
-                      onChange={(e) => {
-                        const selected = new Date(e.target.value);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-
-                        if (selected < today) return;
-
-                        setNewEvent({ ...newEvent, date: e.target.value });
-                      }}
-                      className="w-full rounded-full border border-orange-300 px-3 py-2"
-                    />
-                  </div>
-
-                  {/* NUMBER OF STAGES */}
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <label className="text-sm text-gray-500 mb-1">Number of Stages</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={newEvent.stages}
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, stages: Math.max(1, Number(e.target.value)) })
-                      }
-                      className="w-full rounded-full border border-orange-300 px-4 py-2"
-                    />
-                  </div>
-                </div>
-
-                {/* JUDGES + CANDIDATES */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col">
-                    <label className="text-sm text-gray-500 mb-1">Total Judges</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={newEvent.judges}
-                      onChange={(e) =>
-                        setNewEvent({
-                          ...newEvent,
-                          judges: Math.max(1, Number(e.target.value)),
-                        })
-                      }
-                      className="w-full rounded-full border border-orange-300 px-4 py-2"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <label className="text-sm text-gray-500 mb-1">Total Candidates</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={newEvent.candidates}
-                      onChange={(e) =>
-                        setNewEvent({
-                          ...newEvent,
-                          candidates: Math.max(1, Number(e.target.value)),
-                        })
-                      }
-                      className="w-full rounded-full border border-orange-300 px-4 py-2"
-                    />
-                  </div>
-                </div>
-
-                {/* OPTIONAL IMAGE */}
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs text-gray-400">Optional</span>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    id="eventImage"
-                    hidden
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, image: e.target.files[0] })
-                    }
-                  />
-
-                  <label
-                    htmlFor="eventImage"
-                    className="w-full flex items-center justify-center gap-2 rounded-full border border-orange-300 px-4 py-2 text-sm text-orange-500 hover:bg-orange-50 transition cursor-pointer"
-                  >
-                    + Add Image
-                  </label>
-                </div>
-
-                {/* DESCRIPTION */}
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-500 mb-1">Description</label>
-                  <textarea
-                    rows="3"
-                    placeholder="Enter description"
-                    value={newEvent.description}
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, description: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-orange-300 px-4 py-2"
-                  />
-                </div>
-
-                {/* ACTION BUTTONS */}
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    disabled={!newEvent.title.trim() || !newEvent.date}
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCreateEvent}
-                    className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <EventModal
+          isOpen={isModalOpen}
+          mode={modalMode}
+          eventData={newEvent}
+          setEventData={setNewEvent}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={modalMode === "edit" ? handleUpdateEvent : handleCreateEvent}
+        />
       </main>
     </div>
   );
