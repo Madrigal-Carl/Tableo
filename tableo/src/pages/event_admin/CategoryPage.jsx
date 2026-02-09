@@ -155,12 +155,14 @@ function CategoryPage() {
         ))}
 
       </div>
-        <button
-          onClick={() => setIsCategoryModalOpen(true)}
-          className="w-fit bg-[#FA824C] p-3 rounded-lg h-[50px] text-white font-medium hover:bg-orange-600 transition"
-        >
-          + Add Category
-        </button>
+        {activeTopTab === "Rounds" && (
+          <button
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="w-fit bg-[#FA824C] p-3 rounded-lg h-[50px] text-white font-medium hover:bg-orange-600 transition"
+          >
+            + Add Category
+          </button>
+        )}
       </div>
 
         {/* TAB CONTENT */}
