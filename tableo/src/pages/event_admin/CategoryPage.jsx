@@ -231,27 +231,27 @@ function CategoryPage() {
           )}
         </div>
 
-{/* ROUND TABS & CATEGORY LIST only for Rounds */}
-{activeTopTab === "Rounds" && (
-  <>
-    {/* ROUND TABS */}
-    <div className="flex gap-6 border-b border-gray-300 mb-6 pl-6">
-      {rounds.map((round, idx) => {
-        const isActive = activeRound === round || (!activeRound && idx === 0);
-        return (
-          <button
-            key={round}
-            onClick={() => setActiveRound(round)}
-            className={`pb-3 text-lg font-medium ${
-              isActive
-                ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                : "text-gray-400"
-            }`}
-          >
-            {round}
-          </button>
-        );
-      })}
+        {/* ROUND TABS & CATEGORY LIST only for Rounds */}
+        {activeTopTab === "Rounds" && (
+          <>
+            {/* ROUND TABS */}
+            <div className="flex gap-6 border-b border-gray-300 mb-6 pl-6">
+              {rounds.map((round, idx) => {
+                const isActive = activeRound === round || (!activeRound && idx === 0);
+                return (
+                  <button  
+                    key={round}
+                    onClick={() => setActiveRound(round)}
+                    className={`pb-3 text-lg font-medium ${
+                      isActive
+                        ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {round}
+                  </button>
+                );
+              })}
     </div>
 
     {/* CATEGORY LIST */}

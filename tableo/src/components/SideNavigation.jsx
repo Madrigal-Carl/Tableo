@@ -21,8 +21,8 @@ function SideNavigation() {
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition
           ${isActive
-            ? "bg-[#FA824C] text-white hover:bg-[#FF9768]"
-            : "text-gray-700 hover:bg-[#FA824C] hover:text-white"
+            ? "bg-[#2B6777] text-white hover:bg-[#26515D]"
+            : "text-gray-700 hover:bg-[#2B6777] hover:text-white"
           }`}
       >
         <Icon size={20} />
