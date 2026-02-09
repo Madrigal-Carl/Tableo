@@ -5,6 +5,10 @@ import ViewOnlyTable from "../../components/ViewOnlyTable";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getEvent } from "../../services/event_service";
+import {
+  addCategoryToEvent,
+  getCategoriesByEvent,
+} from "../../services/category_service";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -16,27 +20,46 @@ function CategoryPage() {
   // ============================
   const [event, setEvent] = useState(location.state?.event || null);
   const [loading, setLoading] = useState(!event);
-
   const [categories, setCategories] = useState([]);
   const [activeTopTab, setActiveTopTab] = useState("Rounds");
   const [activeRound, setActiveRound] = useState("");
-
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
-
   const [categoryName, setCategoryName] = useState("");
   const [categoryWeight, setCategoryWeight] = useState("");
   const [maxScore, setMaxScore] = useState("");
   const [selectedRound, setSelectedRound] = useState("");
-
-  const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
-  const [pendingCategory, setPendingCategory] = useState(null);
   const [openCriteriaId, setOpenCriteriaId] = useState(null);
 
   const tabs = ["Rounds", "Participants", "Judges"];
 
   // ============================
-  // FETCH EVENT IF NOT IN STATE
+  // HELPERS
+  // ============================
+  const getStageIdByName = (stageName) =>
+    event?.stages.find((s) => s.name === stageName)?.id;
+
+  const resetCategoryForm = () => {
+    setCategoryName("");
+    setCategoryWeight("");
+    setMaxScore("");
+    setSelectedRound(event?.stages?.[0]?.name || "");
+  };
+
+  // ============================
+  // FETCH CATEGORIES
+  // ============================
+  const fetchCategories = async () => {
+    try {
+      const res = await getCategoriesByEvent(eventId);
+      // ✅ FIX: Use res.data.categories instead of res.data
+      setCategories(res.data.categories || []);
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  };
+
+  // ============================
+  // FETCH EVENT
   // ============================
   useEffect(() => {
     if (event) return;
@@ -44,16 +67,17 @@ function CategoryPage() {
     async function fetchEvent() {
       try {
         setLoading(true);
-        const res = await getEvent(eventId); // API should return your JSON
+        const res = await getEvent(eventId);
         const evt = res.data;
 
         setEvent(evt);
 
-        if (evt.categories?.length) setCategories(evt.categories);
         if (evt.stages?.length) {
           setActiveRound(evt.stages[0].name);
           setSelectedRound(evt.stages[0].name);
         }
+
+        await fetchCategories();
       } catch (err) {
         console.error("Failed to load event", err);
       } finally {
@@ -65,107 +89,56 @@ function CategoryPage() {
   }, [event, eventId]);
 
   // ============================
-  // LOADING / GUARD
+  // GUARDS
   // ============================
   if (loading) return <div className="p-10">Loading event...</div>;
   if (!event) return <div className="p-10 text-red-500">Event not found</div>;
 
   // ============================
-  // ROUNDS FROM STAGES
+  // ROUNDS
   // ============================
   const rounds = event.stages?.map((s) => s.name) || [];
 
   // ============================
   // FILTER CATEGORIES
   // ============================
-  const filteredCategories = categories.filter(
-    (c) => c.eventId === event.id && c.round === activeRound
+  const filteredCategories = categories.filter((c) =>
+    c.stages?.some((s) => s.name === activeRound)
   );
 
   // ============================
-  // HELPERS
+  // ADD CATEGORY
   // ============================
-  const resetCategoryForm = () => {
-    setCategoryName("");
-    setCategoryWeight("");
-    setMaxScore("");
-    setSelectedRound(rounds[0] || "");
-  };
+  const handleAddCategory = async () => {
+    if (!categoryName.trim() || !categoryWeight || !maxScore || !selectedRound)
+      return;
 
-  const resetCriteriaForm = () => {
-    setCriteriaList([{ name: "", weight: "" }]);
-  };
-
-  const handleAddCategory = () => {
-    if (!categoryName.trim() || !categoryWeight || !maxScore || !selectedRound) return;
-
-    const alreadyExists = categories.some(
-      (c) =>
-        c.round === selectedRound &&
-        c.name.toLowerCase() === categoryName.toLowerCase()
-    );
-
-    if (alreadyExists) {
-      alert("Category already exists in this round");
+    const stageId = getStageIdByName(selectedRound);
+    if (!stageId) {
+      alert("Invalid round selected");
       return;
     }
 
-    const newCategory = {
-      id: Date.now(),
-      eventId: event.id,
-      name: categoryName.trim(),
-      round: selectedRound,
-      weight: Number(categoryWeight),
-      maxScore: Number(maxScore),
-      criteria: [],
-    };
+    try {
+      const payload = {
+        name: categoryName.trim(),
+        percentage: Number(categoryWeight),
+        maxScore: Number(maxScore),
+        stage_id: stageId,
+      };
 
-    setPendingCategory(newCategory);
+      await addCategoryToEvent(event.id, payload);
 
-    // 🔥 Switch to the selected round
-    setActiveRound(selectedRound);
+      // 🔥 Always re-fetch from backend
+      await fetchCategories();
 
-    setIsCategoryModalOpen(false);
-    setIsCriteriaModalOpen(true);
-  };
-
-  const handleAddCriteriaRow = () => {
-    setCriteriaList([...criteriaList, { name: "", weight: "" }]);
-  };
-
-  const handleRemoveCriteriaRow = (index) => {
-    if (criteriaList.length === 1) return;
-    setCriteriaList(criteriaList.filter((_, i) => i !== index));
-  };
-
-  const handleCriteriaChange = (index, field, value) => {
-    const updated = [...criteriaList];
-    updated[index][field] = value;
-    setCriteriaList(updated);
-  };
-
-  const handleConfirmCriteria = () => {
-    if (!pendingCategory) return;
-
-    const validCriteria = criteriaList.filter((c) => c.name.trim() && c.weight);
-
-    if (!validCriteria.length) return;
-
-    setCategories((prev) => [
-      ...prev,
-      {
-        ...pendingCategory,
-        criteria: validCriteria.map((c) => ({
-          name: c.name.trim(),
-          weight: Number(c.weight),
-        })),
-      },
-    ]);
-
-    setPendingCategory(null);
-    resetCategoryForm();
-    resetCriteriaForm();
-    setIsCriteriaModalOpen(false);
+      setActiveRound(selectedRound);
+      resetCategoryForm();
+      setIsCategoryModalOpen(false);
+    } catch (err) {
+      console.error("Failed to create category", err);
+      alert(err.response?.data?.message || "Failed to create category");
+    }
   };
 
   // ============================
@@ -179,27 +152,21 @@ function CategoryPage() {
         {/* HEADER */}
         <div className="mt-5 mb-6 text-gray-700">
           <div className="flex items-center gap-3">
-            {/* Back button */}
             <ChevronLeft
               size={30}
-              onClick={() => navigate("/events")}
+              onClick={() => navigate("/dashboard")}
               className="cursor-pointer hover:text-gray-900"
             />
-            {/* Title */}
             <h1 className="text-4xl font-semibold">{event.title}</h1>
           </div>
-
-          {/* Description below the title */}
-          <p className="text-sm text-gray-500 leading-snug mt-2">
-            {event.description}
-          </p>
+          <p className="text-sm text-gray-500 mt-2">{event.description}</p>
         </div>
 
         {/* TOP TABS */}
         <div className="flex items-center justify-between mb-8">
-          <div className="relative flex bg-[#FA824C] p-1 rounded-md overflow-hidden">
+          <div className="relative flex bg-[#FA824C] p-1 rounded-md">
             <div
-              className="absolute top-1 left-1 h-[40px] bg-white rounded-sm transition-transform duration-300"
+              className="absolute top-1 left-1 h-[40px] bg-white rounded-sm transition-transform"
               style={{
                 width: "110px",
                 transform: `translateX(${tabs.indexOf(activeTopTab) * 110}px)`,
@@ -221,7 +188,6 @@ function CategoryPage() {
             <button
               onClick={() => {
                 resetCategoryForm();
-                resetCriteriaForm();
                 setIsCategoryModalOpen(true);
               }}
               className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
@@ -231,215 +197,99 @@ function CategoryPage() {
           )}
         </div>
 
-        {/* ROUND TABS & CATEGORY LIST only for Rounds */}
+        {/* ROUNDS */}
         {activeTopTab === "Rounds" && (
           <>
-            {/* ROUND TABS */}
-            <div className="flex gap-6 border-b border-gray-300 mb-6 pl-6">
-              {rounds.map((round, idx) => {
-                const isActive = activeRound === round || (!activeRound && idx === 0);
-                return (
-                  <button  
-                    key={round}
-                    onClick={() => setActiveRound(round)}
-                    className={`pb-3 text-lg font-medium ${
-                      isActive
-                        ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                        : "text-gray-400"
+            <div className="flex gap-6 border-b mb-6 pl-6">
+              {rounds.map((round) => (
+                <button
+                  key={round}
+                  onClick={() => setActiveRound(round)}
+                  className={`pb-3 text-lg font-medium ${activeRound === round
+                      ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                      : "text-gray-400"
                     }`}
-                  >
-                    {round}
-                  </button>
-                );
-              })}
-    </div>
+                >
+                  {round}
+                </button>
+              ))}
+            </div>
 
-    {/* CATEGORY LIST */}
-    <CategoryCard
-      categories={filteredCategories}
-      openCriteriaId={openCriteriaId}
-      setOpenCriteriaId={setOpenCriteriaId}
-    />
-  </>
-)}
+            <CategoryCard
+              categories={filteredCategories}
+              openCriteriaId={openCriteriaId}
+              setOpenCriteriaId={setOpenCriteriaId}
+            />
+          </>
+        )}
 
-{/* Participants Tab */}
-{activeTopTab === "Participants" && (
-  <div className="px-6">
-    <ViewOnlyTable
-      title="Participants"
-      data={event.participants || []}
-      nameLabel="Name"
-      editable
-      onEdit={(p) => console.log("Edit", p)}
-      onDelete={(p) => console.log("Delete", p)}
-    />
-  </div>
-)}
+        {activeTopTab === "Participants" && (
+          <ViewOnlyTable title="Participants" data={event.participants || []} />
+        )}
 
-{/* Judges Tab */}
-{activeTopTab === "Judges" && (
-  <div className="px-6">
-    <ViewOnlyTable
-      title="Judges"
-      data={event.judges || []}
-      nameLabel="Judge Name"
-      editable
-      onEdit={(j) => console.log("Edit", j)}
-      onDelete={(j) => console.log("Delete", j)}
-    />
-  </div>
-)}
+        {activeTopTab === "Judges" && (
+          <ViewOnlyTable title="Judges" data={event.judges || []} />
+        )}
       </section>
 
       {/* CATEGORY MODAL */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6">
             <h2 className="text-center text-xl font-semibold mb-6">
               Add Category
             </h2>
-            <form className="space-y-5">
-              {/* CATEGORY NAME */}
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-500 mb-1">Category Name</label>
-                <input
-                  type="text"
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                />
-              </div>
 
-              {/* ROUND SELECT */}
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-500 mb-1">Round</label>
-                <select
-                  value={selectedRound}
-                  onChange={(e) => setSelectedRound(e.target.value)}
-                  className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                >
-                  <option value="" disabled>
-                    Select a round
+            <div className="space-y-4">
+              <input
+                placeholder="Category Name"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="w-full rounded-full border px-4 py-2"
+              />
+
+              <select
+                value={selectedRound}
+                onChange={(e) => setSelectedRound(e.target.value)}
+                className="w-full rounded-full border px-4 py-2"
+              >
+                {rounds.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
                   </option>
-                  {rounds.map((round) => (
-                    <option key={round} value={round}>
-                      {round}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                ))}
+              </select>
 
-              {/* WEIGHT + MAX SCORE */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-500 mb-1">
-                    Category Weight (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={categoryWeight}
-                    onChange={(e) => setCategoryWeight(e.target.value)}
-                    placeholder="Enter weight %"
-                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                  />
-                  <span className="text-xs text-gray-400 mt-1">
-                    All category weights must total 100%.
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-500 mb-1">Max Score</label>
-                  <input
-                    type="number"
-                    value={maxScore}
-                    onChange={(e) => setMaxScore(e.target.value)}
-                    className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                  />
-                  <span className="text-xs text-gray-400 mt-1">
-                    Maximum points available for this category.
-                  </span>
-                </div>
-              </div>
+              <input
+                type="number"
+                placeholder="Category Weight (%)"
+                value={categoryWeight}
+                onChange={(e) => setCategoryWeight(e.target.value)}
+                className="w-full rounded-full border px-4 py-2"
+              />
 
-              {/* ACTION BUTTONS */}
-              <div className="flex justify-between pt-6">
+              <input
+                type="number"
+                placeholder="Max Score"
+                value={maxScore}
+                onChange={(e) => setMaxScore(e.target.value)}
+                className="w-full rounded-full border px-4 py-2"
+              />
+
+              <div className="flex justify-between pt-4">
                 <button
-                  type="button"
                   onClick={() => setIsCategoryModalOpen(false)}
-                  className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
+                  className="px-6 py-2 border rounded-full"
                 >
                   Cancel
                 </button>
                 <button
-                  type="button"
                   onClick={handleAddCategory}
-                  className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
+                  className="px-6 py-2 bg-[#FA824C] text-white rounded-full"
                 >
                   Confirm
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* CRITERIA MODAL */}
-      {isCriteriaModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-center text-xl font-semibold mb-6">Criteria</h2>
-
-            {criteriaList.map((c, i) => (
-              <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-3 mb-4">
-                <input
-                  placeholder="Criteria"
-                  value={c.name}
-                  onChange={(e) =>
-                    handleCriteriaChange(i, "name", e.target.value)
-                  }
-                  className="rounded-full border px-4 py-2"
-                />
-                <input
-                  type="number"
-                  placeholder="%"
-                  value={c.weight}
-                  onChange={(e) =>
-                    handleCriteriaChange(i, "weight", e.target.value)
-                  }
-                  className="rounded-full border px-4 py-2"
-                />
-                <button
-                  onClick={() => handleRemoveCriteriaRow(i)}
-                  className="text-red-500"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-
-            <button
-              onClick={handleAddCriteriaRow}
-              className="w-full bg-[#FA824C] text-white rounded-full py-2 mb-4"
-            >
-              + Add Criteria
-            </button>
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  setIsCriteriaModalOpen(false);
-                  setIsCategoryModalOpen(true);
-                }}
-                className="px-6 py-2 border rounded-full"
-              >
-                Previous
-              </button>
-              <button
-                onClick={handleConfirmCriteria}
-                className="px-6 py-2 bg-[#FA824C] text-white rounded-full"
-              >
-                Confirm
-              </button>
             </div>
           </div>
         </div>
