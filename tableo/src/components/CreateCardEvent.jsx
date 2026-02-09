@@ -1,27 +1,60 @@
 import React from "react";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
-function CreateCardEvent({ title, description, date, location, children }) {
+function CreateCardEvent({
+  title,
+  description,
+  date,
+  location,
+  children,
+  onClick,
+  onEdit,
+  onDelete, // 👈 NEW
+}) {
   return (
-    <div className="relative w-full h-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col">
-      
-      {/* IMAGE / MEDIA SLOT */}
+    <div
+      onClick={onClick}
+      className="relative w-full h-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col cursor-pointer"
+    >
+      {/* ACTION BUTTONS */}
+      <div className="absolute top-4 right-4 z-20 flex gap-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.();
+          }}
+          className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"
+          title="Edit"
+        >
+          <FiEdit2 size={16} />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.(); // 👈 DELETE ACTION
+          }}
+          className="p-2 rounded-full bg-black/50 text-white hover:bg-red-600 transition"
+          title="Delete"
+        >
+          <FiTrash2 size={16} />
+        </button>
+      </div>
+
+      {/* IMAGE */}
       <div className="absolute inset-0 w-full h-full">
-        {/* Wrap children so it fills the card */}
         <div className="w-full h-full">
           {children && (
             <div className="w-full h-full">
               {React.isValidElement(children)
                 ? React.cloneElement(children, {
-                    className: `${
-                      children.props.className ?? ""
-                    } w-full h-full object-cover`,
-                  })
+                  className: `${children.props.className ?? ""} w-full h-full object-cover`,
+                })
                 : children}
             </div>
           )}
         </div>
 
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       </div>
 
