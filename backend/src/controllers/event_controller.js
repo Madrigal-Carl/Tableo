@@ -1,4 +1,5 @@
 const eventService = require('../services/event_service');
+const { isEventEditable } = require('../utils/event_time_guard');
 
 async function createEvent(req, res, next) {
     try {
@@ -51,6 +52,19 @@ async function updateEvent(req, res, next) {
     try {
         const userId = req.user.id;
         const eventId = req.params.eventId;
+
+        const event = await eventService.getEvent(eventId, userId);
+
+        const editable = isEventEditable({
+            date: event.date,
+            timeEnd: event.timeEnd,
+        });
+
+        if (!editable) {
+            const err = new Error('Event has already ended and can no longer be edited');
+            err.status = 403;
+            throw err;
+        }
 
         const payload = {
             ...req.body,
