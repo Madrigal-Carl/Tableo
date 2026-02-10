@@ -23,7 +23,6 @@ async function createEvent(req, res, next) {
     }
 }
 
-
 async function getEvent(req, res, next) {
     try {
         const event = await eventService.getEvent(req.params.eventId, req.user.id);
@@ -92,6 +91,5 @@ async function getAllEvents(req, res, next) {
         next(err);
     }
 }
-
 
 module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };

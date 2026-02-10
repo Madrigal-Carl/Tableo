@@ -4,19 +4,17 @@ export function isEventEditable(event) {
 
     if (isNaN(eventDate)) return false;
 
-    // Past date
-    if (eventDate.toDateString() < now.toDateString()) return false;
+    // If event date is in the past, not editable
+    const eventEnd = new Date(eventDate);
 
-    // Same day → check timeEnd
-    if (eventDate.toDateString() === now.toDateString()) {
-        if (!event.timeEnd) return false;
-
+    if (event.timeEnd) {
         const [h, m] = event.timeEnd.split(':').map(Number);
-        const eventEnd = new Date(eventDate);
         eventEnd.setHours(h, m, 0, 0);
-
-        if (eventEnd < now) return false;
+    } else {
+        // No timeEnd, assume end of day
+        eventEnd.setHours(23, 59, 59, 999);
     }
 
-    return true;
+    // Editable only if eventEnd is in the future
+    return eventEnd > now;
 }
