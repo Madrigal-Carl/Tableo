@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import CategoryCard from "../../components/CategoryCard";
 import SideNavigation from "../../components/SideNavigation";
 import ViewOnlyTable from "../../components/ViewOnlyTable";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, PlusCircle } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getEvent } from "../../services/event_service";
 import {
@@ -232,16 +232,22 @@ function CategoryPage() {
             </div>
 
             {/* CATEGORY SELECT DROPDOWN */}
+            {/* CATEGORY SELECT DROPDOWN */}
             <div className="flex items-center gap-4 mb-6 text-lg font-semibold">
-              <span className="text-[#FA824C] text-xl">⊕</span>
+              <PlusCircle
+                className="text-[#FA824C] w-6 h-6 cursor-pointer"
+                onClick={() => {
+                  resetCategoryForm();
+                  setIsCategoryModalOpen(true);
+                }}
+              />
               <select
                 className="px-4 py-2"
                 value={selectedCategory?.id || ""}
                 onChange={(e) => {
-                  const cat = filteredCategories.find(
-                    (c) => c.id === e.target.value
-                  );
-                  setSelectedCategory(cat);
+                  const selectedId = parseInt(e.target.value); // convert to number
+                  const cat = filteredCategories.find((c) => c.id === selectedId);
+                  setSelectedCategory(cat || null);
                 }}
               >
                 {filteredCategories.map((cat) => (
@@ -251,6 +257,7 @@ function CategoryPage() {
                 ))}
               </select>
             </div>
+
 
             {/* JUDGING GRID */}
             <div className="overflow-x-auto bg-white rounded-2xl shadow-sm max-h-[520px] overflow-y-auto">
