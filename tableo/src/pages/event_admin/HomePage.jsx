@@ -10,6 +10,7 @@ import { validateEvent } from "../../validations/event_validation";
 import { showToast } from "../../utils/swal";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../utils/socket";
+import { isEventEditable } from "../../utils/eventEditable";
 
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,6 +52,15 @@ function HomePage() {
   };
 
   const openEditModal = (event) => {
+    if (!isEventEditable(event)) {
+      Swal.fire({
+        icon: "info",
+        title: "Editing Disabled",
+        text: "This event has already ended and can no longer be edited.",
+      });
+      return;
+    }
+
     setModalMode("edit");
     const formattedDate = event.date
       ? new Date(event.date).toISOString().split("T")[0]
@@ -350,8 +360,9 @@ function HomePage() {
               date={event.date}
               location={event.location}
               onClick={() => navigate(`/categories/${event.id}`)}
-              onEdit={() => openEditModal(event)}
+              onEdit={isEventEditable(event) ? () => openEditModal(event) : null}
               onDelete={() => handleDeleteEvent(event.id)}
+              disabledEdit={!isEventEditable(event)}
             >
               {event.image && (
                 <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
