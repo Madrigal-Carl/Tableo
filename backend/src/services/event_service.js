@@ -4,8 +4,7 @@ const eventRepo = require('../repositories/event_repository');
 const stageService = require('./stage_service');
 const candidateService = require('./candidate_service');
 const judgeService = require('./judge_service');
-
-const crypto = require('crypto');
+const { isEventEditable } = require('../utils/event_time_guard');
 
 async function createEvent({
     title,
@@ -54,7 +53,6 @@ async function deleteEvent(eventId, userId) {
 
 async function getEvent(eventId, userId) {
     const event = await eventRepo.findByIdWithRelations(eventId);
-    console.log("Event from DB:", event ? event.toJSON() : null);
 
     if (!event) throw new Error('Event not found');
     if (event.user_id !== userId) throw new Error('Unauthorized');
@@ -68,6 +66,12 @@ async function updateEvent(eventId, userId, payload) {
 
         if (!event) throw new Error('Event not found');
         if (event.user_id !== userId) throw new Error('Unauthorized');
+
+        if (!isEventEditable({ date: event.date, timeEnd: event.timeEnd })) {
+            const err = new Error('Event has already ended and can no longer be edited');
+            err.status = 403;
+            throw err;
+        }
 
         await eventRepo.update(eventId, payload, t);
 
@@ -87,7 +91,6 @@ async function updateEvent(eventId, userId, payload) {
     });
 }
 
-
 async function getAllEvents(userId) {
     const events = await eventRepo.findByUser(userId);
 
@@ -98,6 +101,5 @@ async function getAllEvents(userId) {
         candidates: ev.candidates.length,
     }));
 }
-
 
 module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };
