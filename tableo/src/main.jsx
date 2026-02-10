@@ -12,6 +12,7 @@ import HomePage from './pages/event_admin/HomePage.jsx';
 import LandingPage from './layouts/LandingPage.jsx';
 import JudgePage from './pages/judge/JudgePage.jsx';
 import CategoryPage from './pages/event_admin/CategoryPage.jsx';
+import ArchivePage from './layouts/ArchivePage.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/dashboard" element={<HomePage />} />
             <Route path="/judge" element={<JudgePage />} />
             <Route path="/categories/:eventId" element={<CategoryPage />} />
+            <Route path="/archive" element={<ArchivePage />} />
           </Route>
         </Routes>
       </BrowserRouter>
