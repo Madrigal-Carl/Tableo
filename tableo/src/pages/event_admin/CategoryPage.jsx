@@ -10,6 +10,7 @@ import {
   getCategoriesByEvent,
 } from "../../services/category_service";
 import CriteriaModal from "../../components/CriteriaModal";
+import { showToast } from "../../utils/swal";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -158,9 +159,10 @@ function CategoryPage() {
 
     const stageId = getStageIdByName(selectedRound);
     if (!stageId) {
-      alert("Invalid round selected");
+      showToast("error", "Invalid round selected");
       return;
     }
+
 
     try {
       const payload = {
@@ -175,12 +177,15 @@ function CategoryPage() {
       setActiveRound(selectedRound);
       resetCategoryForm();
 
+      // Show success toast
+      showToast("success", "Category added successfully");
+
       // Show criteria modal automatically after creating a category
       setIsCategoryModalOpen(false);
       setIsCriteriaModalOpen(true);
     } catch (err) {
       console.error("Failed to create category", err);
-      alert(err.response?.data?.message || "Failed to create category");
+      showToast("error", err.response?.data?.message || "Failed to create category");
     }
   };
 
@@ -250,8 +255,8 @@ function CategoryPage() {
                   key={round}
                   onClick={() => setActiveRound(round)}
                   className={`pb-3 text-lg font-semibold transition ${activeRound === round
-                      ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                      : "text-gray-400 hover:text-gray-600"
+                    ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                    : "text-gray-400 hover:text-gray-600"
                     }`}
                 >
                   {round}
