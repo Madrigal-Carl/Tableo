@@ -11,6 +11,7 @@ import {
 } from "../../services/category_service";
 import CriteriaModal from "../../components/CriteriaModal";
 import { showToast } from "../../utils/swal";
+import AddCategoryModal from "../../components/AddCategoryModal";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -28,10 +29,10 @@ function CategoryPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [categoryName, setCategoryName] = useState("");
-  const [categoryWeight, setCategoryWeight] = useState("");
-  const [maxScore, setMaxScore] = useState("");
-  const [selectedRound, setSelectedRound] = useState("");
+  const [categoryList, setCategoryList] = useState([
+    { name: "", weight: "", maxScore: "" },
+  ]);
+
 
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
   const [criteriaList, setCriteriaList] = useState([
@@ -47,12 +48,10 @@ function CategoryPage() {
     event?.stages.find((s) => s.name === stageName)?.id;
 
   const resetCategoryForm = () => {
-    setCategoryName("");
-    setCategoryWeight("");
-    setMaxScore("");
-    setSelectedRound(event?.stages?.[0]?.name || "");
-    setCriteriaList([{ name: "", weight: "" }]);
+    setCategoryList([{ name: "", weight: "", maxScore: "" }]);
   };
+
+
 
   const handleCriteriaChange = (index, field, value) => {
     const updated = [...criteriaList];
@@ -153,41 +152,51 @@ function CategoryPage() {
   // ============================
   // ADD CATEGORY
   // ============================
-  const handleAddCategory = async () => {
-    if (!categoryName.trim() || !categoryWeight || !maxScore || !selectedRound)
-      return;
+  const handleCategoryChange = (index, field, value) => {
+    const updated = [...categoryList];
+    updated[index][field] = value;
+    setCategoryList(updated);
+  };
 
-    const stageId = getStageIdByName(selectedRound);
-    if (!stageId) {
-      showToast("error", "Invalid round selected");
-      return;
-    }
+  const handleAddCategoryRow = () => {
+    setCategoryList([...categoryList, { name: "", weight: "", maxScore: "" }]);
+  };
 
 
+  const handleRemoveCategoryRow = (index) => {
+    setCategoryList(categoryList.filter((_, i) => i !== index));
+  };
+
+  const handleConfirmCategories = async () => {
     try {
-      const payload = {
-        name: categoryName.trim(),
-        percentage: Number(categoryWeight),
-        maxScore: Number(maxScore),
-        stage_id: stageId,
-      };
+      for (const category of categoryList) {
+        if (!category.name || !category.weight || !category.maxScore) continue;
 
-      await addCategoryToEvent(event.id, payload);
+        const stageId = getStageIdByName(activeRound); // or selectedRound if passing from modal
+        if (!stageId) continue;
+
+        await addCategoryToEvent(event.id, {
+          name: category.name.trim(),
+          percentage: Number(category.weight),
+          maxScore: Number(category.maxScore),
+          stage_id: stageId,
+        });
+      }
+
       await fetchCategories();
-      setActiveRound(selectedRound);
       resetCategoryForm();
-
-      // Show success toast
-      showToast("success", "Category added successfully");
-
-      // Show criteria modal automatically after creating a category
       setIsCategoryModalOpen(false);
       setIsCriteriaModalOpen(true);
+
+      showToast("success", "Categories added successfully");
     } catch (err) {
-      console.error("Failed to create category", err);
-      showToast("error", err.response?.data?.message || "Failed to create category");
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to add categories"
+      );
     }
   };
+
 
   // ============================
   // RENDER
@@ -349,68 +358,18 @@ function CategoryPage() {
         )}
       </section>
 
-      {/* CATEGORY MODAL */}
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-md rounded-2xl p-6">
-            <h2 className="text-center text-xl font-semibold mb-6">
-              Add Category
-            </h2>
-
-            <div className="space-y-4">
-              <input
-                placeholder="Category Name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full rounded-full border px-4 py-2"
-              />
-
-              <select
-                value={selectedRound}
-                onChange={(e) => setSelectedRound(e.target.value)}
-                className="w-full rounded-full border px-4 py-2"
-              >
-                {rounds.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                placeholder="Category Weight (%)"
-                value={categoryWeight}
-                onChange={(e) => setCategoryWeight(e.target.value)}
-                className="w-full rounded-full border px-4 py-2"
-              />
-
-              <input
-                type="number"
-                placeholder="Max Score"
-                value={maxScore}
-                onChange={(e) => setMaxScore(e.target.value)}
-                className="w-full rounded-full border px-4 py-2"
-              />
-
-              <div className="flex justify-between pt-4">
-                <button
-                  onClick={() => setIsCategoryModalOpen(false)}
-                  className="px-6 py-2 border rounded-full"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddCategory}
-                  className="px-6 py-2 bg-[#FA824C] text-white rounded-full"
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddCategoryModal
+        isOpen={isCategoryModalOpen}
+        categoryList={categoryList}
+        handleCategoryChange={handleCategoryChange}
+        handleAddCategoryRow={handleAddCategoryRow}
+        handleRemoveCategoryRow={handleRemoveCategoryRow}
+        handleConfirmCategories={handleConfirmCategories}
+        setIsCategoryModalOpen={setIsCategoryModalOpen}
+        rounds={rounds}
+        selectedRound={activeRound} // stage selected at top
+        setSelectedRound={setActiveRound}
+      />
 
       {/* CRITERIA MODAL */}
       <CriteriaModal
