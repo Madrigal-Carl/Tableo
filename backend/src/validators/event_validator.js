@@ -80,11 +80,7 @@ function validateEvent(req, res, next) {
         candidates: Number(req.body.candidates),
     };
 
-<<<<<<< HEAD
     const { error } = schema.validate(data); // validate transformed data
-=======
-    const { error } = schema.validate(data);
->>>>>>> main
     if (error) return res.status(400).json({ message: error.details[0].message });
     next();
 }
