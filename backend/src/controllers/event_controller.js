@@ -10,6 +10,9 @@ async function createEvent(req, res, next) {
             userId,
         });
 
+        const io = req.app.get('io');
+        io.emit('events:updated', { userId });
+
         res.status(201).json({
             message: 'Event created successfully',
             event,
@@ -36,6 +39,9 @@ async function deleteEvent(req, res, next) {
 
         const result = await eventService.deleteEvent(eventId, userId);
 
+        const io = req.app.get('io');
+        io.emit('events:updated', { userId });
+
         res.status(200).json(result);
     } catch (err) {
         next(err);
@@ -53,6 +59,9 @@ async function updateEvent(req, res, next) {
         };
 
         const result = await eventService.updateEvent(eventId, userId, payload);
+
+        const io = req.app.get('io');
+        io.emit('events:updated', { userId });
 
         res.json({ message: 'Event updated successfully', event: result });
     } catch (err) {

@@ -9,6 +9,7 @@ import { createEvent, getAllEvents, deleteEvent, updateEvent } from "../../servi
 import { validateEvent } from "../../validations/event_validation";
 import { showToast } from "../../utils/swal";
 import { useNavigate } from "react-router-dom";
+import { socket } from "../../utils/socket";
 
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -122,7 +123,7 @@ function HomePage() {
         const formattedEvents = res.data.events.map((ev) => ({
           ...ev,
           image: ev.path
-            ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}`
+            ? `${import.meta.env.VITE_ASSET_URL}${ev.path}`
             : null,
         }));
         setEvents(formattedEvents);
@@ -133,7 +134,17 @@ function HomePage() {
       }
     };
 
+    // initial load
     fetchEvents();
+
+    // 🔥 listen for backend updates
+    socket.on("events:updated", () => {
+      fetchEvents();
+    });
+
+    return () => {
+      socket.off("events:updated");
+    };
   }, []);
 
   const handleDeleteEvent = async (eventId) => {
