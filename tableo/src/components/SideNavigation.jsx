@@ -1,28 +1,28 @@
-import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.svg";
 import { Calendar, Archive, Settings, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 function SideNavigation() {
-  const [active, setActive] = useState("Events");
-  const { logout } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const navItem = (label, Icon, action) => {
-    const isActive = active === label;
+  const navItem = (label, Icon, path, action) => {
+    const isActive = location.pathname === path;
 
     return (
       <button
         onClick={() => {
-          setActive(label);
           if (action) action();
+          if (path) navigate(path);
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition
-          ${isActive
-            ? "bg-[#2B6777] text-white hover:bg-[#26515D]"
-            : "text-gray-700 hover:bg-[#2B6777] hover:text-white"
+          ${
+            isActive
+              ? "bg-[#2B6777] text-white hover:bg-[#26515D]"
+              : "text-gray-700 hover:bg-[#2B6777] hover:text-white"
           }`}
       >
         <Icon size={20} />
@@ -68,8 +68,8 @@ function SideNavigation() {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
-        {navItem("Events", Calendar, () => navigate("/home"))}
-        {navItem("Archives", Archive, () => navigate("/archives"))}
+        {navItem("Events", Calendar, "/dashboard")}
+        {navItem("Archives", Archive, "/archive")}
       </nav>
 
       {/* Divider */}
@@ -77,12 +77,12 @@ function SideNavigation() {
 
       {/* Settings */}
       <div className="flex flex-col gap-2">
-        {navItem("Settings", Settings, () => navigate("/settings"))}
+        {navItem("Settings", Settings, "/settings")}
       </div>
 
       {/* Bottom Action */}
       <div className="mt-auto">
-        {navItem("Logout", LogOut, handleLogout)}
+        {navItem("Logout", LogOut, null, handleLogout)}
       </div>
     </aside>
   );
