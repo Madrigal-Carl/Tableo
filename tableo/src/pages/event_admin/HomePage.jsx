@@ -3,6 +3,7 @@ import CardEvent from "../../components/CreateCardEvent";
 import EventModal from "../../components/EventModal";
 import React, { useState, useEffect } from "react";
 import { CalendarPlus } from "lucide-react";
+import FullScreenLoader from "../../components/FullScreenLoader";
 import Swal from "sweetalert2";
 import { createEvent, getAllEvents, deleteEvent, updateEvent } from "../../services/event_service";
 import { validateEvent } from "../../validations/event_validation";
@@ -15,6 +16,7 @@ function HomePage() {
   const [sortAZ, setSortAZ] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const [newEvent, setNewEvent] = useState({
@@ -114,16 +116,20 @@ function HomePage() {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      setLoading(true);
       try {
         const res = await getAllEvents();
-        // Fix image URL if backend returns relative path
         const formattedEvents = res.data.events.map((ev) => ({
           ...ev,
-          image: ev.path ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}` : null
+          image: ev.path
+            ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}`
+            : null,
         }));
         setEvents(formattedEvents);
       } catch (err) {
         showToast("error", err.message || "Failed to load events");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -258,6 +264,9 @@ function HomePage() {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 ml-72 p-8 bg-gray-50 overflow-y-auto">
+        {/* Loader */}
+        <FullScreenLoader show={loading} />
+
         {/* HEADER */}
         <h1 className="text-3xl font-bold border-b-2 pb-2 border-gray-300 mb-6">Your Events</h1>
 
