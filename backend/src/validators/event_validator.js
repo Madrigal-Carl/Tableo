@@ -18,6 +18,23 @@ function validateEvent(req, res, next) {
             'date.base': 'Date must be a valid date',
             'any.required': 'Date is required'
         }),
+        date: Joi.date()
+            .required()
+            .custom((value, helpers) => {
+                const inputDate = new Date(value);
+                const today = new Date();
+                inputDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+                if (inputDate < today) {
+                    return helpers.error('date.min');
+                }
+                return value;
+            })
+            .messages({
+                'date.base': 'Date must be a valid date',
+                'date.min': 'Event date must be today or later',
+                'any.required': 'Date is required',
+            }),
         timeStart: Joi.string().pattern(/^([01]\d|2[0-3]):[0-5]\d$/).required().messages({
             'string.empty': 'Start time is required',
             'string.pattern.base': 'Start time must be in HH:MM 24-hour format',
@@ -33,23 +50,26 @@ function validateEvent(req, res, next) {
             'string.max': 'Location cannot exceed 200 characters',
             'any.required': 'Location is required'
         }),
-        stages: Joi.number().integer().min(1).required().messages({
+        stages: Joi.number().integer().min(1).max(20).required().messages({
             'number.base': 'Stages must be a number',
             'number.integer': 'Stages must be an integer',
             'number.min': 'Stages must be at least 1',
-            'any.required': 'Stages is required'
+            'number.max': 'Stages cannot exceed 20',
+            'any.required': 'Stages is required',
         }),
-        judges: Joi.number().integer().min(1).required().messages({
+        judges: Joi.number().integer().min(1).max(15).required().messages({
             'number.base': 'Judges must be a number',
             'number.integer': 'Judges must be an integer',
             'number.min': 'Judges must be at least 1',
-            'any.required': 'Judges is required'
+            'number.max': 'Judges cannot exceed 15',
+            'any.required': 'Judges is required',
         }),
-        candidates: Joi.number().integer().min(1).required().messages({
+        candidates: Joi.number().integer().min(1).max(500).required().messages({
             'number.base': 'Candidates must be a number',
             'number.integer': 'Candidates must be an integer',
             'number.min': 'Candidates must be at least 1',
-            'any.required': 'Candidates is required'
+            'number.max': 'Candidates cannot exceed 500',
+            'any.required': 'Candidates is required',
         }),
     });
 
@@ -60,7 +80,11 @@ function validateEvent(req, res, next) {
         candidates: Number(req.body.candidates),
     };
 
+<<<<<<< HEAD
     const { error } = schema.validate(data); // validate transformed data
+=======
+    const { error } = schema.validate(data);
+>>>>>>> main
     if (error) return res.status(400).json({ message: error.details[0].message });
     next();
 }
