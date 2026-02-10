@@ -68,8 +68,8 @@ function SideNavigation() {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
-        {navItem("Events", Calendar, () => navigate("/home"))}
-        {navItem("Archives", Archive, () => navigate("/archives"))}
+        {navItem("Events", Calendar, () => navigate("/dashboard"))}
+        {navItem("Archives", Archive, () => navigate("/archive"))}
       </nav>
 
       {/* Divider */}
