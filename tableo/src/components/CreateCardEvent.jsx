@@ -9,22 +9,29 @@ function CreateCardEvent({
   children,
   onClick,
   onEdit,
-  onDelete, // 👈 NEW
+  onDelete,
+  disabledEdit,
 }) {
   return (
     <div
       onClick={onClick}
-      className="relative w-full h-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col cursor-pointer"
+      className={`relative w-full h-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col cursor-pointer1 ${disabledEdit ? "opacity-80 grayscale-90" : ""}`}
     >
       {/* ACTION BUTTONS */}
       <div className="absolute top-4 right-4 z-20 flex gap-2">
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onEdit?.();
+            if (!disabledEdit) onEdit?.();
           }}
-          className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"
-          title="Edit"
+          disabled={disabledEdit}
+          className={`p-2 rounded-full transition
+    ${disabledEdit
+              ? "bg-gray-400/60 text-gray-200 cursor-not-allowed"
+              : "bg-black/50 text-white hover:bg-black/70"
+            }
+  `}
+          title={disabledEdit ? "Event already ended" : "Edit"}
         >
           <FiEdit2 size={16} />
         </button>
