@@ -2,23 +2,36 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const errorHandler = require('./middlewares/error_handler');
 
 const app = express();
+const server = http.createServer(app);
 
-app.use(
-  cors({
+const io = new Server(server, {
+  cors: {
     origin: 'http://localhost:5173',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+  },
+});
 
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
+
+app.set('io', io);
+
+app.set('io', io);
+io.on('connection', (socket) => {
+  console.log('🟢 Client connected:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('🔴 Client disconnected:', socket.id);
+  });
+});
 
 const authRoutes = require('./routes/auth_routes');
 const eventRoutes = require('./routes/event_routes');
@@ -43,6 +56,6 @@ app.use('/api/stages', stageRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

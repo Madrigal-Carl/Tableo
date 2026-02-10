@@ -1,4 +1,5 @@
 const eventService = require('../services/event_service');
+const { isEventEditable } = require('../utils/event_time_guard');
 
 async function createEvent(req, res, next) {
     try {
@@ -9,6 +10,9 @@ async function createEvent(req, res, next) {
             path: req.file ? `/uploads/events/${req.file.filename}` : null,
             userId,
         });
+
+        const io = req.app.get('io');
+        io.emit('events:updated', { userId });
 
         res.status(201).json({
             message: 'Event created successfully',
@@ -36,6 +40,9 @@ async function deleteEvent(req, res, next) {
 
         const result = await eventService.deleteEvent(eventId, userId);
 
+        const io = req.app.get('io');
+        io.emit('events:updated', { userId });
+
         res.status(200).json(result);
     } catch (err) {
         next(err);
@@ -47,12 +54,28 @@ async function updateEvent(req, res, next) {
         const userId = req.user.id;
         const eventId = req.params.eventId;
 
+        const event = await eventService.getEvent(eventId, userId);
+
+        const editable = isEventEditable({
+            date: event.date,
+            timeEnd: event.timeEnd,
+        });
+
+        if (!editable) {
+            const err = new Error('Event has already ended and can no longer be edited');
+            err.status = 403;
+            throw err;
+        }
+
         const payload = {
             ...req.body,
             ...(req.file && { path: `/uploads/events/${req.file.filename}` }),
         };
 
         const result = await eventService.updateEvent(eventId, userId, payload);
+
+        const io = req.app.get('io');
+        io.emit('events:updated', { userId });
 
         res.json({ message: 'Event updated successfully', event: result });
     } catch (err) {

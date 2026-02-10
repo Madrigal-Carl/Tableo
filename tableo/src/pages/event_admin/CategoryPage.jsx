@@ -205,7 +205,7 @@ function CategoryPage() {
               onClick={() => navigate("/dashboard")}
               className="cursor-pointer hover:text-gray-900"
             />
-            <h1 className="text-4xl font-semibold">{event.title}</h1>
+            <h1 className="text-4xl font-semibold text-[#FA824C]">{event.title}</h1>
           </div>
           <p className="text-sm text-gray-500 mt-2">{event.description}</p>
         </div>

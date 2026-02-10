@@ -95,6 +95,7 @@ function ViewOnlyTable({
                           >
                             <SquarePen size={16} />
                           </button>
+
                           <button
                             onClick={() => openDeleteModal(item)}
                             className="text-gray-500 hover:text-red-600 transition"

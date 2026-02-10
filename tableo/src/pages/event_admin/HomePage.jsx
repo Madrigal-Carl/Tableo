@@ -3,11 +3,14 @@ import CardEvent from "../../components/CreateCardEvent";
 import EventModal from "../../components/EventModal";
 import React, { useState, useEffect } from "react";
 import { CalendarPlus } from "lucide-react";
+import FullScreenLoader from "../../components/FullScreenLoader";
 import Swal from "sweetalert2";
 import { createEvent, getAllEvents, deleteEvent, updateEvent } from "../../services/event_service";
 import { validateEvent } from "../../validations/event_validation";
 import { showToast } from "../../utils/swal";
 import { useNavigate } from "react-router-dom";
+import { socket } from "../../utils/socket";
+import { isEventEditable } from "../../utils/eventEditable";
 
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +18,7 @@ function HomePage() {
   const [sortAZ, setSortAZ] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const [newEvent, setNewEvent] = useState({
@@ -48,6 +52,15 @@ function HomePage() {
   };
 
   const openEditModal = (event) => {
+    if (!isEventEditable(event)) {
+      Swal.fire({
+        icon: "info",
+        title: "Editing Disabled",
+        text: "This event has already ended and can no longer be edited.",
+      });
+      return;
+    }
+
     setModalMode("edit");
     const formattedDate = event.date
       ? new Date(event.date).toISOString().split("T")[0]
@@ -114,20 +127,34 @@ function HomePage() {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      setLoading(true);
       try {
         const res = await getAllEvents();
-        // Fix image URL if backend returns relative path
         const formattedEvents = res.data.events.map((ev) => ({
           ...ev,
-          image: ev.path ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}` : null
+          image: ev.path
+            ? `${import.meta.env.VITE_ASSET_URL}${ev.path}`
+            : null,
         }));
         setEvents(formattedEvents);
       } catch (err) {
         showToast("error", err.message || "Failed to load events");
+      } finally {
+        setLoading(false);
       }
     };
 
+    // initial load
     fetchEvents();
+
+    // 🔥 listen for backend updates
+    socket.on("events:updated", () => {
+      fetchEvents();
+    });
+
+    return () => {
+      socket.off("events:updated");
+    };
   }, []);
 
   const handleDeleteEvent = async (eventId) => {
@@ -258,6 +285,9 @@ function HomePage() {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 ml-72 p-8 bg-gray-50 overflow-y-auto">
+        {/* Loader */}
+        <FullScreenLoader show={loading} />
+
         {/* HEADER */}
         <h1 className="text-3xl font-bold border-b-2 pb-2 border-gray-300 mb-6">Your Events</h1>
 
@@ -330,8 +360,9 @@ function HomePage() {
               date={event.date}
               location={event.location}
               onClick={() => navigate(`/categories/${event.id}`)}
-              onEdit={() => openEditModal(event)}
+              onEdit={isEventEditable(event) ? () => openEditModal(event) : null}
               onDelete={() => handleDeleteEvent(event.id)}
+              disabledEdit={!isEventEditable(event)}
             >
               {event.image && (
                 <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
