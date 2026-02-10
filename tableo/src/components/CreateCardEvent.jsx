@@ -15,7 +15,7 @@ function CreateCardEvent({
   return (
     <div
       onClick={onClick}
-      className="relative w-full h-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col cursor-pointer"
+      className={`relative w-full h-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col cursor-pointer1 ${disabledEdit ? "opacity-80 grayscale-90" : ""}`}
     >
       {/* ACTION BUTTONS */}
       <div className="absolute top-4 right-4 z-20 flex gap-2">
