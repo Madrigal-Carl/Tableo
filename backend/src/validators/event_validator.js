@@ -14,6 +14,10 @@ function validateEvent(req, res, next) {
         description: Joi.string().max(500).allow('', null).messages({
             'string.max': 'Description cannot exceed 500 characters'
         }),
+        date: Joi.date().required().messages({
+            'date.base': 'Date must be a valid date',
+            'any.required': 'Date is required'
+        }),
         date: Joi.date()
             .required()
             .custom((value, helpers) => {
@@ -76,7 +80,7 @@ function validateEvent(req, res, next) {
         candidates: Number(req.body.candidates),
     };
 
-    const { error } = schema.validate(data);
+    const { error } = schema.validate(data); // validate transformed data
     if (error) return res.status(400).json({ message: error.details[0].message });
     next();
 }
