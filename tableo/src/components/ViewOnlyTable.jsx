@@ -5,6 +5,8 @@ function ViewOnlyTable({
   title,
   data,
   nameLabel,
+  fieldLabel = "Sex", // Column label
+  fieldKey = "sex",    // Key in data object
   editable = false,
   onEdit,
   onDelete,
@@ -14,7 +16,7 @@ function ViewOnlyTable({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const [editName, setEditName] = useState("");
-  const [editGender, setEditGender] = useState("");
+  const [editField, setEditField] = useState("");
 
   if (!data || data.length === 0) {
     return (
@@ -24,13 +26,11 @@ function ViewOnlyTable({
     );
   }
 
-  /* --------------------
-     HANDLERS
-  -------------------- */
+  /* -------------------- HANDLERS -------------------- */
   const openEditModal = (item) => {
     setSelectedItem(item);
     setEditName(item.name);
-    setEditGender(item.gender);
+    setEditField(item[fieldKey] || "");
     setIsEditOpen(true);
   };
 
@@ -43,7 +43,7 @@ function ViewOnlyTable({
     onEdit?.({
       ...selectedItem,
       name: editName,
-      gender: editGender,
+      [fieldKey]: editField,
     });
     setIsEditOpen(false);
     setSelectedItem(null);
@@ -61,9 +61,7 @@ function ViewOnlyTable({
         <div className="mb-8">
           {/* TITLE ROW */}
           <div className="flex items-center justify-between py-3 border-b border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-700">
-              {title}
-            </h2>
+            <h2 className="text-2xl font-semibold text-gray-700">{title}</h2>
           </div>
 
           {/* TABLE */}
@@ -72,15 +70,9 @@ function ViewOnlyTable({
               <thead>
                 <tr className="text-sm text-gray-500">
                   <th className="text-left py-3 w-20">No.</th>
-                  <th className="text-left py-3 w-64">
-                    {nameLabel}
-                  </th>
-                  <th className="text-left py-3 w-32">
-                    Sex
-                  </th>
-                  <th className="text-center py-3 w-32">
-                    Actions
-                  </th>
+                  <th className="text-left py-3 w-64">{nameLabel}</th>
+                  <th className="text-left py-3 w-32">{fieldLabel}</th>
+                  <th className="text-center py-3 w-32">Actions</th>
                 </tr>
               </thead>
 
@@ -90,18 +82,9 @@ function ViewOnlyTable({
                     key={item.id}
                     className="border-b border-gray-200 last:border-b-0"
                   >
-                    <td className="py-4 text-sm text-gray-600">
-                      {index + 1}
-                    </td>
-
-                    <td className="py-4 text-sm text-gray-700">
-                      {item.name}
-                    </td>
-
-                    <td className="py-4 text-sm text-gray-600">
-                      {item.gender}
-                    </td>
-
+                    <td className="py-4 text-sm text-gray-600">{index + 1}</td>
+                    <td className="py-4 text-sm text-gray-700">{item.name}</td>
+                    <td className="py-4 text-sm text-gray-600">{item[fieldKey]}</td>
                     <td className="py-4 text-center">
                       {editable ? (
                         <div className="flex justify-center gap-4">
@@ -121,9 +104,7 @@ function ViewOnlyTable({
                           </button>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-300">
-                          View only
-                        </span>
+                        <span className="text-sm text-gray-300">View only</span>
                       )}
                     </td>
                   </tr>
@@ -144,9 +125,7 @@ function ViewOnlyTable({
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-500">
-                  Name
-                </label>
+                <label className="text-sm text-gray-500">Name</label>
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -155,17 +134,12 @@ function ViewOnlyTable({
               </div>
 
               <div>
-                <label className="text-sm text-gray-500">
-                  Gender
-                </label>
-                <select
-                  value={editGender}
-                  onChange={(e) => setEditGender(e.target.value)}
+                <label className="text-sm text-gray-500">{fieldLabel}</label>
+                <input
+                  value={editField}
+                  onChange={(e) => setEditField(e.target.value)}
                   className="w-full mt-1 rounded-full border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
-                >
-                  <option>Male</option>
-                  <option>Female</option>
-                </select>
+                />
               </div>
             </div>
 
@@ -197,10 +171,7 @@ function ViewOnlyTable({
 
             <p className="text-center text-gray-500 mb-6">
               Are you sure you want to delete{" "}
-              <span className="font-medium text-gray-700">
-                {selectedItem?.name}
-              </span>
-              ?
+              <span className="font-medium text-gray-700">{selectedItem?.name}</span>?
             </p>
 
             <div className="flex justify-between">

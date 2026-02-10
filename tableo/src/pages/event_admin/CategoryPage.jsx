@@ -297,11 +297,23 @@ function CategoryPage() {
         )}
 
         {activeTopTab === "Participants" && (
-          <ViewOnlyTable title="Participants" data={event.participants || []} />
+          <ViewOnlyTable
+            title="Participants"
+            data={event.candidates || []}
+            nameLabel="Name"
+            fieldLabel="Sex"   // Table column label
+            fieldKey="sex"     // Field from object to display
+          />
         )}
 
         {activeTopTab === "Judges" && (
-          <ViewOnlyTable title="Judges" data={event.judges || []} />
+          <ViewOnlyTable
+            title="Judges"
+            data={event.judges || []}
+            nameLabel="Name"
+            fieldLabel="Suffix"   // Table column label
+            fieldKey="suffix"     // Field from object to display
+          />
         )}
       </section>
 
