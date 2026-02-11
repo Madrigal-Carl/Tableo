@@ -169,19 +169,31 @@ function CategoryPage() {
 
   const handleConfirmCategories = async () => {
     try {
-      for (const category of categoryList) {
-        if (!category.name || !category.weight || !category.maxScore) continue;
+      // Filter out incomplete categories
+      const validCategories = categoryList.filter(
+        (c) => c.name && c.weight && c.maxScore
+      );
 
-        const stageId = getStageIdByName(activeRound); // or selectedRound if passing from modal
-        if (!stageId) continue;
-
-        await addCategoryToEvent(event.id, {
-          name: category.name.trim(),
-          percentage: Number(category.weight),
-          maxScore: Number(category.maxScore),
-          stage_id: stageId,
-        });
+      if (!validCategories.length) {
+        showToast("error", "Please add at least one valid category");
+        return;
       }
+
+      const stageId = getStageIdByName(activeRound); // Stage selected at top
+      if (!stageId) {
+        showToast("error", "Please select a valid round");
+        return;
+      }
+
+      // Call bulk API
+      await addCategoryToEvent(event.id, {
+        stage_id: stageId,
+        categories: validCategories.map((c) => ({
+          name: c.name.trim(),
+          percentage: Number(c.weight),
+          maxScore: Number(c.maxScore),
+        })),
+      });
 
       await fetchCategories();
       resetCategoryForm();

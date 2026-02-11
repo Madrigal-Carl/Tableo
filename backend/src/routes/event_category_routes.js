@@ -5,10 +5,10 @@ const requireAuth = require('../middlewares/auth');
 const { validateCategory } = require('../validators/category_validator');
 const categoryController = require('../controllers/category_controller');
 
-// Create Category for an Event
+// POST for both single & bulk create
 router.post('/:eventId/categories', requireAuth, validateCategory, categoryController.createCategory);
 
-// Get Categories for an Event
+// GET categories
 router.get('/:eventId/categories', requireAuth, categoryController.getCategoriesByEvent);
 
 module.exports = router;
