@@ -33,11 +33,8 @@ function CategoryPage() {
     { name: "", weight: "", maxScore: "" },
   ]);
 
-
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
-  const [criteriaList, setCriteriaList] = useState([
-    { name: "", weight: "" },
-  ]);
+  const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
 
   const tabs = ["Rounds", "Participants", "Judges"];
 
@@ -50,8 +47,6 @@ function CategoryPage() {
   const resetCategoryForm = () => {
     setCategoryList([{ name: "", weight: "", maxScore: "" }]);
   };
-
-
 
   const handleCriteriaChange = (index, field, value) => {
     const updated = [...criteriaList];
@@ -106,7 +101,6 @@ function CategoryPage() {
 
         if (evt.stages?.length) {
           setActiveRound(evt.stages[0].name);
-          setSelectedRound(evt.stages[0].name);
         }
 
         await fetchCategories();
@@ -162,14 +156,12 @@ function CategoryPage() {
     setCategoryList([...categoryList, { name: "", weight: "", maxScore: "" }]);
   };
 
-
   const handleRemoveCategoryRow = (index) => {
     setCategoryList(categoryList.filter((_, i) => i !== index));
   };
 
   const handleConfirmCategories = async () => {
     try {
-      // Filter out incomplete categories
       const validCategories = categoryList.filter(
         (c) => c.name && c.weight && c.maxScore
       );
@@ -179,13 +171,12 @@ function CategoryPage() {
         return;
       }
 
-      const stageId = getStageIdByName(activeRound); // Stage selected at top
+      const stageId = getStageIdByName(activeRound);
       if (!stageId) {
         showToast("error", "Please select a valid round");
         return;
       }
 
-      // Call bulk API
       await addCategoryToEvent(event.id, {
         stage_id: stageId,
         categories: validCategories.map((c) => ({
@@ -198,7 +189,6 @@ function CategoryPage() {
       await fetchCategories();
       resetCategoryForm();
       setIsCategoryModalOpen(false);
-      setIsCriteriaModalOpen(true);
 
       showToast("success", "Categories added successfully");
     } catch (err) {
@@ -208,7 +198,6 @@ function CategoryPage() {
       );
     }
   };
-
 
   // ============================
   // RENDER
@@ -276,8 +265,8 @@ function CategoryPage() {
                   key={round}
                   onClick={() => setActiveRound(round)}
                   className={`pb-3 text-lg font-semibold transition ${activeRound === round
-                    ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                    : "text-gray-400 hover:text-gray-600"
+                      ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                      : "text-gray-400 hover:text-gray-600"
                     }`}
                 >
                   {round}
@@ -289,10 +278,7 @@ function CategoryPage() {
             <div className="flex items-center gap-4 mb-6 text-lg font-semibold">
               <PlusCircle
                 className="text-[#FA824C] w-6 h-6 cursor-pointer"
-                onClick={() => {
-                  resetCategoryForm();
-                  setIsCategoryModalOpen(true);
-                }}
+                onClick={() => setIsCriteriaModalOpen(true)} // <-- open criteria modal here
               />
               <select
                 className="px-4 py-2"
@@ -370,6 +356,7 @@ function CategoryPage() {
         )}
       </section>
 
+      {/* ADD CATEGORY MODAL */}
       <AddCategoryModal
         isOpen={isCategoryModalOpen}
         categoryList={categoryList}
@@ -379,7 +366,7 @@ function CategoryPage() {
         handleConfirmCategories={handleConfirmCategories}
         setIsCategoryModalOpen={setIsCategoryModalOpen}
         rounds={rounds}
-        selectedRound={activeRound} // stage selected at top
+        selectedRound={activeRound}
         setSelectedRound={setActiveRound}
       />
 
@@ -392,7 +379,6 @@ function CategoryPage() {
         handleRemoveCriteriaRow={handleRemoveCriteriaRow}
         handleConfirmCriteria={handleConfirmCriteria}
         setIsCriteriaModalOpen={setIsCriteriaModalOpen}
-        setIsCategoryModalOpen={setIsCategoryModalOpen}
       />
     </div>
   );
