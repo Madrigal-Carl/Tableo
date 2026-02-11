@@ -60,6 +60,11 @@ async function getEvent(eventId, userId) {
     return event;
 }
 
+function normalizeTime(t) {
+    if (!t) return null;
+    return t.length === 5 ? `${t}:00` : t; // "HH:mm" → "HH:mm:00"
+}
+
 async function updateEvent(eventId, userId, payload) {
     return sequelize.transaction(async (t) => {
         const event = await eventRepo.findByIdWithRelations(eventId, t);
@@ -67,10 +72,36 @@ async function updateEvent(eventId, userId, payload) {
         if (!event) throw new Error('Event not found');
         if (event.user_id !== userId) throw new Error('Unauthorized');
 
-        if (!isEventEditable({ date: event.date, timeEnd: event.timeEnd })) {
-            const err = new Error('Event has already ended and can no longer be edited');
+        // ⛔ Lock editing once event has started
+        if (!isEventEditable({
+            date: event.date,
+            timeStart: event.timeStart,
+        })) {
+            const err = new Error('Event has already started and can no longer be edited');
             err.status = 403;
             throw err;
+        }
+
+        const incomingTimeStart = normalizeTime(payload.timeStart);
+        const existingTimeStart = normalizeTime(event.timeStart);
+
+        const eventHasStarted = !isEventEditable({
+            date: event.date,
+            timeStart: event.timeStart,
+        });
+
+        if (
+            eventHasStarted &&
+            incomingTimeStart &&
+            incomingTimeStart !== existingTimeStart
+        ) {
+            const err = new Error('Event start time cannot be modified after the event has started');
+            err.status = 400;
+            throw err;
+        }
+
+        if (eventHasStarted) {
+            delete payload.timeStart;
         }
 
         await eventRepo.update(eventId, payload, t);
@@ -79,7 +110,6 @@ async function updateEvent(eventId, userId, payload) {
         await judgeService.createOrUpdate(eventId, payload.judges, t);
         await stageService.createOrUpdate(eventId, payload.stages, t);
 
-        // 🔥 REFRESH relations
         const updated = await eventRepo.findByIdWithRelations(eventId, t);
 
         return {

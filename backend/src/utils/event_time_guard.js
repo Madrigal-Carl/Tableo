@@ -1,26 +1,17 @@
-function isEventEditable({ date, timeEnd }) {
+function isEventEditable({ date, timeStart }) {
+    if (!date || !timeStart) return false;
+
     const now = new Date();
 
     const eventDate = new Date(date);
     if (isNaN(eventDate)) return false;
 
-    // Event date already passed
-    if (eventDate.toDateString() < now.toDateString()) {
-        return false;
-    }
+    const [hours, minutes] = timeStart.split(':').map(Number);
 
-    // Same day → check timeEnd
-    if (eventDate.toDateString() === now.toDateString()) {
-        if (!timeEnd) return false;
+    const eventStart = new Date(eventDate);
+    eventStart.setHours(hours, minutes, 0, 0);
 
-        const [hours, minutes] = timeEnd.split(':').map(Number);
-        const eventEnd = new Date(eventDate);
-        eventEnd.setHours(hours, minutes, 0, 0);
-
-        if (eventEnd < now) return false;
-    }
-
-    return true;
+    return eventStart > now;
 }
 
 module.exports = { isEventEditable };

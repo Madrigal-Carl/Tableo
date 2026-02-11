@@ -1,20 +1,20 @@
 export function isEventEditable(event) {
-    const now = new Date();
-    const eventDate = new Date(event.date);
+    if (!event?.date || !event?.timeStart) return false;
 
+    const now = new Date();
+
+    // Normalize date (YYYY-MM-DD or Date)
+    const eventDate = new Date(event.date);
     if (isNaN(eventDate)) return false;
 
-    // If event date is in the past, not editable
-    const eventEnd = new Date(eventDate);
+    // Normalize timeStart (HH:mm or HH:mm:ss)
+    const [hours, minutes] = event.timeStart
+        .split(':')
+        .map(Number);
 
-    if (event.timeEnd) {
-        const [h, m] = event.timeEnd.split(':').map(Number);
-        eventEnd.setHours(h, m, 0, 0);
-    } else {
-        // No timeEnd, assume end of day
-        eventEnd.setHours(23, 59, 59, 999);
-    }
+    const eventStart = new Date(eventDate);
+    eventStart.setHours(hours, minutes, 0, 0);
 
-    // Editable only if eventEnd is in the future
-    return eventEnd > now;
+    // 🔒 Not editable once started
+    return eventStart > now;
 }
