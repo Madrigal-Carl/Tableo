@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from "react";
-import CategoryCard from "../../components/CategoryCard";
 import SideNavigation from "../../components/SideNavigation";
 import ViewOnlyTable from "../../components/ViewOnlyTable";
 import { ChevronLeft, PlusCircle } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getEvent } from "../../services/event_service";
-import {
-  addCategoryToEvent,
-  getCategoriesByEvent,
-} from "../../services/category_service";
+import { addCategoryToEvent, getCategoriesByEvent, editCategoriesByEvent } from "../../services/category_service";
+import AddCategoryModal from "../../components/AddCategoryModal";
 import CriteriaModal from "../../components/CriteriaModal";
 import { showToast } from "../../utils/swal";
-import AddCategoryModal from "../../components/AddCategoryModal";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -29,9 +25,7 @@ function CategoryPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [categoryList, setCategoryList] = useState([
-    { name: "", weight: "", maxScore: "" },
-  ]);
+  const [categoryList, setCategoryList] = useState([{ name: "", weight: "", maxScore: "", categoryId: null }]);
 
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
@@ -45,7 +39,44 @@ function CategoryPage() {
     event?.stages.find((s) => s.name === stageName)?.id;
 
   const resetCategoryForm = () => {
-    setCategoryList([{ name: "", weight: "", maxScore: "" }]);
+    setCategoryList([{ name: "", weight: "", maxScore: "", categoryId: null }]);
+  };
+
+  const handleStageChangeInModal = (newStageName) => {
+    setActiveRound(newStageName);
+
+    const stageCategories = categories
+      .filter((c) => c.stages?.some((s) => s.name === newStageName))
+      .map((c) => ({
+        name: c.name,
+        weight: c.percentage,
+        maxScore: c.maxScore,
+        categoryId: c.id,
+      }));
+
+    setCategoryList(
+      stageCategories.length > 0
+        ? stageCategories
+        : [{ name: "", weight: "", maxScore: "", categoryId: null }]
+    );
+  };
+
+  const handleOpenAddCategoryModal = () => {
+    const stageCategories = categories
+      .filter((c) => c.stages?.some((s) => s.name === activeRound))
+      .map((c) => ({
+        name: c.name,
+        weight: c.percentage,
+        maxScore: c.maxScore,
+        categoryId: c.id,
+      }));
+
+    setCategoryList(
+      stageCategories.length > 0
+        ? stageCategories
+        : [{ name: "", weight: "", maxScore: "", categoryId: null }]
+    );
+    setIsCategoryModalOpen(true);
   };
 
   const handleCriteriaChange = (index, field, value) => {
@@ -54,18 +85,9 @@ function CategoryPage() {
     setCriteriaList(updated);
   };
 
-  const handleAddCriteriaRow = () => {
-    setCriteriaList([...criteriaList, { name: "", weight: "" }]);
-  };
-
-  const handleRemoveCriteriaRow = (index) => {
-    setCriteriaList(criteriaList.filter((_, i) => i !== index));
-  };
-
-  const handleConfirmCriteria = () => {
-    console.log("Criteria confirmed", criteriaList);
-    setIsCriteriaModalOpen(false);
-  };
+  const handleAddCriteriaRow = () => setCriteriaList([...criteriaList, { name: "", weight: "" }]);
+  const handleRemoveCriteriaRow = (index) => setCriteriaList(criteriaList.filter((_, i) => i !== index));
+  const handleConfirmCriteria = () => setIsCriteriaModalOpen(false);
 
   // ============================
   // FETCH CATEGORIES
@@ -125,26 +147,12 @@ function CategoryPage() {
     setSelectedCategory(roundCategories[0] || null);
   }, [activeRound, categories]);
 
-  // ============================
-  // GUARDS
-  // ============================
-  if (loading) return <div className="p-10">Loading event...</div>;
-  if (!event) return <div className="p-10 text-red-500">Event not found</div>;
-
-  // ============================
-  // ROUNDS
-  // ============================
-  const rounds = event.stages?.map((s) => s.name) || [];
-
-  // ============================
-  // FILTER CATEGORIES
-  // ============================
   const filteredCategories = categories.filter((c) =>
     c.stages?.some((s) => s.name === activeRound)
   );
 
   // ============================
-  // ADD CATEGORY
+  // CATEGORY MODAL HANDLERS
   // ============================
   const handleCategoryChange = (index, field, value) => {
     const updated = [...categoryList];
@@ -153,7 +161,7 @@ function CategoryPage() {
   };
 
   const handleAddCategoryRow = () => {
-    setCategoryList([...categoryList, { name: "", weight: "", maxScore: "" }]);
+    setCategoryList([...categoryList, { name: "", weight: "", maxScore: "", categoryId: null }]);
   };
 
   const handleRemoveCategoryRow = (index) => {
@@ -162,9 +170,7 @@ function CategoryPage() {
 
   const handleConfirmCategories = async () => {
     try {
-      const validCategories = categoryList.filter(
-        (c) => c.name && c.weight && c.maxScore
-      );
+      const validCategories = categoryList.filter((c) => c.name && c.weight && c.maxScore);
 
       if (!validCategories.length) {
         showToast("error", "Please add at least one valid category");
@@ -177,27 +183,55 @@ function CategoryPage() {
         return;
       }
 
-      await addCategoryToEvent(event.id, {
-        stage_id: stageId,
-        categories: validCategories.map((c) => ({
+      const newCategories = validCategories
+        .filter((c) => !c.categoryId)
+        .map((c) => ({
           name: c.name.trim(),
           percentage: Number(c.weight),
           maxScore: Number(c.maxScore),
-        })),
-      });
+          stage_id: stageId,
+        }));
+
+      const existingCategories = validCategories
+        .filter((c) => c.categoryId)
+        .map((c) => ({
+          categoryId: c.categoryId,
+          name: c.name.trim(),
+          percentage: Number(c.weight),
+          maxScore: Number(c.maxScore),
+          stage_id: stageId,
+        }));
+
+      if (newCategories.length > 0) {
+        await addCategoryToEvent(event.id, {
+          stage_id: stageId,
+          categories: newCategories,
+        });
+      }
+
+      if (existingCategories.length > 0) {
+        await editCategoriesByEvent(event.id, {
+          categories: existingCategories,
+        });
+      }
 
       await fetchCategories();
       resetCategoryForm();
       setIsCategoryModalOpen(false);
-
-      showToast("success", "Categories added successfully");
+      showToast("success", "Categories saved successfully");
     } catch (err) {
-      showToast(
-        "error",
-        err.response?.data?.message || "Failed to add categories"
-      );
+      console.error(err);
+      showToast("error", err.response?.data?.message || "Failed to save categories");
     }
   };
+
+  // ============================
+  // GUARDS
+  // ============================
+  if (loading) return <div className="p-10">Loading event...</div>;
+  if (!event) return <div className="p-10 text-red-500">Event not found</div>;
+
+  const rounds = event.stages?.map((s) => s.name) || [];
 
   // ============================
   // RENDER
@@ -244,10 +278,7 @@ function CategoryPage() {
 
           {activeTopTab === "Rounds" && (
             <button
-              onClick={() => {
-                resetCategoryForm();
-                setIsCategoryModalOpen(true);
-              }}
+              onClick={handleOpenAddCategoryModal}
               className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
             >
               + Add Category
@@ -255,10 +286,9 @@ function CategoryPage() {
           )}
         </div>
 
-        {/* ROUNDS */}
+        {/* ROUND TABS AND CATEGORY TABLE */}
         {activeTopTab === "Rounds" && (
           <>
-            {/* ROUND TABS */}
             <div className="flex gap-8 border-b mb-8 pl-6">
               {rounds.map((round) => (
                 <button
@@ -274,11 +304,10 @@ function CategoryPage() {
               ))}
             </div>
 
-            {/* CATEGORY SELECT DROPDOWN */}
             <div className="flex items-center gap-4 mb-6 text-lg font-semibold">
               <PlusCircle
                 className="text-[#FA824C] w-6 h-6 cursor-pointer"
-                onClick={() => setIsCriteriaModalOpen(true)} // <-- open criteria modal here
+                onClick={() => setIsCriteriaModalOpen(true)}
               />
               <select
                 className="px-4 py-2"
@@ -297,17 +326,13 @@ function CategoryPage() {
               </select>
             </div>
 
-            {/* JUDGING GRID */}
             <div className="overflow-x-auto bg-white rounded-2xl shadow-sm max-h-[520px] overflow-y-auto">
               <table className="min-w-full border-separate border-spacing-y-2">
                 <thead className="sticky top-0 bg-white z-10">
                   <tr>
                     <th className="w-64 px-6 py-4 text-left"></th>
                     {event.judges.map((judge) => (
-                      <th
-                        key={judge.id}
-                        className="px-6 py-4 text-center font-medium text-gray-600"
-                      >
+                      <th key={judge.id} className="px-6 py-4 text-center font-medium text-gray-600">
                         {judge.name}
                       </th>
                     ))}
@@ -315,13 +340,8 @@ function CategoryPage() {
                 </thead>
                 <tbody>
                   {event.candidates.map((candidate) => (
-                    <tr
-                      key={candidate.id}
-                      className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
-                    >
-                      <td className="px-6 py-4 font-medium text-gray-700 rounded-l-xl">
-                        {candidate.name}
-                      </td>
+                    <tr key={candidate.id} className="bg-gray-50 hover:bg-gray-100 transition rounded-xl">
+                      <td className="px-6 py-4 font-medium text-gray-700 rounded-l-xl">{candidate.name}</td>
                       {event.judges.map((judge) => (
                         <td key={judge.id} className="px-6 py-3 text-center">
                           <div className="w-14 h-10 rounded-lg border border-gray-300 bg-gray-100 mx-auto" />
@@ -356,7 +376,6 @@ function CategoryPage() {
         )}
       </section>
 
-      {/* ADD CATEGORY MODAL */}
       <AddCategoryModal
         isOpen={isCategoryModalOpen}
         categoryList={categoryList}
@@ -367,10 +386,9 @@ function CategoryPage() {
         setIsCategoryModalOpen={setIsCategoryModalOpen}
         rounds={rounds}
         selectedRound={activeRound}
-        setSelectedRound={setActiveRound}
+        setSelectedRound={handleStageChangeInModal}
       />
 
-      {/* CRITERIA MODAL */}
       <CriteriaModal
         isOpen={isCriteriaModalOpen}
         criteriaList={criteriaList}

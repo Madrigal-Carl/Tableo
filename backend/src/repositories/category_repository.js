@@ -50,9 +50,9 @@ async function sumPercentageByStage(stageId, eventId, transaction) {
     include: [
       {
         model: Stage,
-        as: "stages",        // must match Category.belongsToMany alias
+        as: "stages",             // must match Category.belongsToMany alias
         where: { id: stageId },
-        attributes: [],      // we only need this for filtering
+        attributes: [],           // we only need this for filtering
         through: { attributes: [] }, // ignore pivot table fields
       },
     ],
@@ -62,9 +62,29 @@ async function sumPercentageByStage(stageId, eventId, transaction) {
   return total || 0;
 }
 
+/**
+ * Find all categories for a specific stage in an event
+ */
+function findByEventAndStage(eventId, stageId) {
+  return Category.findAll({
+    where: { event_id: eventId },
+    include: [
+      {
+        model: Stage,
+        as: "stages",
+        where: { id: stageId },
+        attributes: ["id", "name"],
+        through: { attributes: [] },
+      },
+    ],
+    order: [["id", "ASC"]],
+  });
+}
+
 module.exports = {
   create,
   findByEvent,
   findById,
   sumPercentageByStage,
+  findByEventAndStage, // ✅ new
 };
