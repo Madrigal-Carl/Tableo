@@ -5,8 +5,8 @@ function ViewOnlyTable({
   title,
   data,
   nameLabel,
-  fieldLabel = "Sex",
-  fieldKey = "sex",
+  fieldLabel = "Sex", // Column label
+  fieldKey = "sex",    // Key in data object
   editable = false,
   onEdit,
   onDelete,
@@ -72,10 +72,7 @@ function ViewOnlyTable({
                   <th className="text-left py-3 w-20">No.</th>
                   <th className="text-left py-3 w-64">{nameLabel}</th>
                   <th className="text-left py-3 w-32">{fieldLabel}</th>
-
-                  {editable && (
-                    <th className="text-center py-3 w-32">Actions</th>
-                  )}
+                  <th className="text-center py-3 w-32">Actions</th>
                 </tr>
               </thead>
 
@@ -87,12 +84,9 @@ function ViewOnlyTable({
                   >
                     <td className="py-4 text-sm text-gray-600">{index + 1}</td>
                     <td className="py-4 text-sm text-gray-700">{item.name}</td>
-                    <td className="py-4 text-sm text-gray-600">
-                      {item[fieldKey]}
-                    </td>
-
-                    {editable && (
-                      <td className="py-4 text-center">
+                    <td className="py-4 text-sm text-gray-600">{item[fieldKey]}</td>
+                    <td className="py-4 text-center">
+                      {editable ? (
                         <div className="flex justify-center gap-4">
                           <button
                             onClick={() => openEditModal(item)}
@@ -110,8 +104,10 @@ function ViewOnlyTable({
                             <Trash2 size={16} />
                           </button>
                         </div>
-                      </td>
-                    )}
+                      ) : (
+                        <span className="text-sm text-gray-300">View only</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
