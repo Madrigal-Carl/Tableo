@@ -177,10 +177,8 @@ function CategoryPage() {
       setActiveRound(selectedRound);
       resetCategoryForm();
 
-      // Show success toast
       showToast("success", "Category added successfully");
 
-      // Show criteria modal automatically after creating a category
       setIsCategoryModalOpen(false);
       setIsCriteriaModalOpen(true);
     } catch (err) {
@@ -205,7 +203,7 @@ function CategoryPage() {
               onClick={() => navigate("/dashboard")}
               className="cursor-pointer hover:text-gray-900"
             />
-            <h1 className="text-4xl font-semibold">{event.title}</h1>
+            <h1 className="text-4xl font-semibold text-[#FA824C]">{event.title}</h1>
           </div>
           <p className="text-sm text-gray-500 mt-2">{event.description}</p>
         </div>
@@ -335,6 +333,13 @@ function CategoryPage() {
             nameLabel="Name"
             fieldLabel="Sex"
             fieldKey="sex"
+            editable={true}
+            onEdit={(updatedParticipant) => {
+              console.log("Edit participant:", updatedParticipant);
+            }}
+            onDelete={(participant) => {
+              console.log("Delete participant:", participant);
+            }}
           />
         )}
 
