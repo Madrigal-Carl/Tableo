@@ -23,56 +23,10 @@ const singleCategorySchema = Joi.object({
 });
 
 /**
- * Main validator
+ * Validator for single create
  */
-function validateCategory(req, res, next) {
-  /**
-   * BULK CREATE
-   */
-  if (Array.isArray(req.body.categories)) {
-    const bulkSchema = Joi.object({
-      stage_id: Joi.number().integer().required().messages({
-        "number.base": "Stage ID must be a number",
-        "number.integer": "Stage ID must be an integer",
-        "any.required": "Stage ID is required",
-      }),
-      categories: Joi.array()
-        .items(singleCategorySchema)
-        .min(1)
-        .required()
-        .custom((categories, helper) => {
-          const total = categories.reduce(
-            (sum, cat) => sum + Number(cat.percentage || 0),
-            0
-          );
-          if (total !== 100) {
-            return helper.message(
-              `Total percentage of all categories must equal 100%. Currently: ${total}%`
-            );
-          }
-          return categories;
-        })
-        .messages({
-          "array.base": "Categories must be an array",
-          "array.min": "At least one category is required",
-          "any.required": "Categories are required",
-        }),
-    });
-
-    const { error } = bulkSchema.validate(req.body, { abortEarly: true });
-    if (error) {
-      return res.status(400).json({
-        message: error.details[0].message,
-      });
-    }
-
-    return next();
-  }
-
-  /**
-   * SINGLE CREATE
-   */
-  const singleSchema = singleCategorySchema.keys({
+function validateSingleCategory(req, res, next) {
+  const schema = singleCategorySchema.keys({
     stage_id: Joi.number().integer().required().messages({
       "number.base": "Stage ID must be a number",
       "number.integer": "Stage ID must be an integer",
@@ -80,14 +34,99 @@ function validateCategory(req, res, next) {
     }),
   });
 
-  const { error } = singleSchema.validate(req.body, { abortEarly: true });
+  const { error } = schema.validate(req.body, { abortEarly: true });
   if (error) {
-    return res.status(400).json({
-      message: error.details[0].message,
-    });
+    return res.status(400).json({ message: error.details[0].message });
   }
-
   next();
 }
 
-module.exports = { validateCategory };
+/**
+ * Validator for bulk create
+ */
+function validateBulkCategoryCreate(req, res, next) {
+  const schema = Joi.object({
+    stage_id: Joi.number().integer().required().messages({
+      "number.base": "Stage ID must be a number",
+      "number.integer": "Stage ID must be an integer",
+      "any.required": "Stage ID is required",
+    }),
+    categories: Joi.array()
+      .items(singleCategorySchema)
+      .min(1)
+      .required()
+      .custom((categories, helper) => {
+        const total = categories.reduce(
+          (sum, cat) => sum + Number(cat.percentage || 0),
+          0
+        );
+        if (total !== 100) {
+          return helper.message(
+            `Total percentage of all categories must equal 100%. Currently: ${total}%`
+          );
+        }
+        return categories;
+      }),
+  });
+
+  const { error } = schema.validate(req.body, { abortEarly: true });
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+  next();
+}
+
+/**
+ * Validator for bulk update
+ * Each item must include categoryId
+ */
+function validateBulkCategoryUpdate(req, res, next) {
+  const schema = Joi.object({
+    eventId: Joi.number().integer().required().messages({
+      "number.base": "Event ID must be a number",
+      "number.integer": "Event ID must be an integer",
+      "any.required": "Event ID is required",
+    }),
+    categories: Joi.array()
+      .items(
+        singleCategorySchema.keys({
+          categoryId: Joi.number().integer().required().messages({
+            "number.base": "Category ID must be a number",
+            "number.integer": "Category ID must be an integer",
+            "any.required": "Category ID is required",
+          }),
+          stage_id: Joi.number().integer().required().messages({
+            "number.base": "Stage ID must be a number",
+            "number.integer": "Stage ID must be an integer",
+            "any.required": "Stage ID is required",
+          }),
+        })
+      )
+      .min(1)
+      .required()
+      .custom((categories, helper) => {
+        const total = categories.reduce(
+          (sum, cat) => sum + Number(cat.percentage || 0),
+          0
+        );
+        if (total > 100) {
+          return helper.message(
+            `Total percentage of all categories cannot exceed 100%. Currently: ${total}%`
+          );
+        }
+        return categories;
+      }),
+  });
+
+  const { error } = schema.validate(req.body, { abortEarly: true });
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+  next();
+}
+
+module.exports = {
+  validateSingleCategory,
+  validateBulkCategoryCreate,
+  validateBulkCategoryUpdate,
+};

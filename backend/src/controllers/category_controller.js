@@ -1,28 +1,20 @@
 const categoryService = require("../services/category_service");
 
+/**
+ * CREATE CATEGORY
+ * Supports single and bulk create
+ */
 async function createCategory(req, res, next) {
   try {
     const userId = req.user.id;
     const { eventId } = req.params;
 
-    /**
-     * CASE 1: BULK CREATE (ARRAY)
-     * Expected body:
-     * {
-     *   stage_id: number,
-     *   categories: [
-     *     { name, percentage, maxScore },
-     *     ...
-     *   ]
-     * }
-     */
     if (Array.isArray(req.body.categories)) {
+      // BULK CREATE
       const { categories, stage_id } = req.body;
 
       if (!categories.length) {
-        return res.status(400).json({
-          message: "Categories array cannot be empty",
-        });
+        return res.status(400).json({ message: "Categories array cannot be empty" });
       }
 
       const createdCategories = await categoryService.createCategories({
@@ -38,16 +30,7 @@ async function createCategory(req, res, next) {
       });
     }
 
-    /**
-     * CASE 2: SINGLE CREATE (DEFAULT / BACKWARD COMPATIBLE)
-     * Expected body:
-     * {
-     *   name,
-     *   percentage,
-     *   maxScore,
-     *   stage_id
-     * }
-     */
+    // SINGLE CREATE
     const category = await categoryService.createCategory({
       eventId,
       userId,
@@ -63,6 +46,9 @@ async function createCategory(req, res, next) {
   }
 }
 
+/**
+ * GET ALL CATEGORIES BY EVENT
+ */
 async function getCategoriesByEvent(req, res, next) {
   try {
     const { eventId } = req.params;
@@ -77,9 +63,13 @@ async function getCategoriesByEvent(req, res, next) {
   }
 }
 
+/**
+ * SINGLE CATEGORY UPDATE
+ */
 async function updateCategory(req, res, next) {
   try {
     const { categoryId } = req.params;
+
     const category = await categoryService.updateCategory({
       categoryId,
       ...req.body,
@@ -94,8 +84,50 @@ async function updateCategory(req, res, next) {
   }
 }
 
+/**
+ * BULK CATEGORY UPDATE
+ * Expected body:
+ * {
+ *   eventId: number,
+ *   categories: [
+ *     { categoryId, name, percentage, maxScore, stage_id },
+ *     ...
+ *   ]
+ * }
+ */
+async function bulkUpdateCategories(req, res, next) {
+  try {
+    const { eventId } = req.params;
+    const { categories } = req.body;
+
+    if (!Array.isArray(categories) || categories.length === 0) {
+      return res.status(400).json({ message: "Categories array cannot be empty" });
+    }
+
+    const updatedCategories = [];
+    for (const cat of categories) {
+      const updated = await categoryService.updateCategory({
+        categoryId: cat.categoryId,
+        name: cat.name,
+        percentage: cat.percentage,
+        maxScore: cat.maxScore,
+        stage_id: cat.stage_id,
+      });
+      updatedCategories.push(updated);
+    }
+
+    res.status(200).json({
+      message: "Categories updated successfully",
+      categories: updatedCategories,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createCategory,
   getCategoriesByEvent,
   updateCategory,
+  bulkUpdateCategories,
 };
