@@ -39,6 +39,22 @@ function CategoryPage() {
 
   const tabs = ["Stages", "Participants", "Judges"];
 
+  const handleEditParticipant = (updated) => {
+  console.log("Edit participant:", updated);
+  };
+
+  const handleDeleteParticipant = (item) => {
+    console.log("Delete participant:", item);
+  };
+
+  const handleEditJudge = (updated) => {
+    console.log("Edit judge:", updated);
+  };
+
+  const handleDeleteJudge = (item) => {
+    console.log("Delete judge:", item);
+  };
+
   // ============================
   // HELPERS
   // ============================
@@ -323,9 +339,12 @@ function CategoryPage() {
             <ViewOnlyTable
               title="Participants"
               data={event?.candidates || []}
-              nameLabel="Name"
+              nameLabel="Participant Name"
               fieldLabel="Sex"
               fieldKey="sex"
+              editable
+              onEdit={handleEditParticipant}
+              onDelete={handleDeleteParticipant}
             />
           )}
 
@@ -333,9 +352,11 @@ function CategoryPage() {
             <ViewOnlyTable
               title="Judges"
               data={event?.judges || []}
-              nameLabel="Name"
-              fieldLabel="Suffix"
-              fieldKey="suffix"
+              nameLabel="Judge Name"
+              editable
+              isJudge={true}
+              onEdit={handleEditJudge}
+              onDelete={handleDeleteJudge}
             />
           )}
         </section>
