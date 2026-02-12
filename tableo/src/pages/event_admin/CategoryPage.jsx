@@ -127,7 +127,9 @@ function CategoryPage() {
     const errors = validateCategories(categoryList);
 
     if (errors.length > 0) {
-      const firstError = Object.values(errors[0])[0];
+      const firstError = errors
+        .map(row => Object.values(row)[0])
+        .find(Boolean);
       showToast("error", firstError);
       return;
     }
@@ -348,9 +350,7 @@ function CategoryPage() {
           handleRemoveCategoryRow={handleRemoveCategoryRow}
           handleConfirmCategories={handleConfirmCategories}
           setIsCategoryModalOpen={setIsCategoryModalOpen}
-          stages={stages}
           selectedStage={activeStage}
-          setSelectedStage={setActiveStage}
           eventId={eventId}
           eventStages={event?.stages || []}
         />

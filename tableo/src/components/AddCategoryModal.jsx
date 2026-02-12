@@ -5,7 +5,6 @@ import { showToast } from "../utils/swal";
 function AddCategoryModal({
     isOpen,
     selectedStage,
-    setSelectedStage,
     categoryList,
     setCategoryList,
     handleCategoryChange,
@@ -13,7 +12,6 @@ function AddCategoryModal({
     handleRemoveCategoryRow,
     handleConfirmCategories,
     setIsCategoryModalOpen,
-    stages = [],
     eventId,
     eventStages = [],
 }) {

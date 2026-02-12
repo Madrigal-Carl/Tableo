@@ -5,12 +5,14 @@ const singleCategorySchema = Joi.object({
     "string.empty": "Category name is required",
     "any.required": "Category name is required",
   }),
-  percentage: Joi.number().positive().required().messages({
+  percentage: Joi.number().integer().positive().required().messages({
     "number.base": "Percentage must be a number",
+    "number.integer": "Percentage must be a whole number",
     "any.required": "Percentage is required",
   }),
-  maxScore: Joi.number().positive().required().messages({
+  maxScore: Joi.number().integer().positive().required().messages({
     "number.base": "Max score must be a number",
+    "number.integer": "Max score must be a whole number",
     "any.required": "Max score is required",
   }),
 });
