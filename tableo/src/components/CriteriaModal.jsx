@@ -8,8 +8,7 @@ function CriteriaModal({
     handleAddCriteriaRow,
     handleRemoveCriteriaRow,
     handleConfirmCriteria,
-    setIsCriteriaModalOpen,
-    setIsCategoryModalOpen,
+    setIsCriteriaModalOpen
 }) {
     if (!isOpen) return null;
 
@@ -81,13 +80,10 @@ function CriteriaModal({
                 <div className="flex justify-between">
                     <button
                         type="button"
-                        onClick={() => {
-                            setIsCriteriaModalOpen(false);
-                            setIsCategoryModalOpen(true);
-                        }}
+                        onClick={() => setIsCriteriaModalOpen(false)}
                         className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
                     >
-                        Previous
+                        Cancel
                     </button>
 
                     <button

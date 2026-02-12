@@ -154,7 +154,6 @@ function CategoryPage() {
       await fetchCategories(activeStage);
       resetCategoryForm();
       setIsCategoryModalOpen(false);
-      setIsCriteriaModalOpen(true);
 
       showToast("success", "Categories added successfully");
     } catch (err) {
@@ -257,8 +256,7 @@ function CategoryPage() {
                 <PlusCircle
                   className="text-[#FA824C] w-6 h-6 cursor-pointer"
                   onClick={() => {
-                    resetCategoryForm();
-                    setIsCategoryModalOpen(true);
+                    setIsCriteriaModalOpen(true);
                   }}
                 />
                 <select
