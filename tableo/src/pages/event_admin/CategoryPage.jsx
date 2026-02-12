@@ -157,6 +157,7 @@ function CategoryPage() {
       resetCategoryForm();
       setIsCategoryModalOpen(false);
 
+
       showToast("success", "Categories added successfully");
     } catch (err) {
       showToast(
@@ -247,8 +248,7 @@ function CategoryPage() {
                   <PlusCircle
                     className="text-[#FA824C] w-6 h-6 cursor-pointer"
                     onClick={() => {
-                      resetCategoryForm();
-                      setIsCategoryModalOpen(true);
+                      setIsCriteriaModalOpen(true);
                     }}
                   />
                   <select
@@ -271,7 +271,8 @@ function CategoryPage() {
 
                 <button
                   onClick={() => {
-                    setIsCriteriaModalOpen(true);
+                    resetCategoryForm();
+                    setIsCategoryModalOpen(true);
                   }}
                   className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
                 >
