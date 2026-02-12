@@ -1,8 +1,9 @@
 const Joi = require("joi");
 
 const singleCategorySchema = Joi.object({
-  name: Joi.string().trim().min(1).required().messages({
+  name: Joi.string().trim().min(1).pattern(/[a-zA-Z]/, "letters").required().messages({
     "string.empty": "Category name is required",
+    "string.pattern.name": "Category name must include at least one letter",
     "any.required": "Category name is required",
   }),
   percentage: Joi.number().integer().positive().required().messages({
