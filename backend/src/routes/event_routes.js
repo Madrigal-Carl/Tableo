@@ -21,4 +21,7 @@ router.put('/:eventId', requireAuth, upload.single('image'), validateEvent, even
 // Get All Events
 router.get('/', requireAuth, eventController.getAllEvents);
 
+// Get Soft Deleted Events
+router.get('/deleted/all', requireAuth, eventController.getDeletedEvents);
+
 module.exports = router;

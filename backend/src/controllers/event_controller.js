@@ -79,4 +79,15 @@ async function getAllEvents(req, res, next) {
     }
 }
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };
+async function getDeletedEvents(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const events = await eventService.getDeletedEvents(userId);
+
+        res.json({ events });
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents, getDeletedEvents, };
