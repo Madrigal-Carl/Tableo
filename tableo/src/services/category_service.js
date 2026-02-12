@@ -6,4 +6,8 @@ export const addCategoryToEvent = (eventId, data) => {
 
 export const getCategoriesByEvent = (eventId) => {
     return api.get(`/events/${eventId}/categories`);
-}
+};
+
+export const getCategoriesByStage = (eventId, stageId) => {
+    return api.get(`/events/${eventId}/stages/${stageId}/categories`);
+};

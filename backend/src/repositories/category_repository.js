@@ -1,15 +1,9 @@
 const { Category, Stage } = require("../database/models");
 
-/**
- * Create a single category
- */
 function create(data, transaction) {
   return Category.create(data, { transaction });
 }
 
-/**
- * Find all categories by event (with associated stages)
- */
 function findByEvent(eventId) {
   return Category.findAll({
     where: { event_id: eventId },
@@ -17,7 +11,7 @@ function findByEvent(eventId) {
       {
         model: Stage,
         as: "stages",
-        through: { attributes: [] }, // don't fetch pivot table fields
+        through: { attributes: [] },
         attributes: ["id", "name"],
       },
     ],
@@ -25,9 +19,29 @@ function findByEvent(eventId) {
   });
 }
 
-/**
- * Find a category by ID (with stages)
- */
+function findByEventIncludingSoftDeleted(eventId, transaction) {
+  return Category.findAll({
+    where: { event_id: eventId },
+    paranoid: false,
+    include: [
+      {
+        model: Stage,
+        as: "stages",
+        through: { attributes: [] },
+        attributes: ["id"],
+      },
+    ],
+    transaction,
+  });
+}
+
+function restore(categoryId, transaction) {
+  return Category.restore({
+    where: { id: categoryId },
+    transaction,
+  });
+}
+
 function findById(categoryId) {
   return Category.findByPk(categoryId, {
     include: [
@@ -41,19 +55,16 @@ function findById(categoryId) {
   });
 }
 
-/**
- * Sum category percentages for a given stage in an event
- */
 async function sumPercentageByStage(stageId, eventId, transaction) {
   const total = await Category.sum("percentage", {
     where: { event_id: eventId },
     include: [
       {
         model: Stage,
-        as: "stages",        // must match Category.belongsToMany alias
+        as: "stages",
         where: { id: stageId },
-        attributes: [],      // we only need this for filtering
-        through: { attributes: [] }, // ignore pivot table fields
+        attributes: [],
+        through: { attributes: [] },
       },
     ],
     transaction,
@@ -62,9 +73,30 @@ async function sumPercentageByStage(stageId, eventId, transaction) {
   return total || 0;
 }
 
+function findByEventAndStage(eventId, stageId) {
+  return Category.findAll({
+    where: {
+      event_id: eventId,
+    },
+    include: [
+      {
+        model: Stage,
+        as: "stages",
+        where: { id: stageId },
+        attributes: ["id", "name"],
+        through: { attributes: [] },
+      },
+    ],
+    order: [["id", "ASC"]],
+  });
+}
+
 module.exports = {
   create,
   findByEvent,
   findById,
   sumPercentageByStage,
+  findByEventIncludingSoftDeleted,
+  restore,
+  findByEventAndStage
 };
