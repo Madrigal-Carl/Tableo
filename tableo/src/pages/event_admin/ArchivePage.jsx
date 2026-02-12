@@ -1,32 +1,27 @@
-import SideNavigation from "../components/SideNavigation";
-import CardEvent from "../components/CreateCardEvent";
+import SideNavigation from "../../components/SideNavigation";
+import RestoreCardEvent from "../../components/RestoreCardEvent";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { showToast } from "../utils/swal";
-import { getAllEvents } from "../services/event_service";
+import { showToast } from "../../utils/swal";
+import { getDeletedEvents } from "../../services/event_service";
 
 function ArchivePage() {
   const [events, setEvents] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortAZ, setSortAZ] = useState(true);
-  const [sortOption, setSortOption] = useState("all");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchArchivedEvents = async () => {
       try {
-        const res = await getAllEvents();
+        const res = await getDeletedEvents();
 
-        const now = new Date();
-
-        const archivedEvents = res.data.events
-          .filter(ev => new Date(ev.date) < now)
-          .map(ev => ({
-            ...ev,
-            image: ev.path
-              ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}`
-              : null,
-          }));
+        const archivedEvents = res.data.events.map(ev => ({
+          ...ev,
+          image: ev.path
+            ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}`
+            : null,
+        }));
 
         setEvents(archivedEvents);
       } catch (err) {
@@ -99,15 +94,21 @@ function ArchivePage() {
 
         {/* CARD GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredAndSortedEvents.length === 0 && (
+            <p className="text-gray-500 text-center col-span-full mt-10">
+              No archived events found
+            </p>
+          )}
           {filteredAndSortedEvents.map(event => (
-            <CardEvent
+            <RestoreCardEvent
               key={event.id}
               title={event.title}
               description={event.description}
               date={event.date}
               location={event.location}
-              onClick={() => navigate(`/event/${event.id}`)}
-              hideActions
+              onRestore={() => {
+                console.log("Restore event", event.id);
+              }}
             >
               {event.image && (
                 <img
@@ -116,7 +117,7 @@ function ArchivePage() {
                   className="w-full h-full object-cover"
                 />
               )}
-            </CardEvent>
+            </RestoreCardEvent>
           ))}
         </div>
       </main>
