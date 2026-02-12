@@ -56,20 +56,6 @@ function AddCategoryModal({
 
                 <h2 className="text-center text-xl font-semibold mb-4">Add Categories</h2>
 
-                {/* MODAL STAGE SELECT (INDEPENDENT FILTER) */}
-                <div className="mb-6">
-                    <label className="block text-sm text-gray-500 mb-1">Stage / Round</label>
-                    <select
-                        value={selectedStage}
-                        onChange={(e) => setSelectedStage(e.target.value)}
-                        className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    >
-                        {stages.map((r) => (
-                            <option key={r} value={r}>{r}</option>
-                        ))}
-                    </select>
-                </div>
-
                 {/* CATEGORY ROWS */}
                 {categoryList.map((category, index) => (
                     <div key={index} className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-3 mb-4 items-end">

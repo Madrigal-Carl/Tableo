@@ -187,21 +187,21 @@ function CategoryPage() {
 
         <section className="flex-1 ml-72 p-8 overflow-y-auto">
           {/* HEADER */}
-          <div className="mt-5 mb-6 text-gray-700">
-            <div className="flex items-center gap-3">
-              <ChevronLeft
-                size={30}
-                onClick={() => navigate("/dashboard")}
-                className="cursor-pointer hover:text-gray-900"
-              />
-              <h1 className="text-4xl font-semibold text-[#FA824C]">{event?.title}</h1>
+          <div className="mt-5 mb-6 text-gray-700 flex items-center justify-between">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <ChevronLeft
+                  size={30}
+                  onClick={() => navigate("/dashboard")}
+                  className="cursor-pointer hover:text-gray-900"
+                />
+                <h1 className="text-4xl font-semibold text-[#FA824C]">{event?.title}</h1>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">{event?.description}</p>
             </div>
-            <p className="text-sm text-gray-500 mt-2">{event?.description}</p>
-          </div>
 
-          {/* TOP TABS */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="relative flex bg-[#FA824C] p-1 rounded-md">
+
+            <div className="relative flex bg-[#FA824C] p-1 rounded-md w-fit">
               <div
                 className="absolute top-1 left-1 h-[40px] bg-white rounded-sm transition-transform"
                 style={{
@@ -220,18 +220,6 @@ function CategoryPage() {
                 </button>
               ))}
             </div>
-
-            {activeTopTab === "Stages" && (
-              <button
-                onClick={() => {
-                  resetCategoryForm();
-                  setIsCategoryModalOpen(true);
-                }}
-                className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
-              >
-                + Add Category
-              </button>
-            )}
           </div>
 
           {/* STAGE TABS */}
@@ -253,30 +241,42 @@ function CategoryPage() {
               </div>
 
               {/* CATEGORY SELECT */}
-              <div className="flex items-center gap-4 mb-6 text-lg font-semibold">
-                <PlusCircle
-                  className="text-[#FA824C] w-6 h-6 cursor-pointer"
+              <div className="flex items-center justify-between gap-4 mb-6 text-lg font-semibold">
+                <div className="flex items-center">
+                  <PlusCircle
+                    className="text-[#FA824C] w-6 h-6 cursor-pointer"
+                    onClick={() => {
+                      resetCategoryForm();
+                      setIsCategoryModalOpen(true);
+                    }}
+                  />
+                  <select
+                    className="px-4 py-2"
+                    value={selectedCategory?.id || ""}
+                    onChange={(e) => {
+                      const selectedId = parseInt(e.target.value);
+                      const cat = filteredCategories.find((c) => c.id === selectedId);
+                      setSelectedCategory(cat || null);
+                    }}
+                  >
+                    <option value="" disabled>Select a Stage</option>
+                    {filteredCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id} title={cat.name}>
+                        {cat.name.length > 30 ? cat.name.slice(0, 30) + "…" : cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
                   onClick={() => {
                     resetCategoryForm();
                     setIsCategoryModalOpen(true);
                   }}
-                />
-                <select
-                  className="px-4 py-2"
-                  value={selectedCategory?.id || ""}
-                  onChange={(e) => {
-                    const selectedId = parseInt(e.target.value);
-                    const cat = filteredCategories.find((c) => c.id === selectedId);
-                    setSelectedCategory(cat || null);
-                  }}
+                  className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
                 >
-                  <option value="" disabled>Select a Stage</option>
-                  {filteredCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+                  + Add Category
+                </button>
               </div>
 
               {/* JUDGING GRID */}
