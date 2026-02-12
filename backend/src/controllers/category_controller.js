@@ -1,62 +1,21 @@
 const categoryService = require("../services/category_service");
 
-async function createCategory(req, res, next) {
+async function createOrUpdateCategories(req, res, next) {
   try {
     const userId = req.user.id;
     const { eventId } = req.params;
+    const { stage_id, categories } = req.body;
 
-    /**
-     * CASE 1: BULK CREATE (ARRAY)
-     * Expected body:
-     * {
-     *   stage_id: number,
-     *   categories: [
-     *     { name, percentage, maxScore },
-     *     ...
-     *   ]
-     * }
-     */
-    if (Array.isArray(req.body.categories)) {
-      const { categories, stage_id } = req.body;
-
-      if (!categories.length) {
-        return res.status(400).json({
-          message: "Categories array cannot be empty",
-        });
-      }
-
-      const createdCategories = await categoryService.createCategories({
-        eventId,
-        userId,
-        stage_id,
-        categories,
-      });
-
-      return res.status(201).json({
-        message: "Categories created successfully",
-        categories: createdCategories,
-      });
-    }
-
-    /**
-     * CASE 2: SINGLE CREATE (DEFAULT / BACKWARD COMPATIBLE)
-     * Expected body:
-     * {
-     *   name,
-     *   percentage,
-     *   maxScore,
-     *   stage_id
-     * }
-     */
-    const category = await categoryService.createCategory({
-      eventId,
+    const result = await categoryService.createOrUpdateCategories({
+      eventId: Number(eventId),
+      stage_id,
+      categories,
       userId,
-      ...req.body,
     });
 
-    return res.status(201).json({
-      message: "Category created successfully",
-      category,
+    res.status(200).json({
+      message: "Categories synced successfully",
+      categories: result,
     });
   } catch (err) {
     next(err);
@@ -77,17 +36,19 @@ async function getCategoriesByEvent(req, res, next) {
   }
 }
 
-async function updateCategory(req, res, next) {
+async function getCategoriesByStage(req, res, next) {
   try {
-    const { categoryId } = req.params;
-    const category = await categoryService.updateCategory({
-      categoryId,
-      ...req.body,
-    });
+    const { eventId, stageId } = req.params;
 
-    res.status(200).json({
-      message: "Category updated successfully",
-      category,
+    const categories =
+      await categoryService.getCategoriesByStage(
+        Number(eventId),
+        Number(stageId)
+      );
+
+    res.json({
+      message: "Categories fetched successfully",
+      categories,
     });
   } catch (err) {
     next(err);
@@ -95,7 +56,7 @@ async function updateCategory(req, res, next) {
 }
 
 module.exports = {
-  createCategory,
+  createOrUpdateCategories,
   getCategoriesByEvent,
-  updateCategory,
+  getCategoriesByStage,
 };
