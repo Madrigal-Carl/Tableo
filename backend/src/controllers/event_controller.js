@@ -90,4 +90,23 @@ async function getDeletedEvents(req, res, next) {
     }
 }
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents, getDeletedEvents, };
+async function restoreEvent(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const eventId = req.params.eventId;
+
+        const event = await eventService.restoreEvent(eventId, userId);
+
+        const io = req.app.get('io');
+        io.emit('events:updated', { userId });
+
+        res.json({
+            message: 'Event restored successfully',
+            event,
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents, getDeletedEvents, restoreEvent };

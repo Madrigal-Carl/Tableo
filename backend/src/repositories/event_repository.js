@@ -74,6 +74,21 @@ async function findDeletedByUser(userId) {
     });
 }
 
+async function findDeletedById(eventId, transaction) {
+    return Event.findOne({
+        where: { id: eventId },
+        paranoid: false,
+        transaction,
+    });
+}
+
+async function restore(eventId, transaction) {
+    return Event.restore({
+        where: { id: eventId },
+        transaction,
+    });
+}
+
 module.exports = {
     create,
     findById,
@@ -82,4 +97,6 @@ module.exports = {
     softDelete,
     update,
     findDeletedByUser,
+    findDeletedById,
+    restore,
 };
