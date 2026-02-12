@@ -77,7 +77,7 @@ function SideNavigation() {
 
       {/* Settings */}
       <div className="flex flex-col gap-2">
-        {navItem("Settings", Settings, "/settings")}
+        {navItem("Profile Settings", Settings, "/settings")}
       </div>
 
       {/* Bottom Action */}
