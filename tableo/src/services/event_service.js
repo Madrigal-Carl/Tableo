@@ -31,3 +31,7 @@ export const getAllEvents = () => {
 export const getDeletedEvents = () => {
     return api.get("/events/deleted/all");
 };
+
+export const restoreEvent = (eventId) => {
+    return api.patch(`/events/${eventId}/restore`);
+};

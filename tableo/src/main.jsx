@@ -31,7 +31,7 @@ createRoot(document.getElementById('root')).render(
           <Route element={<ProtectedRoute />}>
             <Route path="/events" element={<HomePage />} />
             <Route path="/judge" element={<JudgePage />} />
-            <Route path="/event/:eventId" element={<CategoryPage />} />
+            <Route path="/events/:eventId" element={<CategoryPage />} />
             <Route path="/archive" element={<ArchivePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

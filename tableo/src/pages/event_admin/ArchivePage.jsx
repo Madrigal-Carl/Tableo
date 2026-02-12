@@ -3,7 +3,8 @@ import RestoreCardEvent from "../../components/RestoreCardEvent";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../../utils/swal";
-import { getDeletedEvents } from "../../services/event_service";
+import { getDeletedEvents, restoreEvent } from "../../services/event_service";
+import Swal from "sweetalert2";
 
 function ArchivePage() {
   const [events, setEvents] = useState([]);
@@ -31,6 +32,33 @@ function ArchivePage() {
 
     fetchArchivedEvents();
   }, []);
+
+  const handleRestore = async (eventId) => {
+    try {
+      await restoreEvent(eventId);
+
+      // Optimistic UI update
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+
+      showToast("success", "Event restored successfully");
+    } catch (err) {
+      showToast("error", "Failed to restore event");
+    }
+  };
+
+  const confirmRestore = async (eventId) => {
+    const result = await Swal.fire({
+      title: "Restore event?",
+      text: "This event will be moved back to active events.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Restore",
+    });
+
+    if (result.isConfirmed) {
+      handleRestore(eventId);
+    }
+  };
 
   const filteredAndSortedEvents = [...events]
     .filter(event =>
@@ -106,9 +134,7 @@ function ArchivePage() {
               description={event.description}
               date={event.date}
               location={event.location}
-              onRestore={() => {
-                console.log("Restore event", event.id);
-              }}
+              onRestore={() => confirmRestore(event.id)}
             >
               {event.image && (
                 <img
