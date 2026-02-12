@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
@@ -45,10 +46,7 @@ export default function LoginPage() {
       showToast("success", "Signed in successfully");
       navigate("/dashboard");
     } catch (err) {
-      showToast(
-        "error",
-        err.message || "Invalid email or password"
-      );
+      showToast("error", err.message || "Invalid email or password");
     }
   };
 
@@ -61,10 +59,7 @@ export default function LoginPage() {
       setShowVerification(true);
       showToast("success", "Verification code sent");
     } catch (err) {
-      showToast(
-        "error",
-        err.message || "Failed to send verification code"
-      );
+      showToast("error", err.message || "Failed to send verification code");
     }
   };
 
@@ -86,10 +81,7 @@ export default function LoginPage() {
       setForgotEmail("");
       showToast("success", "Password reset successfully");
     } catch (err) {
-      showToast(
-        "error",
-        err.message || "Failed to reset password"
-      );
+      showToast("error", err.message || "Failed to reset password");
     }
   };
 
@@ -98,7 +90,7 @@ export default function LoginPage() {
       <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-6">
 
-          {/* LEFT IMAGE (MATCHES REGISTER DESIGN) */}
+          {/* LEFT IMAGE */}
           <div className="hidden md:block order-1">
             <div className="relative h-full w-full overflow-hidden rounded-2xl">
               <img
@@ -120,76 +112,83 @@ export default function LoginPage() {
               Sign in to continue
             </p>
 
-            {/* EMAIL */}
-            <div className="mb-4">
-              <label className="block mb-1 text-sm font-medium text-gray-600">
-                Email
-              </label>
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-                focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
-              />
-            </div>
-
-            {/* PASSWORD */}
-            <div className="mb-4">
-              <label className="block mb-1 text-sm font-medium text-gray-600">
-                Password
-              </label>
-              <div className="relative">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleLogin();
+              }}
+            >
+              {/* EMAIL */}
+              <div className="mb-4">
+                <label className="block mb-1 text-sm font-medium text-gray-600">
+                  Email
+                </label>
                 <input
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
+                  name="email"
+                  type="email"
+                  value={form.email}
                   onChange={handleChange}
-                  placeholder="Enter your password"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
+                  placeholder="Enter your email"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
                   focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
                 />
+              </div>
+
+              {/* PASSWORD */}
+              <div className="mb-4">
+                <label className="block mb-1 text-sm font-medium text-gray-600">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
+                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2
+                    flex items-center justify-center text-gray-400 hover:text-[#FA824C]"
+                  >
+                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* REMEMBER & FORGOT */}
+              <div className="flex items-center justify-between mb-6">
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-[#FA824C]"
+                  />
+                  Remember me
+                </label>
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2
-                  flex items-center justify-center text-gray-400 hover:text-[#FA824C]"
+                  onClick={() => setShowForgot(true)}
+                  className="text-xs font-medium text-gray-500 hover:text-[#FA5C5C]"
                 >
-                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                  Forgot password?
                 </button>
               </div>
-            </div>
 
-            {/* REMEMBER & FORGOT */}
-            <div className="flex items-center justify-between mb-6">
-              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-[#FA824C]"
-                />
-                Remember me
-              </label>
-
+              {/* LOGIN BUTTON */}
               <button
-                type="button"
-                onClick={() => setShowForgot(true)}
-                className="text-xs font-medium text-gray-500 hover:text-[#FA5C5C]"
+                type="submit"
+                className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
               >
-                Forgot password?
+                Login
               </button>
-            </div>
-
-            {/* LOGIN BUTTON */}
-            <button
-              onClick={handleLogin}
-              className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
-            >
-              Login
-            </button>
+            </form>
 
             {/* REGISTER LINK */}
             <p className="mt-5 text-center text-sm text-gray-600">

@@ -1,16 +1,19 @@
 const Joi = require("joi");
 
 const singleCategorySchema = Joi.object({
-  name: Joi.string().trim().min(1).required().messages({
+  name: Joi.string().trim().min(1).pattern(/[a-zA-Z]/, "letters").required().messages({
     "string.empty": "Category name is required",
+    "string.pattern.name": "Category name must include at least one letter",
     "any.required": "Category name is required",
   }),
-  percentage: Joi.number().positive().required().messages({
+  percentage: Joi.number().integer().positive().required().messages({
     "number.base": "Percentage must be a number",
+    "number.integer": "Percentage must be a whole number",
     "any.required": "Percentage is required",
   }),
-  maxScore: Joi.number().positive().required().messages({
+  maxScore: Joi.number().integer().positive().required().messages({
     "number.base": "Max score must be a number",
+    "number.integer": "Max score must be a whole number",
     "any.required": "Max score is required",
   }),
 });
