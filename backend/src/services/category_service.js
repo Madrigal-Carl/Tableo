@@ -3,50 +3,43 @@ const eventRepo = require("../repositories/event_repository");
 const categoryStageRepo = require("../repositories/category_stage_repository");
 const { sequelize } = require("../database/models");
 
-async function createOrUpdateCategories({
-  eventId,
-  stage_id,
-  categories,
-  userId,
-}) {
+async function createOrUpdateCategories({ eventId, stage_id, categories, userId }) {
   return sequelize.transaction(async (t) => {
     const event = await eventRepo.findByIdWithRelations(eventId);
     if (!event) throw new Error("Event not found");
-    if (event.user_id !== userId) {
-      throw new Error("You are not allowed to modify this event");
-    }
+    if (event.user_id !== userId) throw new Error("You are not allowed to modify this event");
 
-    const allCategories =
-      await categoryRepo.findByEventIncludingSoftDeleted(eventId, t);
-
-    const stageCategories = allCategories.filter(c =>
-      c.stages.some(s => s.id === stage_id)
-    );
-
-    const activeCategories = stageCategories.filter(c => !c.deletedAt);
-    const softDeletedCategories = stageCategories.filter(c => c.deletedAt);
+    // Fetch all categories including soft-deleted
+    const allCategories = await categoryRepo.findByEventIncludingSoftDeleted(eventId, t);
 
     const usedCategoryIds = new Set();
 
-    /** CREATE / UPDATE / RESTORE **/
     for (const incoming of categories) {
-      const nameKey = incoming.name.trim().toLowerCase();
-
-      // 1️⃣ Match active category by name
-      let category = activeCategories.find(
-        c =>
-          !usedCategoryIds.has(c.id) &&
-          c.name.toLowerCase() === nameKey
+      // 1️⃣ Try to find an active category mapped to this stage
+      let category = allCategories.find(c =>
+        !c.deletedAt &&
+        c.stages.some(s => s.id === stage_id) &&
+        !usedCategoryIds.has(c.id)
       );
 
-      // 2️⃣ Reuse soft-deleted category
-      if (!category && softDeletedCategories.length > 0) {
-        category = softDeletedCategories.shift();
+      // 2️⃣ If none, try to find a soft-deleted category for the event
+      if (!category) {
+        category = allCategories.find(c =>
+          c.deletedAt && !usedCategoryIds.has(c.id)
+        );
 
-        await category.restore({ transaction: t });
+        if (category) {
+          await category.restore({ transaction: t });
+
+          // Ensure stage mapping exists
+          const stageIds = category.stages.map(s => s.id);
+          if (!stageIds.includes(stage_id)) {
+            await categoryStageRepo.create({ categoryId: category.id, stageId: stage_id }, t);
+          }
+        }
       }
 
-      // 3️⃣ Create brand new
+      // 3️⃣ If still none, create new
       if (!category) {
         category = await categoryRepo.create(
           {
@@ -58,11 +51,9 @@ async function createOrUpdateCategories({
           t
         );
 
-        await categoryStageRepo.create(
-          { categoryId: category.id, stageId: stage_id },
-          t
-        );
+        await categoryStageRepo.create({ categoryId: category.id, stageId: stage_id }, t);
       } else {
+        // Update active/restored category
         await category.update(
           {
             name: incoming.name.trim(),
@@ -76,8 +67,8 @@ async function createOrUpdateCategories({
       usedCategoryIds.add(category.id);
     }
 
-    /** SOFT DELETE REMOVED ACTIVE CATEGORIES **/
-    for (const category of activeCategories) {
+    // Soft-delete any active categories that were not used
+    for (const category of allCategories.filter(c => !c.deletedAt)) {
       if (!usedCategoryIds.has(category.id)) {
         await category.destroy({ transaction: t });
       }
