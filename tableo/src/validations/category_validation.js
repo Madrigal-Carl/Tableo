@@ -7,6 +7,8 @@ export function validateCategories(categoryList) {
         // Name required
         if (!c.name || c.name.trim() === "") {
             rowErrors.name = "Category name is required";
+        } else if (!/[a-zA-Z]/.test(c.name)) {
+            rowErrors.name = "Category name must include at least one letter";
         }
 
         // Weight must be a whole number > 0
