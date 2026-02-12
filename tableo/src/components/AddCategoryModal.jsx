@@ -1,95 +1,108 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { getCategoriesByStage } from "../services/category_service";
+import { showToast } from "../utils/swal";
 
 function AddCategoryModal({
     isOpen,
     selectedRound,
     setSelectedRound,
     categoryList,
+    setCategoryList,
     handleCategoryChange,
     handleAddCategoryRow,
     handleRemoveCategoryRow,
     handleConfirmCategories,
     setIsCategoryModalOpen,
     rounds = [],
+    eventId,
+    eventStages = [],
 }) {
+    useEffect(() => {
+        if (!isOpen || !selectedRound) return;
+
+        async function fetchCategories() {
+            try {
+                const stageId = eventStages.find((s) => s.name === selectedRound)?.id;
+                if (!stageId) return;
+
+                const res = await getCategoriesByStage(eventId, stageId);
+                const fetchedCategories = res.data.categories || [];
+
+                if (fetchedCategories.length > 0) {
+                    setCategoryList(
+                        fetchedCategories.map((c) => ({
+                            name: c.name || "",
+                            weight: c.percentage || "",
+                            maxScore: c.maxScore || "",
+                        }))
+                    );
+                } else {
+                    setCategoryList([{ name: "", weight: "", maxScore: "" }]);
+                }
+            } catch (err) {
+                console.error("Failed to fetch categories in modal", err);
+                showToast("error", "Failed to load categories for this round");
+            }
+        }
+
+        fetchCategories();
+    }, [isOpen, selectedRound, eventId, eventStages, setCategoryList]);
+
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
             <div className="bg-white w-full max-w-lg max-h-[90vh] rounded-2xl shadow-xl p-6 overflow-y-auto">
 
-                {/* TITLE */}
-                <h2 className="text-center text-xl font-semibold mb-4">
-                    Add Categories
-                </h2>
+                <h2 className="text-center text-xl font-semibold mb-4">Add Categories</h2>
 
-                {/* STAGE / ROUND SELECT (SOLO AT TOP) */}
+                {/* MODAL STAGE SELECT (INDEPENDENT FILTER) */}
                 <div className="mb-6">
-                    <label className="block text-sm text-gray-500 mb-1">
-                        Stage / Round
-                    </label>
+                    <label className="block text-sm text-gray-500 mb-1">Stage / Round</label>
                     <select
                         value={selectedRound}
                         onChange={(e) => setSelectedRound(e.target.value)}
                         className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
                     >
                         {rounds.map((r) => (
-                            <option key={r} value={r}>
-                                {r}
-                            </option>
+                            <option key={r} value={r}>{r}</option>
                         ))}
                     </select>
                 </div>
 
                 {/* CATEGORY ROWS */}
                 {categoryList.map((category, index) => (
-                    <div
-                        key={index}
-                        className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-3 mb-4 items-end"
-                    >
-                        {/* CATEGORY NAME */}
+                    <div key={index} className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-3 mb-4 items-end">
                         <div className="flex flex-col">
                             <label className="text-sm text-gray-500 mb-1">Category</label>
                             <input
                                 type="text"
                                 value={category.name}
-                                onChange={(e) =>
-                                    handleCategoryChange(index, "name", e.target.value)
-                                }
+                                onChange={(e) => handleCategoryChange(index, "name", e.target.value)}
                                 placeholder="Category name"
                                 className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
                             />
                         </div>
-
-                        {/* WEIGHT */}
                         <div className="flex flex-col">
                             <label className="text-sm text-gray-500 mb-1">Weight %</label>
                             <input
                                 type="number"
                                 value={category.weight}
-                                onChange={(e) =>
-                                    handleCategoryChange(index, "weight", e.target.value)
-                                }
+                                onChange={(e) => handleCategoryChange(index, "weight", e.target.value)}
                                 placeholder="%"
                                 className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
                             />
                         </div>
-
-                        {/* MAX SCORE */}
                         <div className="flex flex-col">
                             <label className="text-sm text-gray-500 mb-1">Max</label>
                             <input
                                 type="number"
                                 value={category.maxScore}
-                                onChange={(e) =>
-                                    handleCategoryChange(index, "maxScore", e.target.value)
-                                }
+                                onChange={(e) => handleCategoryChange(index, "maxScore", e.target.value)}
                                 placeholder="Score"
                                 className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
                             />
                         </div>
-
-                        {/* DELETE */}
                         <button
                             type="button"
                             onClick={() => handleRemoveCategoryRow(index)}
@@ -101,7 +114,6 @@ function AddCategoryModal({
                     </div>
                 ))}
 
-                {/* ADD CATEGORY BUTTON */}
                 <button
                     type="button"
                     onClick={handleAddCategoryRow}
@@ -110,7 +122,6 @@ function AddCategoryModal({
                     + Add Category
                 </button>
 
-                {/* ACTION BUTTONS */}
                 <div className="flex justify-between">
                     <button
                         type="button"

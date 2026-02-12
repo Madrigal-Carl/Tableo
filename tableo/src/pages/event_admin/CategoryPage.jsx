@@ -7,6 +7,7 @@ import ViewOnlyTable from "../../components/ViewOnlyTable";
 import AddCategoryModal from "../../components/AddCategoryModal";
 import CriteriaModal from "../../components/CriteriaModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
+import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
 
 import { getEvent } from "../../services/event_service";
@@ -123,26 +124,27 @@ function CategoryPage() {
   };
 
   const handleConfirmCategories = async () => {
+    const errors = validateCategories(categoryList);
+
+    if (errors.length > 0) {
+      const firstError = Object.values(errors[0])[0];
+      showToast("error", firstError);
+      return;
+    }
+
     try {
-      const validCategories = categoryList.filter(
-        (c) => c.name && c.weight && c.maxScore
-      );
-
-      if (!validCategories.length) {
-        showToast("error", "Please add at least one valid category");
-        return;
-      }
-
       const stageId = getStageIdByName(activeRound);
       if (!stageId) {
         showToast("error", "Please select a valid round");
         return;
       }
 
-      setLoading(true); // Show loader while adding categories
+      setLoading(true);
+
+      // Connect to backend createOrUpdate API
       await addCategoryToEvent(eventId, {
         stage_id: stageId,
-        categories: validCategories.map((c) => ({
+        categories: categoryList.map((c) => ({
           name: c.name.trim(),
           percentage: Number(c.weight),
           maxScore: Number(c.maxScore),
@@ -158,7 +160,7 @@ function CategoryPage() {
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message || "Failed to add categories"
+        err.message || "Failed to add categories"
       );
     } finally {
       setLoading(false);
@@ -339,6 +341,7 @@ function CategoryPage() {
         <AddCategoryModal
           isOpen={isCategoryModalOpen}
           categoryList={categoryList}
+          setCategoryList={setCategoryList}
           handleCategoryChange={handleCategoryChange}
           handleAddCategoryRow={handleAddCategoryRow}
           handleRemoveCategoryRow={handleRemoveCategoryRow}
@@ -347,6 +350,8 @@ function CategoryPage() {
           rounds={rounds}
           selectedRound={activeRound}
           setSelectedRound={setActiveRound}
+          eventId={eventId}
+          eventStages={event?.stages || []}
         />
 
         {/* CRITERIA MODAL */}
