@@ -9,6 +9,8 @@ import CriteriaModal from "../../components/CriteriaModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
+import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
+
 
 import { getEvent } from "../../services/event_service";
 import {
@@ -172,7 +174,7 @@ function CategoryPage() {
       await fetchCategories(activeStage);
       resetCategoryForm();
       setIsCategoryModalOpen(false);
-      setIsCriteriaModalOpen(true);
+
 
       showToast("success", "Categories added successfully");
     } catch (err) {
@@ -182,6 +184,30 @@ function CategoryPage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmCriteria = async () => {
+    if (!selectedCategory) {
+      showToast("error", "Please select a category first");
+      return;
+    }
+
+    try {
+      const payload = criteriaList.map(c => ({
+        label: c.name.trim(),
+        percentage: Number(c.weight),
+      }));
+
+      await addCriteria(selectedCategory.id, { criteria: payload });
+
+      showToast("success", "Criteria saved successfully");
+
+      setCriteriaList([{ name: "", weight: "" }]);
+      setIsCriteriaModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      showToast("error", err.response?.data?.message || "Failed to save criteria");
     }
   };
 
@@ -263,9 +289,31 @@ function CategoryPage() {
                 <div className="flex items-center">
                   <PlusCircle
                     className="text-[#FA824C] w-6 h-6 cursor-pointer"
-                    onClick={() => {
-                      resetCategoryForm();
-                      setIsCategoryModalOpen(true);
+                    onClick={async () => {
+                      if (!selectedCategory) {
+                        showToast("error", "Please select a category first");
+                        return;
+                      }
+
+                      try {
+                        setLoading(true);
+                        const res = await getCriteriaByCategory(selectedCategory.id);
+                        const criteria = res.data.data || [];
+                        setCriteriaList(
+                          criteria.length > 0
+                            ? criteria.map(c => ({
+                              name: c.label,
+                              weight: c.percentage
+                            }))
+                            : [{ name: "", weight: "" }]
+                        );
+                        setIsCriteriaModalOpen(true);
+                      } catch (err) {
+                        console.error(err);
+                        showToast("error", "Failed to load criteria for this category");
+                      } finally {
+                        setLoading(false);
+                      }
                     }}
                   />
                   <select
@@ -391,9 +439,8 @@ function CategoryPage() {
           handleRemoveCriteriaRow={(i) =>
             setCriteriaList(criteriaList.filter((_, idx) => idx !== i))
           }
-          handleConfirmCriteria={() => setIsCriteriaModalOpen(false)}
+          handleConfirmCriteria={handleConfirmCriteria} // <-- use your new handler
           setIsCriteriaModalOpen={setIsCriteriaModalOpen}
-          setIsCategoryModalOpen={setIsCategoryModalOpen}
         />
       </div>
     </>

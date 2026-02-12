@@ -83,12 +83,12 @@ function CriteriaModal({
                         type="button"
                         onClick={() => {
                             setIsCriteriaModalOpen(false);
-                            setIsCategoryModalOpen(true);
                         }}
                         className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
                     >
-                        Previous
+                        Cancel
                     </button>
+
 
                     <button
                         type="button"
