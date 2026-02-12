@@ -6,7 +6,7 @@ class CriterionRepository {
     return Criterion.create(data, { transaction });
   }
 
-  // Find criteria by category
+  // Find criteria by category (active only)
   async findByCategory(categoryId) {
     return Criterion.findAll({
       where: { category_id: categoryId },
@@ -14,7 +14,7 @@ class CriterionRepository {
     });
   }
 
-  // Optional: find by id
+  // Find criterion by ID
   async findById(id) {
     return Criterion.findOne({ where: { id } });
   }
@@ -23,9 +23,16 @@ class CriterionRepository {
   async softDelete(id, transaction) {
     const criterion = await this.findById(id);
     if (!criterion) throw new Error("Criterion not found");
-
-    // ✅ Use destroy() to trigger paranoid soft delete
     return criterion.destroy({ transaction });
+  }
+
+  // Fetch all criteria including soft-deleted
+  async findByCategoryIncludingSoftDeleted(categoryId, transaction) {
+    return Criterion.findAll({
+      where: { category_id: categoryId },
+      paranoid: false, // include soft-deleted
+      transaction,
+    });
   }
 }
 

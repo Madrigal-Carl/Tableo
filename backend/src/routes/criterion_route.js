@@ -1,45 +1,32 @@
 const express = require("express");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const requireAuth = require("../middlewares/auth"); // middleware
+const requireAuth = require("../middlewares/auth");
 const {
-  createCriterionController,
+  createOrUpdateCriteriaController,
   getCriteriaController,
-  updateCriteriaController,
 } = require("../controllers/criterion_controller");
 
-// Async wrapper to handle errors and avoid crashing nodemon
+// Async wrapper to handle errors
 function asyncHandler(fn) {
   return function (req, res, next) {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
 
-// CREATE CRITERIA
-router.post(
-  "/:categoryId/",
-  requireAuth,
-  asyncHandler(async (req, res) => {
-    req.body.category_id = parseInt(req.params.categoryId, 10);
-    await createCriterionController(req, res);
-  })
-);
-
-// READ CRITERIA
+// GET criteria by category
 router.get(
-  "/:categoryId",
+  "/:categoryId/criteria",
   requireAuth,
-  asyncHandler(async (req, res) => {
-    await getCriteriaController(req, res);
-  })
+  asyncHandler(getCriteriaController)
 );
 
-// UPDATE CRITERIA (multi-update)
-router.put(
-  "/:categoryId/",
+// CREATE OR UPDATE criteria (single endpoint)
+router.post(
+  "/:categoryId/criteria",
   requireAuth,
   asyncHandler(async (req, res) => {
-    await updateCriteriaController(req, res);
+    await createOrUpdateCriteriaController(req, res);
   })
 );
 
