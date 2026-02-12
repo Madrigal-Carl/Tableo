@@ -27,8 +27,8 @@ function CategoryPage() {
   const [event, setEvent] = useState(location.state?.event || null);
   const [loading, setLoading] = useState(!event);
   const [categories, setCategories] = useState([]);
-  const [activeTopTab, setActiveTopTab] = useState("Rounds");
-  const [activeRound, setActiveRound] = useState("");
+  const [activeTopTab, setActiveTopTab] = useState("Stages");
+  const [activeStage, setActiveStage] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -37,7 +37,7 @@ function CategoryPage() {
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
 
-  const tabs = ["Rounds", "Participants", "Judges"];
+  const tabs = ["Stages", "Participants", "Judges"];
 
   // ============================
   // HELPERS
@@ -49,7 +49,7 @@ function CategoryPage() {
     setCategoryList([{ name: "", weight: "", maxScore: "" }]);
   };
 
-  const fetchCategories = async (stageName = activeRound) => {
+  const fetchCategories = async (stageName = activeStage) => {
     try {
       const stageId = getStageIdByName(stageName);
       if (!stageId) return;
@@ -62,7 +62,7 @@ function CategoryPage() {
       setSelectedCategory(stageCategories[0] || null);
     } catch (err) {
       console.error("Failed to fetch categories for stage", err);
-      showToast("error", "Failed to load categories for this round");
+      showToast("error", "Failed to load categories for this stage");
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ function CategoryPage() {
         setEvent(evt);
 
         if (evt.stages?.length) {
-          setActiveRound(evt.stages[0].name);
+          setActiveStage(evt.stages[0].name);
         }
 
         await fetchCategories(evt.stages?.[0]?.name);
@@ -99,12 +99,12 @@ function CategoryPage() {
   }, [event, eventId]);
 
   // ============================
-  // UPDATE SELECTED CATEGORY WHEN ROUND CHANGES
+  // UPDATE SELECTED CATEGORY WHEN STAGE CHANGES
   // ============================
   useEffect(() => {
-    if (!activeRound) return;
-    fetchCategories(activeRound);
-  }, [activeRound, eventId]);
+    if (!activeStage) return;
+    fetchCategories(activeStage);
+  }, [activeStage, eventId]);
 
   // ============================
   // CATEGORY MODAL HANDLERS
@@ -133,9 +133,9 @@ function CategoryPage() {
     }
 
     try {
-      const stageId = getStageIdByName(activeRound);
+      const stageId = getStageIdByName(activeStage);
       if (!stageId) {
-        showToast("error", "Please select a valid round");
+        showToast("error", "Please select a valid stage");
         return;
       }
 
@@ -151,7 +151,7 @@ function CategoryPage() {
         })),
       });
 
-      await fetchCategories(activeRound);
+      await fetchCategories(activeStage);
       resetCategoryForm();
       setIsCategoryModalOpen(false);
       setIsCriteriaModalOpen(true);
@@ -168,9 +168,9 @@ function CategoryPage() {
   };
 
   // ============================
-  // ROUNDS & FILTERED CATEGORIES
+  // STAGES & FILTERED CATEGORIES
   // ============================
-  const rounds = event?.stages?.map((s) => s.name) || [];
+  const stages = event?.stages?.map((s) => s.name) || [];
   const filteredCategories = categories;
 
   // ============================
@@ -221,7 +221,7 @@ function CategoryPage() {
               ))}
             </div>
 
-            {activeTopTab === "Rounds" && (
+            {activeTopTab === "Stages" && (
               <button
                 onClick={() => {
                   resetCategoryForm();
@@ -234,20 +234,20 @@ function CategoryPage() {
             )}
           </div>
 
-          {/* ROUND TABS */}
-          {activeTopTab === "Rounds" && (
+          {/* STAGE TABS */}
+          {activeTopTab === "Stages" && (
             <>
               <div className="flex gap-8 border-b mb-8 pl-6">
-                {rounds.map((round) => (
+                {stages.map((stage) => (
                   <button
-                    key={round}
-                    onClick={() => setActiveRound(round)}
-                    className={`pb-3 text-lg font-semibold transition ${activeRound === round
+                    key={stage}
+                    onClick={() => setActiveStage(stage)}
+                    className={`pb-3 text-lg font-semibold transition ${activeStage === stage
                       ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                       : "text-gray-400 hover:text-gray-600"
                       }`}
                   >
-                    {round}
+                    {stage}
                   </button>
                 ))}
               </div>
@@ -270,6 +270,7 @@ function CategoryPage() {
                     setSelectedCategory(cat || null);
                   }}
                 >
+                  <option value="" disabled>Select a Stage</option>
                   {filteredCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -347,9 +348,9 @@ function CategoryPage() {
           handleRemoveCategoryRow={handleRemoveCategoryRow}
           handleConfirmCategories={handleConfirmCategories}
           setIsCategoryModalOpen={setIsCategoryModalOpen}
-          rounds={rounds}
-          selectedRound={activeRound}
-          setSelectedRound={setActiveRound}
+          stages={stages}
+          selectedStage={activeStage}
+          setSelectedStage={setActiveStage}
           eventId={eventId}
           eventStages={event?.stages || []}
         />

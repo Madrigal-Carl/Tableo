@@ -4,8 +4,8 @@ import { showToast } from "../utils/swal";
 
 function AddCategoryModal({
     isOpen,
-    selectedRound,
-    setSelectedRound,
+    selectedStage,
+    setSelectedStage,
     categoryList,
     setCategoryList,
     handleCategoryChange,
@@ -13,16 +13,16 @@ function AddCategoryModal({
     handleRemoveCategoryRow,
     handleConfirmCategories,
     setIsCategoryModalOpen,
-    rounds = [],
+    stages = [],
     eventId,
     eventStages = [],
 }) {
     useEffect(() => {
-        if (!isOpen || !selectedRound) return;
+        if (!isOpen || !selectedStage) return;
 
         async function fetchCategories() {
             try {
-                const stageId = eventStages.find((s) => s.name === selectedRound)?.id;
+                const stageId = eventStages.find((s) => s.name === selectedStage)?.id;
                 if (!stageId) return;
 
                 const res = await getCategoriesByStage(eventId, stageId);
@@ -41,12 +41,12 @@ function AddCategoryModal({
                 }
             } catch (err) {
                 console.error("Failed to fetch categories in modal", err);
-                showToast("error", "Failed to load categories for this round");
+                showToast("error", "Failed to load categories for this stage");
             }
         }
 
         fetchCategories();
-    }, [isOpen, selectedRound, eventId, eventStages, setCategoryList]);
+    }, [isOpen, selectedStage, eventId, eventStages, setCategoryList]);
 
     if (!isOpen) return null;
 
@@ -60,11 +60,11 @@ function AddCategoryModal({
                 <div className="mb-6">
                     <label className="block text-sm text-gray-500 mb-1">Stage / Round</label>
                     <select
-                        value={selectedRound}
-                        onChange={(e) => setSelectedRound(e.target.value)}
+                        value={selectedStage}
+                        onChange={(e) => setSelectedStage(e.target.value)}
                         className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
                     >
-                        {rounds.map((r) => (
+                        {stages.map((r) => (
                             <option key={r} value={r}>{r}</option>
                         ))}
                     </select>
