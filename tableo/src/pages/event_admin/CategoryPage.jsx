@@ -200,7 +200,7 @@ function CategoryPage() {
     }
   };
 
-  const stages = event?.stages?.map((s) => s.name) || [];
+  const stages = event?.stages?.slice().sort((a, b) => a.sequence - b.sequence).map((s) => s.name) || [];
   const filteredCategories = categories;
 
   return (
@@ -267,51 +267,37 @@ function CategoryPage() {
 
               {/* CATEGORY SELECT */}
               <div className="flex items-center justify-between gap-4 mb-6 text-lg font-semibold">
-                <div className="flex items-center gap-2">
-                  <label htmlFor="categoryFilter" className="font-medium text-gray-700">
-                    Category:
-                  </label>
-                  <select
-                    id="categoryFilter"
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    value={selectedCategory?.id || ""}
-                    onChange={(e) => {
-                      const selectedId = parseInt(e.target.value);
-                      const cat = filteredCategories.find((c) => c.id === selectedId);
-                      setSelectedCategory(cat || null);
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select a Category
-                    </option>
-                    {filteredCategories.map((cat) => (
-                      <option
-                        key={cat.id}
-                        value={cat.id}
-                        title={cat.name}
-                      >
-                        {cat.name.length > 30
-                          ? cat.name.slice(0, 30).replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
-                          : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
+                <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-4">
+                    <label htmlFor="categoryFilter" className="font-medium text-gray-700">
+                      Category:
+                    </label>
+                    <select
+                      id="categoryFilter"
+                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      value={selectedCategory?.id || ""}
+                      onChange={(e) => {
+                        const selectedId = parseInt(e.target.value);
+                        const cat = filteredCategories.find((c) => c.id === selectedId);
+                        setSelectedCategory(cat || null);
+                      }}
+                    >
+                      <option value="" disabled>
+                        Select a Category
                       </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  {/* Category Button */}
-                  <button
-                    onClick={() => {
-                      if (!canEditEvent) return; // Prevent opening
-                      resetCategoryForm();
-                      setIsCategoryModalOpen(true);
-                    }}
-                    disabled={!canEditEvent}
-                    className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
-    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
-                  >
-                    Category
-                  </button>
+                      {filteredCategories.map((cat) => (
+                        <option
+                          key={cat.id}
+                          value={cat.id}
+                          title={cat.name}
+                        >
+                          {cat.name.length > 30
+                            ? cat.name.slice(0, 30).replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                            : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
                   {/* Criteria Button */}
                   <button
@@ -349,6 +335,20 @@ function CategoryPage() {
                     Criteria
                   </button>
                 </div>
+
+                {/* Category Button */}
+                <button
+                  onClick={() => {
+                    if (!canEditEvent) return; // Prevent opening
+                    resetCategoryForm();
+                    setIsCategoryModalOpen(true);
+                  }}
+                  disabled={!canEditEvent}
+                  className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
+    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
+                >
+                  Category
+                </button>
               </div>
 
               {/* JUDGING GRID */}
