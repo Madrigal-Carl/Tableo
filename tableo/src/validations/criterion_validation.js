@@ -10,7 +10,7 @@ export const validateCriteria = (criteriaList) => {
             return `Criterion #${i + 1}: Label is required`;
         }
 
-        // Check if name has letters (at least one)
+        // Must contain at least one letter
         if (!/[A-Za-z]/.test(c.name)) {
             return `Criterion #${i + 1}: Label must contain letters`;
         }
@@ -20,14 +20,34 @@ export const validateCriteria = (criteriaList) => {
         }
 
         const weight = Number(c.weight);
-        if (isNaN(weight)) return `Criterion #${i + 1}: Percentage must be a number`;
-        if (weight < 0) return `Criterion #${i + 1}: Percentage cannot be less than 0`;
-        if (weight > 100) return `Criterion #${i + 1}: Percentage cannot be more than 100`;
+
+        if (isNaN(weight)) {
+            return `Criterion #${i + 1}: Percentage must be a number`;
+        }
+
+        // ✅ Prevent decimals
+        if (!Number.isInteger(weight)) {
+            return `Criterion #${i + 1}: Percentage must be a whole number`;
+        }
+
+        if (weight < 0) {
+            return `Criterion #${i + 1}: Percentage cannot be less than 0`;
+        }
+
+        if (weight > 100) {
+            return `Criterion #${i + 1}: Percentage cannot be more than 100`;
+        }
     }
 
-    // Optional: Check if total percentage equals 100
-    const total = criteriaList.reduce((sum, c) => sum + Number(c.weight), 0);
-    if (total !== 100) return "Total of all percentages must be exactly 100";
+    // Ensure total = 100
+    const total = criteriaList.reduce(
+        (sum, c) => sum + Number(c.weight),
+        0
+    );
 
-    return null; // No errors
+    if (total !== 100) {
+        return "Total of all percentages must be exactly 100";
+    }
+
+    return null;
 };

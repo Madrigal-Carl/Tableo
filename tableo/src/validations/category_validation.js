@@ -1,8 +1,10 @@
 export function validateCategories(categoryList) {
-    const errors = [];
+    if (!categoryList || categoryList.length === 0) {
+        return "At least one category is required";
+    }
 
-    categoryList.forEach((c, idx) => {
-        const rowErrors = {};
+    for (let i = 0; i < categoryList.length; i++) {
+        const c = categoryList[i];
 
         // ✅ NAME — Required
         if (c.name === undefined || c.name === null || c.name.trim() === "") {
@@ -41,10 +43,14 @@ export function validateCategories(categoryList) {
             }
         }
 
-        if (Object.keys(rowErrors).length > 0) {
-            errors[idx] = rowErrors;
+        if (!Number.isInteger(maxScoreNum)) {
+            return `Category #${i + 1}: Max score must be a whole number`;
         }
-    });
 
-    return errors;
+        if (maxScoreNum <= 0) {
+            return `Category #${i + 1}: Max score must be greater than 0`;
+        }
+    }
+
+    return null;
 }
