@@ -270,9 +270,49 @@ function CategoryPage() {
 
               {/* CATEGORY SELECT */}
               <div className="flex items-center justify-between gap-4 mb-6 text-lg font-semibold">
-                <div className="flex items-center">
-                  <PlusCircle
-                    className="text-[#FA824C] w-6 h-6 cursor-pointer"
+                <div className="flex items-center gap-2">
+                  <label htmlFor="categoryFilter" className="font-medium text-gray-700">
+                    Category:
+                  </label>
+                  <select
+                    id="categoryFilter"
+                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    value={selectedCategory?.id || ""}
+                    onChange={(e) => {
+                      const selectedId = parseInt(e.target.value);
+                      const cat = filteredCategories.find((c) => c.id === selectedId);
+                      setSelectedCategory(cat || null);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select a Category
+                    </option>
+                    {filteredCategories.map((cat) => (
+                      <option
+                        key={cat.id}
+                        value={cat.id}
+                        title={cat.name}
+                      >
+                        {cat.name.length > 30
+                          ? cat.name.slice(0, 30).replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                          : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-6">
+                  <button
+                    onClick={() => {
+                      resetCategoryForm();
+                      setIsCategoryModalOpen(true);
+                    }}
+                    className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
+                  >
+                    Category
+                  </button>
+                  <button
+                    className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
                     onClick={async () => {
                       if (!selectedCategory) {
                         showToast("error", "Please select a category first");
@@ -298,35 +338,10 @@ function CategoryPage() {
                       } finally {
                         setLoading(false);
                       }
-                    }}
-                  />
-                  <select
-                    className="px-4 py-2"
-                    value={selectedCategory?.id || ""}
-                    onChange={(e) => {
-                      const selectedId = parseInt(e.target.value);
-                      const cat = filteredCategories.find((c) => c.id === selectedId);
-                      setSelectedCategory(cat || null);
-                    }}
-                  >
-                    <option value="" disabled>Select a Category</option>
-                    {filteredCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id} title={cat.name}>
-                        {cat.name.length > 30 ? cat.name.slice(0, 30) + "…" : cat.name}
-                      </option>
-                    ))}
-                  </select>
+                    }}>
+                    Criteria
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => {
-                    resetCategoryForm();
-                    setIsCategoryModalOpen(true);
-                  }}
-                  className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
-                >
-                  + Add Category
-                </button>
               </div>
 
               {/* JUDGING GRID */}
