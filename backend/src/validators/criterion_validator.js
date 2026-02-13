@@ -5,10 +5,16 @@ const createOrUpdateCriterionValidator = Joi.object({
   criteria: Joi.array()
     .items(
       Joi.object({
-        label: Joi.string().required().messages({
-          "any.required": "Criterion label is required",
-          "string.base": "Criterion label must be a string",
-        }),
+        label: Joi.string()
+          .trim()
+          .pattern(/[A-Za-z]/) // must contain at least one letter
+          .required()
+          .messages({
+            "any.required": "Criterion label is required",
+            "string.base": "Criterion label must be a string",
+            "string.empty": "Criterion label cannot be empty",
+            "string.pattern.base": "Criterion label must contain letters and cannot be numbers only",
+          }),
         percentage: Joi.number().min(0).max(100).required().messages({
           "any.required": "Percentage is required",
           "number.base": "Percentage must be a number",
