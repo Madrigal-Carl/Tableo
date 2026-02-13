@@ -179,6 +179,8 @@ function CategoryPage() {
     }
 
     try {
+      setLoading(true);
+
       const payload = criteriaList.map(c => ({
         label: c.name.trim(),
         percentage: Number(c.weight),
@@ -193,6 +195,8 @@ function CategoryPage() {
     } catch (err) {
       console.error(err);
       showToast("error", err.message || "Failed to save criteria");
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -86,8 +86,9 @@ function HomePage() {
     if (error) return showToast("error", error);
 
     try {
-      const formData = new FormData();
+      setLoading(true);
 
+      const formData = new FormData();
       formData.append("title", newEvent.title);
       formData.append("location", newEvent.location);
       formData.append("description", newEvent.description);
@@ -119,6 +120,8 @@ function HomePage() {
       setIsModalOpen(false);
     } catch (err) {
       showToast("error", err.message || "Failed to update event");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -198,8 +201,9 @@ function HomePage() {
     if (error) return showToast("error", error);
 
     try {
-      const formData = new FormData();
+      setLoading(true);
 
+      const formData = new FormData();
       formData.append("title", newEvent.title);
       formData.append("location", newEvent.location);
       formData.append("description", newEvent.description);
@@ -241,6 +245,8 @@ function HomePage() {
       });
     } catch (err) {
       showToast("error", err.message || "Failed to create event");
+    } finally {
+      setLoading(false);
     }
   };
 
