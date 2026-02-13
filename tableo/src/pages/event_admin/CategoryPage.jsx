@@ -10,7 +10,7 @@ import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
 import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
-
+import { validateCriteria } from "../../validations/criterion_validation";
 
 import { getEvent } from "../../services/event_service";
 import {
@@ -42,7 +42,7 @@ function CategoryPage() {
   const tabs = ["Stages", "Participants", "Judges"];
 
   const handleEditParticipant = (updated) => {
-  console.log("Edit participant:", updated);
+    console.log("Edit participant:", updated);
   };
 
   const handleDeleteParticipant = (item) => {
@@ -57,9 +57,6 @@ function CategoryPage() {
     console.log("Delete judge:", item);
   };
 
-  // ============================
-  // HELPERS
-  // ============================
   const getStageIdByName = (stageName) =>
     event?.stages.find((s) => s.name === stageName)?.id;
 
@@ -79,16 +76,12 @@ function CategoryPage() {
       setCategories(stageCategories);
       setSelectedCategory(stageCategories[0] || null);
     } catch (err) {
-      console.error("Failed to fetch categories for stage", err);
       showToast("error", "Failed to load categories for this stage");
     } finally {
       setLoading(false);
     }
   };
 
-  // ============================
-  // FETCH EVENT
-  // ============================
   useEffect(() => {
     if (event) return;
 
@@ -106,7 +99,6 @@ function CategoryPage() {
 
         await fetchCategories(evt.stages?.[0]?.name);
       } catch (err) {
-        console.error("Failed to load event", err);
         showToast("error", "Failed to load event");
       } finally {
         setLoading(false);
@@ -116,17 +108,11 @@ function CategoryPage() {
     fetchEvent();
   }, [event, eventId]);
 
-  // ============================
-  // UPDATE SELECTED CATEGORY WHEN STAGE CHANGES
-  // ============================
   useEffect(() => {
     if (!activeStage) return;
     fetchCategories(activeStage);
   }, [activeStage, eventId]);
 
-  // ============================
-  // CATEGORY MODAL HANDLERS
-  // ============================
   const handleCategoryChange = (index, field, value) => {
     const updated = [...categoryList];
     updated[index][field] = value;
@@ -193,6 +179,12 @@ function CategoryPage() {
       return;
     }
 
+    const errorMessage = validateCriteria(criteriaList);
+    if (errorMessage) {
+      showToast("error", errorMessage);
+      return;
+    }
+
     try {
       const payload = criteriaList.map(c => ({
         label: c.name.trim(),
@@ -207,20 +199,13 @@ function CategoryPage() {
       setIsCriteriaModalOpen(false);
     } catch (err) {
       console.error(err);
-      showToast("error", err.response?.data?.message || "Failed to save criteria");
+      showToast("error", err.message || "Failed to save criteria");
     }
   };
 
-  // ============================
-  // STAGES & FILTERED CATEGORIES
-  // ============================
   const stages = event?.stages?.map((s) => s.name) || [];
   const filteredCategories = categories;
 
-  // ============================
-  // RENDER
-  // ============================
-  // Early return is no longer needed; just reuse FullScreenLoader
   return (
     <>
       {/* Loader */}
@@ -236,14 +221,13 @@ function CategoryPage() {
               <div className="flex items-center gap-3">
                 <ChevronLeft
                   size={30}
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/events")}
                   className="cursor-pointer hover:text-gray-900"
                 />
                 <h1 className="text-4xl font-semibold text-[#FA824C]">{event?.title}</h1>
               </div>
               <p className="text-sm text-gray-500 mt-2">{event?.description}</p>
             </div>
-
 
             <div className="relative flex bg-[#FA824C] p-1 rounded-md w-fit">
               <div
@@ -325,7 +309,7 @@ function CategoryPage() {
                       setSelectedCategory(cat || null);
                     }}
                   >
-                    <option value="" disabled>Select a Stage</option>
+                    <option value="" disabled>Select a Category</option>
                     {filteredCategories.map((cat) => (
                       <option key={cat.id} value={cat.id} title={cat.name}>
                         {cat.name.length > 30 ? cat.name.slice(0, 30) + "…" : cat.name}
@@ -393,6 +377,11 @@ function CategoryPage() {
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
+              onAdd={() => {
+                // your logic to add a participant
+                console.log("Add participant clicked");
+                // Example: open a modal here to create a participant
+              }}
             />
           )}
 
@@ -405,6 +394,9 @@ function CategoryPage() {
               isJudge={true}
               onEdit={handleEditJudge}
               onDelete={handleDeleteJudge}
+              onAdd={() => {
+                console.log("Add Judge clicked");
+              }}
             />
           )}
         </section>

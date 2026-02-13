@@ -1,65 +1,46 @@
-const { createOrUpdateCriteria, getCriteriaByCategory } = require("../services/criterion_service");
-const { createOrUpdateCriterionValidator } = require("../validators/criterion_validator");
+// controllers/criterion_controller.js
+const criterionService = require("../services/criterion_service");
 
-// CREATE OR UPDATE CRITERIA CONTROLLER
-async function createOrUpdateCriteriaController(req, res) {
+async function upsertCriteria(req, res, next) {
   try {
-    const category_id = parseInt(req.params.categoryId, 10);
-    if (isNaN(category_id)) {
+    const categoryId = Number(req.params.categoryId);
+    if (isNaN(categoryId)) {
       return res.status(400).json({ message: "Invalid category ID" });
     }
 
-    // Validate input
-    const { error, value } = createOrUpdateCriterionValidator.validate(req.body, { abortEarly: false });
-    if (error) {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: error.details.map((d) => d.message),
-      });
-    }
-
-    const updatedCriteria = await createOrUpdateCriteria({
-      category_id,
-      criteria: value.criteria,
+    const data = await criterionService.createOrUpdateCriteria({
+      categoryId,
+      criteria: req.validatedBody.criteria,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Criteria created/updated successfully",
-      data: updatedCriteria,
+      data,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      message: "Failed to create/update criteria",
-      error: err.message,
-    });
+    next(err);
   }
 }
 
-// READ CRITERIA CONTROLLER
-async function getCriteriaController(req, res) {
+async function getCriteria(req, res, next) {
   try {
-    const category_id = parseInt(req.params.categoryId, 10);
-    if (isNaN(category_id)) {
+    const categoryId = Number(req.params.categoryId);
+    if (isNaN(categoryId)) {
       return res.status(400).json({ message: "Invalid category ID" });
     }
 
-    const criteria = await getCriteriaByCategory(category_id);
+    const data = await criterionService.getCriteriaByCategory(categoryId);
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Criteria fetched successfully",
-      data: criteria,
+      data,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      message: "Failed to fetch criteria",
-      error: err.message,
-    });
+    next(err);
   }
 }
 
 module.exports = {
-  createOrUpdateCriteriaController,
-  getCriteriaController,
+  upsertCriteria,
+  getCriteria,
 };

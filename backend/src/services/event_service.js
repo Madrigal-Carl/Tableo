@@ -5,6 +5,7 @@ const stageService = require('./stage_service');
 const candidateService = require('./candidate_service');
 const judgeService = require('./judge_service');
 const { isEventEditable } = require('../utils/event_time_guard');
+const { Stage, Judge, Candidate } = require('../database/models');
 
 async function createEvent({
     title,
@@ -132,4 +133,60 @@ async function getAllEvents(userId) {
     }));
 }
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };
+async function getDeletedEvents(userId) {
+    const events = await eventRepo.findDeletedByUser(userId);
+
+    return events.map(ev => ({
+        ...ev.toJSON(),
+        stages: ev.stages.length,
+        judges: ev.judges.length,
+        candidates: ev.candidates.length,
+    }));
+}
+
+async function restoreEvent(eventId, userId) {
+    return sequelize.transaction(async (t) => {
+        const event = await eventRepo.findDeletedById(eventId, t);
+
+        if (!event) throw new Error('Event not found');
+        if (event.user_id !== userId) throw new Error('Unauthorized');
+
+        // 1️⃣ Restore Event
+        await eventRepo.restore(eventId, t);
+
+        // 2️⃣ Restore direct relations
+        await Promise.all([
+            Stage.restore({ where: { event_id: eventId }, transaction: t }),
+            Judge.restore({ where: { event_id: eventId }, transaction: t }),
+            Candidate.restore({ where: { event_id: eventId }, transaction: t }),
+        ]);
+
+        const categories = await sequelize.models.Category.findAll({
+            where: { event_id: eventId },
+            paranoid: false,
+            transaction: t,
+        });
+
+        for (const cat of categories) {
+            await cat.restore({ transaction: t });
+
+            // 🔥 RESTORE THROUGH TABLE
+            await sequelize.models.CategoryStage.restore({
+                where: { category_id: cat.id },
+                transaction: t,
+            });
+
+            await sequelize.models.Criterion.restore({
+                where: { category_id: cat.id },
+                transaction: t,
+            });
+        }
+
+        // 4️⃣ Fetch fully restored event
+        const restored = await eventRepo.findByIdWithRelations(eventId, t);
+
+        return restored;
+    });
+}
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents, getDeletedEvents, restoreEvent };

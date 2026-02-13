@@ -9,20 +9,29 @@ function SideNavigation() {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const navItem = (label, Icon, path, action) => {
-    const isActive = location.pathname === path;
+  const navItem = (label, Icon, paths, action) => {
+    const normalizedPaths = Array.isArray(paths)
+      ? paths
+      : paths
+        ? [paths]
+        : [];
+
+    const isActive = normalizedPaths.some(
+      (p) =>
+        location.pathname === p ||
+        location.pathname.startsWith(p + "/")
+    );
 
     return (
       <button
         onClick={() => {
           if (action) action();
-          if (path) navigate(path);
+          if (normalizedPaths[0]) navigate(normalizedPaths[0]);
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition
-          ${
-            isActive
-              ? "bg-[#2B6777] text-white hover:bg-[#26515D]"
-              : "text-gray-700 hover:bg-[#2B6777] hover:text-white"
+        ${isActive
+            ? "bg-[#FA824C] text-white hover:bg-[#eb6e34]"
+            : "text-gray-700 hover:bg-[#FA824C] hover:text-white"
           }`}
       >
         <Icon size={20} />
@@ -68,8 +77,8 @@ function SideNavigation() {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
-        {navItem("Events", Calendar, "/dashboard")}
-        {navItem("Archives", Archive, "/archive")}
+        {navItem("Events", Calendar, ["/events", "/event"])}
+        {navItem("Archives", Archive, ["/archive"])}
       </nav>
 
       {/* Divider */}
