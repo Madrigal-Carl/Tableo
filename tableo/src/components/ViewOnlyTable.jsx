@@ -1,17 +1,18 @@
 import React, { useState } from "react";
-import { SquarePen, Trash2, Settings } from "lucide-react";
+import { SquarePen, Trash2, Plus } from "lucide-react";
 import EditModal from "./EditModal";
 
 function ViewOnlyTable({
   title,
   data,
-  nameLabel,
+  nameLabel = "Name",
   fieldLabel = "Sex",
   fieldKey = "sex",
   editable = false,
   onEdit,
   onDelete,
-  isJudge = false, // <-- ADD THIS
+  onAdd, // optional add button callback
+  isJudge = false,
 }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -25,13 +26,10 @@ function ViewOnlyTable({
     );
   }
 
-  /* ================== HANDLERS ================== */
-
   const openEditModal = (item) => {
     setSelectedItem({ ...item });
     setIsEditOpen(true);
   };
-
 
   const openDeleteModal = (item) => {
     setSelectedItem(item);
@@ -48,132 +46,152 @@ function ViewOnlyTable({
     setSelectedItem(null);
   };
 
-  /* ================== JUDGE CODE GENERATOR ================== */
-  const generateJudgeCode = (index) => {
-    return `JDG-${String(index + 1).padStart(3, "0")}`;
-  };
-
   return (
     <>
-      <div className="w-full px-6">
-        <div className="mb-8">
+      <div className="bg-white rounded-2xl shadow-sm p-6">
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
+        </div>
 
-          {/* TITLE */}
-          <div className="flex items-center justify-between py-3 border-b border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-700">{title}</h2>
-          </div>
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
+            {/* HEADER */}
+            <thead>
+              <tr className="text-xs uppercase tracking-wider text-gray-400">
+                {isJudge && (
+                  <>
+                    <th className="px-4 py-3 w-1/4 text-center">Judge Code</th>
+                    <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
+                  </>
+                )}
+                {!isJudge && (
+                  <th className="px-4 py-3 w-1/4 text-center">Participant No.</th>
+                )}
+                <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
+                {!isJudge && fieldKey && (
+                  <th className="px-4 py-3 w-1/4 text-center">{fieldLabel}</th>
+                )}
+                <th className="px-4 py-3 w-1/4 text-center">Actions</th>
+              </tr>
+            </thead>
 
-          {/* TABLE */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="text-sm text-gray-500">
-
-                  {/* PARTICIPANT NUMBER */}
-                  {!isJudge && (
-                    <th className="text-left py-3 w-24">No.</th>
-                  )}
-
-                  {/* JUDGE CODE + NUMBER */}
+            {/* BODY */}
+            <tbody>
+              {data.map((item, index) => (
+                <tr
+                  key={item.id}
+                  className="bg-gray-50 hover:bg-gray-100 transition shadow-sm"
+                >
+                  {/* Judge columns */}
                   {isJudge && (
                     <>
-                      <th className="text-left py-3 w-32">Judge Code</th>
-                      <th className="text-left py-3 w-24">Judge No.</th>
+                      <td className="px-4 py-4 text-center font-medium text-gray-600">
+                        JDG-{String(index + 1).padStart(3, "0")}
+                      </td>
+                      <td className="px-4 py-4 text-center text-gray-600">
+                        {item.suffix}
+                      </td>
                     </>
                   )}
 
-                  <th className="text-left py-3 w-64">{nameLabel}</th>
-                  {fieldKey && (
-                    <th className="text-left py-3 w-32">{fieldLabel}</th>
+                  {/* Participant number */}
+                  {!isJudge && (
+                    <td className="px-4 py-4 text-center font-medium text-gray-600">
+                      {index + 1}
+                    </td>
                   )}
 
-                  <th className="text-center py-3 w-32">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {data.map((item, index) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-gray-200 last:border-b-0"
-                  >
-
-                    {/* PARTICIPANT NUMBER */}
-                    {!isJudge && (
-                      <td className="py-4 text-sm text-gray-600">
-                        {index + 1}
-                      </td>
-                    )}
-
-                    {/* JUDGE CODE + NUMBER */}
-                    {isJudge && (
-                      <>
-                        <td className="py-4 text-sm text-gray-600">
-                          {`JDG-${String(index + 1).padStart(3, "0")}`}
-                        </td>
-
-                        <td className="py-4 text-sm text-gray-600">
-                          {index + 1}
-                        </td>
-                      </>
-                    )}
-
-                    {/* SUFFIX + NAME */}
-                    <td className="py-4 text-sm text-gray-700">
-                      {item.suffix ? `${item.suffix}. ` : ""}
-                      {item.name}
-                    </td>
-
-                    {/* OTHER FIELD */}
-                    {fieldKey && (
-                      <td className="py-4 text-sm text-gray-600">
-                        {item[fieldKey]}
-                      </td>
-                    )}
-
-                    {/* ACTIONS */}
-                    <td className="py-4 text-center">
-                      {editable ? (
-                        <div className="flex justify-center gap-4">
-                          <button
-                            onClick={() => openEditModal(item)}
-                            className="text-gray-500 hover:text-blue-600 transition"
-                          >
-                            <SquarePen size={16} />
-                          </button>
-
-                          <button
-                            onClick={() => openDeleteModal(item)}
-                            className="text-gray-500 hover:text-red-600 transition"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                  {/* Name with avatar for participants */}
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      {!isJudge && (
+                        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
+                          {item.photo || item.avatar ? (
+                            <img
+                              src={item.photo || item.avatar}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            item.name
+                              ?.split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()
+                          )}
                         </div>
-                      ) : (
-                        <span className="text-sm text-gray-300">View only</span>
                       )}
-                    </td>
+                      <p className="font-semibold text-gray-800">
+                        {item.suffix ? `${item.suffix}. ` : ""}
+                        {item.name}
+                      </p>
+                    </div>
+                  </td>
 
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  {/* Sex column for participants */}
+                  {!isJudge && fieldKey && (
+                    <td className="px-4 py-4 text-center text-gray-600">
+                      {item[fieldKey]}
+                    </td>
+                  )}
+
+                  {/* Actions */}
+                  <td className="px-4 py-4 text-center">
+                    {editable ? (
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition"
+                        >
+                          <SquarePen size={16} />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(item)}
+                          className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">View only</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+
+              {/* ADD BUTTON ROW */}
+              {onAdd && (
+                <tr className="bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
+                  <td
+                    colSpan={isJudge ? data.length + 2 : fieldKey ? 4 : 3}
+                    className="px-4 py-4 text-center text-blue-600 font-semibold"
+                    onClick={onAdd}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Plus size={16} />
+                      Add {title.slice(0, -1)}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* ================= EDIT MODAL ================= */}
+      {/* EDIT MODAL */}
       <EditModal
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         onSave={handleConfirmEdit}
-        title={title.slice(0, -1)}
         item={selectedItem}
-        fieldLabel={fieldLabel}
-        fieldKey={fieldKey}
+        isParticipant={!isJudge} // Pass true for participants
       />
 
-      {/* ================= DELETE MODAL ================= */}
+      {/* DELETE MODAL */}
       {isDeleteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
@@ -183,23 +201,20 @@ function ViewOnlyTable({
 
             <p className="text-center text-gray-500 mb-6">
               Are you sure you want to delete{" "}
-              <span className="font-medium text-gray-700">
-                {selectedItem?.name}
-              </span>
-              ?
+              <span className="font-medium text-gray-700">{selectedItem?.name}</span>?
             </p>
 
             <div className="flex justify-between">
               <button
                 onClick={() => setIsDeleteOpen(false)}
-                className="px-6 py-2 rounded-full border border-gray-300 text-gray-600"
+                className="px-6 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleConfirmDelete}
-                className="px-6 py-2 rounded-full bg-red-500 text-white"
+                className="px-6 py-2 rounded-full bg-red-500 text-white hover:bg-red-600"
               >
                 Delete
               </button>

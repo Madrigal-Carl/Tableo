@@ -324,7 +324,7 @@ function CategoryPage() {
                       setSelectedCategory(cat || null);
                     }}
                   >
-                    <option value="" disabled>Select a Stage</option>
+                    <option value="" disabled>Select a Category</option>
                     {filteredCategories.map((cat) => (
                       <option key={cat.id} value={cat.id} title={cat.name}>
                         {cat.name.length > 30 ? cat.name.slice(0, 30) + "…" : cat.name}
@@ -392,6 +392,11 @@ function CategoryPage() {
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
+              onAdd={() => {
+                // your logic to add a participant
+                console.log("Add participant clicked");
+                // Example: open a modal here to create a participant
+              }}
             />
           )}
 
@@ -404,6 +409,9 @@ function CategoryPage() {
               isJudge={true}
               onEdit={handleEditJudge}
               onDelete={handleDeleteJudge}
+              onAdd={() => {
+                console.log("Add Judge clicked");
+              }}
             />
           )}
         </section>
