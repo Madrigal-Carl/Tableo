@@ -359,7 +359,7 @@ function HomePage() {
               description={event.description}
               date={event.date}
               location={event.location}
-              onClick={() => navigate(`/categories/${event.id}`)}
+              onClick={() => navigate(`/event/${event.id}`)}
               onEdit={isEventEditable(event) ? () => openEditModal(event) : null}
               onDelete={() => handleDeleteEvent(event.id)}
               disabledEdit={!isEventEditable(event)}

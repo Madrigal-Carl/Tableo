@@ -106,7 +106,7 @@ function ArchivePage() {
               description={event.description}
               date={event.date}
               location={event.location}
-              onClick={() => navigate(`/categories/${event.id}`)}
+              onClick={() => navigate(`/event/${event.id}`)}
               hideActions
             >
               {event.image && (

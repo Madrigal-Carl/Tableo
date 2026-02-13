@@ -29,9 +29,9 @@ createRoot(document.getElementById('root')).render(
 
           {/* Authenticated-only */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<HomePage />} />
+            <Route path="/events" element={<HomePage />} />
             <Route path="/judge" element={<JudgePage />} />
-            <Route path="/categories/:eventId" element={<CategoryPage />} />
+            <Route path="/event/:eventId" element={<CategoryPage />} />
             <Route path="/archive" element={<ArchivePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
