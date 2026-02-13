@@ -5,6 +5,7 @@ const stageService = require('./stage_service');
 const candidateService = require('./candidate_service');
 const judgeService = require('./judge_service');
 const { isEventEditable } = require('../utils/event_time_guard');
+const { Stage, Judge, Candidate } = require('../database/models');
 
 async function createEvent({
     title,
@@ -150,9 +151,17 @@ async function restoreEvent(eventId, userId) {
         if (!event) throw new Error('Event not found');
         if (event.user_id !== userId) throw new Error('Unauthorized');
 
+        // 1️⃣ Restore Event
         await eventRepo.restore(eventId, t);
 
-        // Fetch restored event with relations
+        // 2️⃣ Restore relations
+        await Promise.all([
+            Stage.restore({ where: { event_id: eventId }, transaction: t }),
+            Judge.restore({ where: { event_id: eventId }, transaction: t }),
+            Candidate.restore({ where: { event_id: eventId }, transaction: t }),
+        ]);
+
+        // 3️⃣ Fetch fully restored event
         const restored = await eventRepo.findByIdWithRelations(eventId);
 
         return restored;
