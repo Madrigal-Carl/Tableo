@@ -154,15 +154,36 @@ async function restoreEvent(eventId, userId) {
         // 1️⃣ Restore Event
         await eventRepo.restore(eventId, t);
 
-        // 2️⃣ Restore relations
+        // 2️⃣ Restore direct relations
         await Promise.all([
             Stage.restore({ where: { event_id: eventId }, transaction: t }),
             Judge.restore({ where: { event_id: eventId }, transaction: t }),
             Candidate.restore({ where: { event_id: eventId }, transaction: t }),
         ]);
 
-        // 3️⃣ Fetch fully restored event
-        const restored = await eventRepo.findByIdWithRelations(eventId);
+        const categories = await sequelize.models.Category.findAll({
+            where: { event_id: eventId },
+            paranoid: false,
+            transaction: t,
+        });
+
+        for (const cat of categories) {
+            await cat.restore({ transaction: t });
+
+            // 🔥 RESTORE THROUGH TABLE
+            await sequelize.models.CategoryStage.restore({
+                where: { category_id: cat.id },
+                transaction: t,
+            });
+
+            await sequelize.models.Criterion.restore({
+                where: { category_id: cat.id },
+                transaction: t,
+            });
+        }
+
+        // 4️⃣ Fetch fully restored event
+        const restored = await eventRepo.findByIdWithRelations(eventId, t);
 
         return restored;
     });
