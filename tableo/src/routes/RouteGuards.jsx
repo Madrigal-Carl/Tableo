@@ -17,5 +17,5 @@ export function GuestRoute() {
 
     if (loading) return null;
 
-    return !isAuth ? <Outlet /> : <Navigate to="/dashboard" replace />;
+    return !isAuth ? <Outlet /> : <Navigate to="/events" replace />;
 }

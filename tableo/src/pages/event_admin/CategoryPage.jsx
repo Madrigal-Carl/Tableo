@@ -41,6 +41,22 @@ function CategoryPage() {
 
   const tabs = ["Stages", "Participants", "Judges"];
 
+  const handleEditParticipant = (updated) => {
+    console.log("Edit participant:", updated);
+  };
+
+  const handleDeleteParticipant = (item) => {
+    console.log("Delete participant:", item);
+  };
+
+  const handleEditJudge = (updated) => {
+    console.log("Edit judge:", updated);
+  };
+
+  const handleDeleteJudge = (item) => {
+    console.log("Delete judge:", item);
+  };
+
   // ============================
   // HELPERS
   // ============================
@@ -220,14 +236,13 @@ function CategoryPage() {
               <div className="flex items-center gap-3">
                 <ChevronLeft
                   size={30}
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/events")}
                   className="cursor-pointer hover:text-gray-900"
                 />
                 <h1 className="text-4xl font-semibold text-[#FA824C]">{event?.title}</h1>
               </div>
               <p className="text-sm text-gray-500 mt-2">{event?.description}</p>
             </div>
-
 
             <div className="relative flex bg-[#FA824C] p-1 rounded-md w-fit">
               <div
@@ -371,9 +386,12 @@ function CategoryPage() {
             <ViewOnlyTable
               title="Participants"
               data={event?.candidates || []}
-              nameLabel="Name"
+              nameLabel="Participant Name"
               fieldLabel="Sex"
               fieldKey="sex"
+              editable
+              onEdit={handleEditParticipant}
+              onDelete={handleDeleteParticipant}
             />
           )}
 
@@ -381,9 +399,11 @@ function CategoryPage() {
             <ViewOnlyTable
               title="Judges"
               data={event?.judges || []}
-              nameLabel="Name"
-              fieldLabel="Suffix"
-              fieldKey="suffix"
+              nameLabel="Judge Name"
+              editable
+              isJudge={true}
+              onEdit={handleEditJudge}
+              onDelete={handleDeleteJudge}
             />
           )}
         </section>

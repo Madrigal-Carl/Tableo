@@ -1,4 +1,5 @@
 const { Event, Category, Stage, Judge, Candidate, sequelize, } = require('../database/models');
+const { Op } = require('sequelize');
 
 function create(data, transaction) {
     return Event.create(data, { transaction });
@@ -57,6 +58,37 @@ async function findByUser(userId) {
     });
 }
 
+async function findDeletedByUser(userId) {
+    return Event.findAll({
+        where: {
+            user_id: userId,
+            deletedAt: { [Op.not]: null },
+        },
+        paranoid: false,
+        include: [
+            { model: sequelize.models.Stage, as: 'stages' },
+            { model: sequelize.models.Judge, as: 'judges' },
+            { model: sequelize.models.Candidate, as: 'candidates' },
+        ],
+        order: [['deletedAt', 'DESC']],
+    });
+}
+
+async function findDeletedById(eventId, transaction) {
+    return Event.findOne({
+        where: { id: eventId },
+        paranoid: false,
+        transaction,
+    });
+}
+
+async function restore(eventId, transaction) {
+    return Event.restore({
+        where: { id: eventId },
+        transaction,
+    });
+}
+
 module.exports = {
     create,
     findById,
@@ -64,4 +96,7 @@ module.exports = {
     findByUser,
     softDelete,
     update,
+    findDeletedByUser,
+    findDeletedById,
+    restore,
 };

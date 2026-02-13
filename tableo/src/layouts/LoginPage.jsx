@@ -44,7 +44,7 @@ export default function LoginPage() {
 
       setUser(res.data.user);
       showToast("success", "Signed in successfully");
-      navigate("/dashboard");
+      navigate("/events");
     } catch (err) {
       showToast("error", err.message || "Invalid email or password");
     }

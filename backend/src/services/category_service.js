@@ -31,9 +31,14 @@ async function createOrUpdateCategories({ eventId, stage_id, categories, userId 
         if (category) {
           await category.restore({ transaction: t });
 
-          // Ensure stage mapping exists
-          const stageIds = category.stages.map(s => s.id);
-          if (!stageIds.includes(stage_id)) {
+          // Check if a soft-deleted CategoryStage exists
+          let categoryStage = await categoryStageRepo.findOneIncludingSoftDeleted(category.id, stage_id);
+
+          if (categoryStage) {
+            if (categoryStage.deletedAt) {
+              await categoryStage.restore({ transaction: t });
+            }
+          } else {
             await categoryStageRepo.create({ categoryId: category.id, stageId: stage_id }, t);
           }
         }
@@ -53,7 +58,6 @@ async function createOrUpdateCategories({ eventId, stage_id, categories, userId 
 
         await categoryStageRepo.create({ categoryId: category.id, stageId: stage_id }, t);
       } else {
-        // Update active/restored category
         await category.update(
           {
             name: incoming.name.trim(),
@@ -67,9 +71,10 @@ async function createOrUpdateCategories({ eventId, stage_id, categories, userId 
       usedCategoryIds.add(category.id);
     }
 
-    // Soft-delete any active categories that were not used
+    // Soft-delete categories that are linked to this stage but not in the incoming list
     for (const category of allCategories.filter(c => !c.deletedAt)) {
-      if (!usedCategoryIds.has(category.id)) {
+      const isLinkedToStage = category.stages.some(s => s.id === stage_id);
+      if (isLinkedToStage && !usedCategoryIds.has(category.id)) {
         await category.destroy({ transaction: t });
       }
     }

@@ -27,3 +27,11 @@ export const updateEvent = (eventId, data) => {
 export const getAllEvents = () => {
     return api.get("/events");
 };
+
+export const getDeletedEvents = () => {
+    return api.get("/events/deleted/all");
+};
+
+export const restoreEvent = (eventId) => {
+    return api.patch(`/events/${eventId}/restore`);
+};

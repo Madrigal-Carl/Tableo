@@ -178,7 +178,7 @@ export default function RegisterPage() {
             setShowModal(false);
             showToast("success", "Account has been successfully created");
             await refreshUser();
-            navigate("/dashboard");
+            navigate("/events");
           }}
         />
       </div>

@@ -12,7 +12,7 @@ import HomePage from './pages/event_admin/HomePage.jsx';
 import LandingPage from './layouts/LandingPage.jsx';
 import JudgePage from './pages/judge/JudgePage.jsx';
 import CategoryPage from './pages/event_admin/CategoryPage.jsx';
-import ArchivePage from './layouts/ArchivePage.jsx';
+import ArchivePage from './pages/event_admin/ArchivePage.jsx';
 import SettingsPage from './pages/event_admin/SettingsPage.jsx';
 
 createRoot(document.getElementById('root')).render(
@@ -29,9 +29,9 @@ createRoot(document.getElementById('root')).render(
 
           {/* Authenticated-only */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<HomePage />} />
+            <Route path="/events" element={<HomePage />} />
             <Route path="/judge" element={<JudgePage />} />
-            <Route path="/categories/:eventId" element={<CategoryPage />} />
+            <Route path="/events/:eventId" element={<CategoryPage />} />
             <Route path="/archive" element={<ArchivePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

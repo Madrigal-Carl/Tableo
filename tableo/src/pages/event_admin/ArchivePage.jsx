@@ -1,32 +1,28 @@
-import SideNavigation from "../components/SideNavigation";
-import CardEvent from "../components/CreateCardEvent";
+import SideNavigation from "../../components/SideNavigation";
+import RestoreCardEvent from "../../components/RestoreCardEvent";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { showToast } from "../utils/swal";
-import { getAllEvents } from "../services/event_service";
+import { showToast } from "../../utils/swal";
+import { getDeletedEvents, restoreEvent } from "../../services/event_service";
+import Swal from "sweetalert2";
 
 function ArchivePage() {
   const [events, setEvents] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortAZ, setSortAZ] = useState(true);
-  const [sortOption, setSortOption] = useState("all");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchArchivedEvents = async () => {
       try {
-        const res = await getAllEvents();
+        const res = await getDeletedEvents();
 
-        const now = new Date();
-
-        const archivedEvents = res.data.events
-          .filter(ev => new Date(ev.date) < now)
-          .map(ev => ({
-            ...ev,
-            image: ev.path
-              ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}`
-              : null,
-          }));
+        const archivedEvents = res.data.events.map(ev => ({
+          ...ev,
+          image: ev.path
+            ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${ev.path}`
+            : null,
+        }));
 
         setEvents(archivedEvents);
       } catch (err) {
@@ -36,6 +32,33 @@ function ArchivePage() {
 
     fetchArchivedEvents();
   }, []);
+
+  const handleRestore = async (eventId) => {
+    try {
+      await restoreEvent(eventId);
+
+      // Optimistic UI update
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+
+      showToast("success", "Event restored successfully");
+    } catch (err) {
+      showToast("error", "Failed to restore event");
+    }
+  };
+
+  const confirmRestore = async (eventId) => {
+    const result = await Swal.fire({
+      title: "Restore event?",
+      text: "This event will be moved back to active events.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Restore",
+    });
+
+    if (result.isConfirmed) {
+      handleRestore(eventId);
+    }
+  };
 
   const filteredAndSortedEvents = [...events]
     .filter(event =>
@@ -99,15 +122,19 @@ function ArchivePage() {
 
         {/* CARD GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredAndSortedEvents.length === 0 && (
+            <p className="text-gray-500 text-center col-span-full mt-10">
+              No archived events found
+            </p>
+          )}
           {filteredAndSortedEvents.map(event => (
-            <CardEvent
+            <RestoreCardEvent
               key={event.id}
               title={event.title}
               description={event.description}
               date={event.date}
               location={event.location}
-              onClick={() => navigate(`/categories/${event.id}`)}
-              hideActions
+              onRestore={() => confirmRestore(event.id)}
             >
               {event.image && (
                 <img
@@ -116,7 +143,7 @@ function ArchivePage() {
                   className="w-full h-full object-cover"
                 />
               )}
-            </CardEvent>
+            </RestoreCardEvent>
           ))}
         </div>
       </main>
