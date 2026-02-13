@@ -132,4 +132,31 @@ async function getAllEvents(userId) {
     }));
 }
 
-module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents };
+async function getDeletedEvents(userId) {
+    const events = await eventRepo.findDeletedByUser(userId);
+
+    return events.map(ev => ({
+        ...ev.toJSON(),
+        stages: ev.stages.length,
+        judges: ev.judges.length,
+        candidates: ev.candidates.length,
+    }));
+}
+
+async function restoreEvent(eventId, userId) {
+    return sequelize.transaction(async (t) => {
+        const event = await eventRepo.findDeletedById(eventId, t);
+
+        if (!event) throw new Error('Event not found');
+        if (event.user_id !== userId) throw new Error('Unauthorized');
+
+        await eventRepo.restore(eventId, t);
+
+        // Fetch restored event with relations
+        const restored = await eventRepo.findByIdWithRelations(eventId);
+
+        return restored;
+    });
+}
+
+module.exports = { createEvent, getEvent, deleteEvent, updateEvent, getAllEvents, getDeletedEvents, restoreEvent };
