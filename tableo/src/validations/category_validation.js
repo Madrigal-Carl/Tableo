@@ -1,50 +1,58 @@
 export function validateCategories(categoryList) {
-    const errors = [];
+    if (!categoryList || categoryList.length === 0) {
+        return "At least one category is required";
+    }
 
-    categoryList.forEach((c, idx) => {
-        const rowErrors = {};
+    for (let i = 0; i < categoryList.length; i++) {
+        const c = categoryList[i];
 
-        // ✅ NAME — Required
+        // NAME
         if (c.name === undefined || c.name === null || c.name.trim() === "") {
-            rowErrors.name = "Category name is required";
-        } else if (!/[a-zA-Z]/.test(c.name)) {
-            rowErrors.name = "Category name must include at least one letter";
+            return `Category #${i + 1}: Name is required`;
         }
 
-        // ✅ WEIGHT — Required
+        if (!/[a-zA-Z]/.test(c.name)) {
+            return `Category #${i + 1}: Name must include at least one letter`;
+        }
+
+        // WEIGHT
         if (c.weight === undefined || c.weight === null || c.weight === "") {
-            rowErrors.weight = "Weight is required";
-        } else {
-            const weightNum = Number(c.weight);
-
-            if (isNaN(weightNum)) {
-                rowErrors.weight = "Weight must be a number";
-            } else if (!Number.isInteger(weightNum)) {
-                rowErrors.weight = "Weight must be a whole number";
-            } else if (weightNum <= 0) {
-                rowErrors.weight = "Weight must be greater than 0";
-            }
+            return `Category #${i + 1}: Weight is required`;
         }
 
-        // ✅ MAX SCORE — Required
+        const weightNum = Number(c.weight);
+
+        if (isNaN(weightNum)) {
+            return `Category #${i + 1}: Weight must be a number`;
+        }
+
+        if (!Number.isInteger(weightNum)) {
+            return `Category #${i + 1}: Weight must be a whole number`;
+        }
+
+        if (weightNum <= 0) {
+            return `Category #${i + 1}: Weight must be greater than 0`;
+        }
+
+        // MAX SCORE
         if (c.maxScore === undefined || c.maxScore === null || c.maxScore === "") {
-            rowErrors.maxScore = "Max score is required";
-        } else {
-            const maxScoreNum = Number(c.maxScore);
-
-            if (isNaN(maxScoreNum)) {
-                rowErrors.maxScore = "Max score must be a number";
-            } else if (!Number.isInteger(maxScoreNum)) {
-                rowErrors.maxScore = "Max score must be a whole number";
-            } else if (maxScoreNum <= 0) {
-                rowErrors.maxScore = "Max score must be greater than 0";
-            }
+            return `Category #${i + 1}: Max score is required`;
         }
 
-        if (Object.keys(rowErrors).length > 0) {
-            errors[idx] = rowErrors;
-        }
-    });
+        const maxScoreNum = Number(c.maxScore);
 
-    return errors;
+        if (isNaN(maxScoreNum)) {
+            return `Category #${i + 1}: Max score must be a number`;
+        }
+
+        if (!Number.isInteger(maxScoreNum)) {
+            return `Category #${i + 1}: Max score must be a whole number`;
+        }
+
+        if (maxScoreNum <= 0) {
+            return `Category #${i + 1}: Max score must be greater than 0`;
+        }
+    }
+
+    return null;
 }
