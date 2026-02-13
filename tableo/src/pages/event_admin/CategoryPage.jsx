@@ -11,6 +11,7 @@ import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
 import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
+import { isEventEditable } from "../../utils/eventEditable";
 
 import { getEvent } from "../../services/event_service";
 import {
@@ -27,6 +28,7 @@ function CategoryPage() {
   // STATE
   // ============================
   const [event, setEvent] = useState(location.state?.event || null);
+  const canEditEvent = event ? isEventEditable(event) : false;
   const [loading, setLoading] = useState(!event);
   const [categories, setCategories] = useState([]);
   const [activeTopTab, setActiveTopTab] = useState("Stages");
@@ -302,18 +304,24 @@ function CategoryPage() {
                 </div>
 
                 <div className="flex items-center gap-6">
+                  {/* Category Button */}
                   <button
                     onClick={() => {
+                      if (!canEditEvent) return; // Prevent opening
                       resetCategoryForm();
                       setIsCategoryModalOpen(true);
                     }}
-                    className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
+                    disabled={!canEditEvent}
+                    className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
+    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
                   >
                     Category
                   </button>
+
+                  {/* Criteria Button */}
                   <button
-                    className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
                     onClick={async () => {
+                      if (!canEditEvent) return; // Prevent opening
                       if (!selectedCategory) {
                         showToast("error", "Please select a category first");
                         return;
@@ -338,7 +346,11 @@ function CategoryPage() {
                       } finally {
                         setLoading(false);
                       }
-                    }}>
+                    }}
+                    disabled={!canEditEvent}
+                    className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
+    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
+                  >
                     Criteria
                   </button>
                 </div>
