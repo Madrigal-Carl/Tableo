@@ -130,13 +130,9 @@ function CategoryPage() {
   };
 
   const handleConfirmCategories = async () => {
-    const errors = validateCategories(categoryList);
-
-    if (errors.length > 0) {
-      const firstError = errors
-        .map(row => Object.values(row)[0])
-        .find(Boolean);
-      showToast("error", firstError);
+    const error = validateCategories(categoryList);
+    if (error) {
+      showToast("error", error);
       return;
     }
 
@@ -149,7 +145,6 @@ function CategoryPage() {
 
       setLoading(true);
 
-      // Connect to backend createOrUpdate API
       await addCategoryToEvent(eventId, {
         stage_id: stageId,
         categories: categoryList.map((c) => ({
@@ -163,13 +158,9 @@ function CategoryPage() {
       resetCategoryForm();
       setIsCategoryModalOpen(false);
 
-
       showToast("success", "Categories added successfully");
     } catch (err) {
-      showToast(
-        "error",
-        err.message || "Failed to add categories"
-      );
+      showToast("error", err.message || "Failed to add categories");
     } finally {
       setLoading(false);
     }
