@@ -1,18 +1,40 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Crown from "../assets/Crown pic.svg";
+import { showToast } from "../utils/swal";
+import api from "../services/api";
+import { validateInvitationCode } from "../validations/judge_validation";
 
 function FirstPartLanding() {
+  const [code, setCode] = useState("");
+  const navigate = useNavigate();
+
+  const handleJoinEvent = async () => {
+    if (!validateInvitationCode(code)) return;
+
+    try {
+      const trimmedCode = code.trim().toUpperCase();
+      await api.get(`/judge/event/${trimmedCode}`);
+
+      navigate(`/judge/${trimmedCode}`);
+    } catch (err) {
+      const backendMessage =
+        err?.response?.data?.message ||
+        err.message ||
+        "Invalid invitation code";
+      showToast("error", backendMessage);
+    }
+  };
+
   return (
     <section className="w-full  min-h-screen flex items-center justify-center px-12">
-
       {/* FULL PAGE CARD */}
       <div className="relative w-[96%] h-[86vh] mt-14 bg-white rounded-2xl overflow-hidden">
-
         {/* TEAL CUT SHAPE (PART OF THE CARD) */}
         <div className="absolute inset-y-0 right-0 w-[60%] bg-[#2F6B75] card-cut" />
 
         {/* CONTENT WRAPPER */}
         <div className="relative z-10 flex h-full">
-
           {/* LEFT CONTENT */}
           <div className="w-[55%] flex items-center ml-5">
             <div className="max-w-xl ml-2">
@@ -39,22 +61,24 @@ function FirstPartLanding() {
           <div className="w-[45%] flex flex-col items-center justify-center text-white px-18 py-4">
             <img src={Crown} alt="Crown" className="w-[650px] -mt-10" />
 
-            <p className="text-5xl font-semibold mt-6">
-              Enter Code Here
-            </p>
+            <p className="text-5xl font-semibold mt-6">Enter Code Here</p>
 
             <div className="flex items-center border border-white rounded-4xl  overflow-hidden mt-4">
               <input
                 type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
                 placeholder="Enter Code"
                 className="px-8 py-4 text-base text-gray-700 focus:outline-none rounded-4xl bg-white text-center"
               />
-              <button className="px-8 py-4 text-sm font-semibold hover:cursor-pointer ">
+              <button
+                onClick={handleJoinEvent}
+                className="px-8 py-4 text-sm font-semibold hover:cursor-pointer "
+              >
                 JOIN EVENT
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </section>

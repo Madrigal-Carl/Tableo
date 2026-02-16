@@ -2,10 +2,10 @@ const judgeService = require('../services/judge_service');
 
 async function updateJudge(req, res, next) {
     try {
-        const judgeId = req.params.id;
+        const invitationCode = req.params.invitationCode;
         const data = req.body;
 
-        const updated = await judgeService.updateJudge(judgeId, data);
+        const updated = await judgeService.updateJudge(invitationCode, data);
 
         res.json({
             message: 'Judge updated successfully',
@@ -31,4 +31,14 @@ async function createOrUpdateJudges(req, res, next) {
     }
 }
 
-module.exports = { updateJudge, createOrUpdateJudges };
+async function getEventForJudge(req, res, next) {
+  try {
+    const result = await judgeService.getEventForJudge(req);
+
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { updateJudge, createOrUpdateJudges, getEventForJudge  };

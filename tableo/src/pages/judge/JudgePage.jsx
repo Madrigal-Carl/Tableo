@@ -1,80 +1,49 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import JudgeTable from "../../components/JudgeTable";
+import { getEventForJudge } from "../../services/judge_service";
 
 function JudgePage() {
-  const rounds = ["Preliminary", "Semi Finals", "Grand Finals"];
-  const [activeRound, setActiveRound] = useState("Preliminary");
+  const { invitationCode } = useParams();
+  const navigate = useNavigate();
+
+  const [eventData, setEventData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [activeRound, setActiveRound] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
-  const roundData = {
-    "Preliminary": [
-      {
-        categoryName: "Swimwear",
-        participants: [
-          { id: 1, name: "Jessy Mary" },
-          { id: 2, name: "Jane Doe" },
-          { id: 3, name: "Kristy Krab" },
-        ],
-        criteria: [
-          { id: "creative", name: "Creative", weight: 30, maxScore: 50 },
-          { id: "stage", name: "Stage Presence", weight: 20, maxScore: 40 },
-          { id: "poise", name: "Poise & Bearing", weight: 20, maxScore: 40 },
-          { id: "audience", name: "Audience Impact", weight: 30, maxScore: 50 },
-        ],
-      },
-      {
-        categoryName: "Evening Gown",
-        participants: [
-          { id: 1, name: "Jessy Mary" },
-          { id: 2, name: "Jane Doe" },
-          { id: 3, name: "Kristy Krab" },
-        ],
-        criteria: [
-          { id: "grace", name: "Grace", weight: 40, maxScore: 50 },
-          { id: "poise", name: "Poise", weight: 60, maxScore: 50 },
-        ],
-      },
-    ],
-    "Semi Finals": [
-      {
-        categoryName: "Swimwear",
-        participants: [
-          { id: 4, name: "Sophie Hans" },
-          { id: 5, name: "Stephannie Curry" },
-        ],
-        criteria: [
-          { id: "confidence", name: "Confidence", weight: 40, maxScore: 50 },
-          { id: "presentation", name: "Presentation", weight: 60, maxScore: 60 },
-        ],
-      },
-    ],
-    "Grand Finals": [
-      {
-        categoryName: "Evening Gown",
-        participants: [
-          { id: 1, name: "Jessy Mary" },
-          { id: 5, name: "Stephannie Curry" },
-        ],
-        criteria: [
-          { id: "creativity", name: "Creativity", weight: 50, maxScore: 50 },
-          { id: "stage", name: "Stage Presence", weight: 50, maxScore: 50 },
-        ],
-      },
-    ],
-  };
-
-  const currentRoundCategories = roundData[activeRound] || [];
-
+  // Fetch data from backend
   useEffect(() => {
-    if (currentRoundCategories.length > 0) {
-      setSelectedCategory(currentRoundCategories[0].categoryName);
-    } else {
-      setSelectedCategory("");
+    async function fetchData() {
+      try {
+        const data = await getEventForJudge(invitationCode);
+        setEventData(data);
+        setActiveRound(data.event.stages[0]?.name || "");
+        setSelectedCategory(data.event.categories[0]?.name || "");
+      } catch (err) {
+        setError(err.message || "Failed to load judge data");
+        // Redirect to landing if invalid
+        navigate("/", { replace: true });
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [activeRound]);
+
+    fetchData();
+  }, [invitationCode]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+  if (!eventData) return null;
+
+  const rounds = eventData.event.stages.map(stage => stage.name);
+  const currentRoundCategories =
+    eventData.event.categories.filter(cat => cat.stageId === activeRound) || [];
 
   const selectedCategoryData =
-    currentRoundCategories.find((cat) => cat.categoryName === selectedCategory) || null;
+    currentRoundCategories.find(cat => cat.name === selectedCategory) || null;
 
   let normalizedCriteria = [];
   if (selectedCategoryData) {
@@ -90,11 +59,14 @@ function JudgePage() {
       {/* HEADER */}
       <div className="fixed top-0 left-0 w-full bg-white shadow-sm z-50">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center px-4 sm:px-6 py-3 gap-2">
-          <button className="px-5 py-2 rounded-full bg-[#FA824C] text-white text-sm hover:bg-[#FF9768] transition">
+          <button
+            onClick={() => navigate("/")}
+            className="px-5 py-2 rounded-full bg-[#FA824C] text-white text-sm hover:bg-[#FF9768] transition"
+          >
             Back
           </button>
           <h1 className="text-lg sm:text-2xl font-semibold text-center">
-            Event Title
+            {eventData.event.title}
           </h1>
           <div className="hidden sm:block w-12" />
         </div>
@@ -124,7 +96,7 @@ function JudgePage() {
             <JudgeTable
               participants={selectedCategoryData.participants}
               criteria={normalizedCriteria}
-              categoryName={selectedCategoryData.categoryName}
+              categoryName={selectedCategoryData.name}
               categories={currentRoundCategories}
               onCategorySelect={setSelectedCategory}
             />
