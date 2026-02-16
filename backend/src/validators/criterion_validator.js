@@ -17,9 +17,10 @@ function validateCriteria(req, res, next) {
                 "Criterion label must contain letters and cannot be numbers only",
               "any.required": "Criterion label is required",
             }),
-          percentage: Joi.number().min(0).max(100).required().messages({
+          percentage: Joi.number().min(0).max(100).positive().required().messages({
             "any.required": "Percentage is required",
             "number.base": "Percentage must be a number",
+            "number.integer": "Max score must be a whole number",
             "number.min": "Percentage cannot be less than 0",
             "number.max": "Percentage cannot be more than 100",
           }),

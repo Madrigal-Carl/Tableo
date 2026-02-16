@@ -11,6 +11,7 @@ import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
 import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
+import { isEventEditable } from "../../utils/eventEditable";
 
 import { getEvent } from "../../services/event_service";
 import {
@@ -27,6 +28,7 @@ function CategoryPage() {
   // STATE
   // ============================
   const [event, setEvent] = useState(location.state?.event || null);
+  const canEditEvent = event ? isEventEditable(event) : false;
   const [loading, setLoading] = useState(!event);
   const [categories, setCategories] = useState([]);
   const [activeTopTab, setActiveTopTab] = useState("Stages");
@@ -38,6 +40,16 @@ function CategoryPage() {
 
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
+  
+  const [sexFilter, setSexFilter] = useState("ALL");
+
+  const filteredCandidates =
+  sexFilter === "ALL"
+    ? event?.candidates || []
+    : (event?.candidates || []).filter(
+        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase()
+      );
+
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -128,13 +140,9 @@ function CategoryPage() {
   };
 
   const handleConfirmCategories = async () => {
-    const errors = validateCategories(categoryList);
-
-    if (errors.length > 0) {
-      const firstError = errors
-        .map(row => Object.values(row)[0])
-        .find(Boolean);
-      showToast("error", firstError);
+    const error = validateCategories(categoryList);
+    if (error) {
+      showToast("error", error);
       return;
     }
 
@@ -147,7 +155,6 @@ function CategoryPage() {
 
       setLoading(true);
 
-      // Connect to backend createOrUpdate API
       await addCategoryToEvent(eventId, {
         stage_id: stageId,
         categories: categoryList.map((c) => ({
@@ -161,13 +168,9 @@ function CategoryPage() {
       resetCategoryForm();
       setIsCategoryModalOpen(false);
 
-
       showToast("success", "Categories added successfully");
     } catch (err) {
-      showToast(
-        "error",
-        err.message || "Failed to add categories"
-      );
+      showToast("error", err.message || "Failed to add categories");
     } finally {
       setLoading(false);
     }
@@ -186,6 +189,8 @@ function CategoryPage() {
     }
 
     try {
+      setLoading(true);
+
       const payload = criteriaList.map(c => ({
         label: c.name.trim(),
         percentage: Number(c.weight),
@@ -200,10 +205,12 @@ function CategoryPage() {
     } catch (err) {
       console.error(err);
       showToast("error", err.message || "Failed to save criteria");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const stages = event?.stages?.map((s) => s.name) || [];
+  const stages = event?.stages?.slice().sort((a, b) => a.sequence - b.sequence).map((s) => s.name) || [];
   const filteredCategories = categories;
 
   return (
@@ -270,10 +277,42 @@ function CategoryPage() {
 
               {/* CATEGORY SELECT */}
               <div className="flex items-center justify-between gap-4 mb-6 text-lg font-semibold">
-                <div className="flex items-center">
-                  <PlusCircle
-                    className="text-[#FA824C] w-6 h-6 cursor-pointer"
+                <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-4">
+                    <label htmlFor="categoryFilter" className="font-medium text-gray-700">
+                      Category:
+                    </label>
+                    <select
+                      id="categoryFilter"
+                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      value={selectedCategory?.id || ""}
+                      onChange={(e) => {
+                        const selectedId = parseInt(e.target.value);
+                        const cat = filteredCategories.find((c) => c.id === selectedId);
+                        setSelectedCategory(cat || null);
+                      }}
+                    >
+                      <option value="" disabled>
+                        Select a Category
+                      </option>
+                      {filteredCategories.map((cat) => (
+                        <option
+                          key={cat.id}
+                          value={cat.id}
+                          title={cat.name}
+                        >
+                          {cat.name.length > 30
+                            ? cat.name.slice(0, 30).replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                            : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Criteria Button */}
+                  <button
                     onClick={async () => {
+                      if (!canEditEvent) return; // Prevent opening
                       if (!selectedCategory) {
                         showToast("error", "Please select a category first");
                         return;
@@ -299,33 +338,39 @@ function CategoryPage() {
                         setLoading(false);
                       }
                     }}
-                  />
-                  <select
-                    className="px-4 py-2"
-                    value={selectedCategory?.id || ""}
-                    onChange={(e) => {
-                      const selectedId = parseInt(e.target.value);
-                      const cat = filteredCategories.find((c) => c.id === selectedId);
-                      setSelectedCategory(cat || null);
-                    }}
+                    disabled={!canEditEvent}
+                    className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
+    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
                   >
-                    <option value="" disabled>Select a Category</option>
-                    {filteredCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id} title={cat.name}>
-                        {cat.name.length > 30 ? cat.name.slice(0, 30) + "…" : cat.name}
-                      </option>
-                    ))}
+                    Criteria
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="text-gray-600 font-medium">Filter by Sex:</label>
+                  <select
+                    value={sexFilter}
+                    onChange={(e) => setSexFilter(e.target.value)}
+                    className="px-4 py-2 border rounded-md focus:ring-2 focus:ring-orange-400"
+                  >
+                    <option value="ALL">All</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
                   </select>
                 </div>
 
+                {/* Category Button */}
                 <button
                   onClick={() => {
+                    if (!canEditEvent) return; // Prevent opening
                     resetCategoryForm();
                     setIsCategoryModalOpen(true);
                   }}
-                  className="bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium hover:bg-orange-600"
+                  disabled={!canEditEvent}
+                  className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
+    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
                 >
-                  + Add Category
+                  Category
                 </button>
               </div>
 
@@ -346,7 +391,7 @@ function CategoryPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {event?.candidates?.map((candidate) => (
+                    {filteredCandidates.map((candidate) => (
                       <tr
                         key={candidate.id}
                         className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
@@ -370,18 +415,14 @@ function CategoryPage() {
           {activeTopTab === "Participants" && (
             <ViewOnlyTable
               title="Participants"
-              data={event?.candidates || []}
+              data={filteredCandidates}
               nameLabel="Participant Name"
               fieldLabel="Sex"
               fieldKey="sex"
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
-              onAdd={() => {
-                // your logic to add a participant
-                console.log("Add participant clicked");
-                // Example: open a modal here to create a participant
-              }}
+              onAdd={() => console.log("Add participant clicked")}
             />
           )}
 

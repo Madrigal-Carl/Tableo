@@ -37,10 +37,10 @@ function ArchivePage() {
     try {
       await restoreEvent(eventId);
 
-      // Optimistic UI update
-      setEvents(prev => prev.filter(event => event.id !== eventId));
-
       showToast("success", "Event restored successfully");
+
+      navigate("/events");
+
     } catch (err) {
       showToast("error", "Failed to restore event");
     }

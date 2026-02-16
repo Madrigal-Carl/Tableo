@@ -12,7 +12,13 @@ function findById(id, transaction) {
 function findByIdWithRelations(id) {
     return Event.findByPk(id, {
         include: [
-            { model: Category, as: 'categories' },
+            {
+                model: Category,
+                as: 'categories',
+                include: [
+                    { model: sequelize.models.Criterion, as: 'criteria', separate: true, order: [['id', 'ASC']], },
+                ],
+            },
             { model: Stage, as: 'stages' },
             { model: Judge, as: 'judges' },
             { model: Candidate, as: 'candidates' },
