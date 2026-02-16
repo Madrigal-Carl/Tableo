@@ -10,4 +10,8 @@ router.put('/:id', requireAuth, validateCandidate, candidateController.updateCan
 // Create or update candidates by count for an event
 router.post('/event/:eventId', requireAuth, validateCandidateCount, candidateController.createOrUpdateCandidates);
 
+// Get all candidates for an event
+router.get('/event/:eventId', requireAuth, candidateController.getAllCandidatesForEvent);
+
+
 module.exports = router;

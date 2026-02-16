@@ -24,4 +24,19 @@ async function createOrUpdateCandidates(req, res, next) {
     }
 }
 
-module.exports = { updateCandidate, createOrUpdateCandidates };
+// ✅ NEW: Get all candidates for an event
+async function getAllCandidatesForEvent(req, res, next) {
+    try {
+        const eventId = parseInt(req.params.eventId);
+        const candidates = await candidateService.findAllByEvent(eventId);
+        res.json(candidates);
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { 
+    updateCandidate, 
+    createOrUpdateCandidates, 
+    getAllCandidatesForEvent, // ✅ export the new function
+};

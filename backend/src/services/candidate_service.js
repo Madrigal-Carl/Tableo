@@ -45,4 +45,13 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
     }
 }
 
-module.exports = { createOrUpdate, updateCandidate };
+// ✅ NEW: Fetch all candidates for a given event
+async function findAllByEvent(eventId, transaction = null) {
+    return candidateRepo.findByEventIncludingSoftDeleted(eventId, transaction);
+}
+
+module.exports = { 
+    createOrUpdate, 
+    updateCandidate, 
+    findAllByEvent // ✅ export the new function
+};
