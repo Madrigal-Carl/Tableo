@@ -25,12 +25,12 @@ createRoot(document.getElementById('root')).render(
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<LoginPage />} />
             <Route path="/auth/register" element={<RegisterPage />} />
+            <Route path="/judge" element={<JudgePage />} />
           </Route>
 
           {/* Authenticated-only */}
           <Route element={<ProtectedRoute />}>
             <Route path="/events" element={<HomePage />} />
-            <Route path="/judge" element={<JudgePage />} />
             <Route path="/events/:eventId" element={<CategoryPage />} />
             <Route path="/archive" element={<ArchivePage />} />
             <Route path="/settings" element={<SettingsPage />} />

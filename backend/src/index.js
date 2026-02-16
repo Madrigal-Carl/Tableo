@@ -48,7 +48,7 @@ app.use('/api/events', eventCategoryRoutes);
 app.use('/api/criterion', criterionRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/competition', competitionScoreRoutes);
-app.use('/api/judges', judgeRoutes);
+app.use('/api/judge', judgeRoutes);
 app.use('/api/stages', stageRoutes);
 
 app.use(errorHandler);

@@ -1,4 +1,5 @@
 const sequelize = require('../database/models').sequelize;
+const { isEventEditable } = require('../utils/event_time_guard');
 const judgeRepo = require('../repositories/judge_repository');
 const crypto = require('crypto');
 
@@ -23,13 +24,34 @@ async function generateUniqueInvitationCode() {
     return code;
 }
 
-async function updateJudge(judgeId, data) {
+async function updateJudge(invitationCode, data) {
     return sequelize.transaction(async (t) => {
-        const eventId = await judgeRepo.findEventByJudgeId(judgeId, t);
+        const judge = await judgeRepo.findByInvitationCode(invitationCode, t);
+        if (!judge) {
+            const err = new Error('Judge not found');
+            err.status = 404;
+            throw err;
+        }
 
-        await judgeRepo.update(judgeId, data, t);
+        const event = await judge.getEvent({ transaction: t });
 
-        return await judgeRepo.findByEventIncludingSoftDeleted(eventId, t);
+        if (hasEventEnded(event)) {
+            const err = new Error('Event has already ended');
+            err.status = 403;
+            throw err;
+        }
+
+        const payload = {
+            name: data.name,
+            ...(data.suffix && { suffix: data.suffix }),
+        };
+
+        await judgeRepo.update(judge.id, payload, t);
+
+        return await judgeRepo.findByEventIncludingSoftDeleted(
+            event.id,
+            t
+        );
     });
 }
 
@@ -70,4 +92,53 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
     }
 }
 
-module.exports = { updateJudge, createOrUpdate };
+function hasEventStarted({ date, timeStart }) {
+  return !isEventEditable({ date, timeStart });
+}
+
+function hasEventEnded({ date, timeEnd }) {
+  if (!timeEnd) return false;
+
+  const now = new Date();
+  const end = new Date(`${date}T${timeEnd}`);
+
+  return now > end;
+}
+
+async function getEventForJudge(req) {
+  const { event, judge } = req;
+
+  if (!hasEventStarted(event)) {
+    const err = new Error('Event has not started yet');
+    err.status = 403;
+    throw err;
+  }
+
+  if (hasEventEnded(event)) {
+    const err = new Error('Event has already ended');
+    err.status = 403;
+    throw err;
+  }
+
+  return {
+    event: {
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      date: event.date,
+      timeStart: event.timeStart,
+      timeEnd: event.timeEnd,
+      location: event.location,
+      stages: event.stages,
+      categories: event.categories,
+      candidates: event.candidates,
+    },
+    judge: {
+      id: judge.id,
+      name: judge.name,
+      sequence: judge.sequence,
+    },
+  };
+}
+
+module.exports = { updateJudge, createOrUpdate, getEventForJudge };
