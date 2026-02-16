@@ -4,9 +4,10 @@ function create(data, transaction) {
     return Judge.create(data, { transaction });
 }
 
-function findByInvitationCode(invitationCode) {
+function findByInvitationCode(invitationCode, transaction = null) {
     return Judge.findOne({
         where: { invitationCode },
+        transaction,
     });
 }
 

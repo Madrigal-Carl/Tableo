@@ -7,6 +7,12 @@ function validateJudge(req, res, next) {
             'string.empty': 'Judge name is required',
             'any.required': 'Judge name is required',
         }),
+        suffix: Joi.string()
+            .valid('mr', 'ms', 'mrs')
+            .optional()
+            .messages({
+                'any.only': 'Suffix must be one of: mr, ms, mrs',
+            }),
     });
 
     const { error } = schema.validate(req.body);
@@ -35,4 +41,24 @@ function validateJudgeCount(req, res, next) {
     next();
 }
 
-module.exports = { validateJudge, validateJudgeCount };
+function validateInvitationCode(req, res, next) {
+    const schema = Joi.object({
+        invitationCode: Joi.string()
+            .pattern(/^JDG-[A-Z0-9]{6}$/)
+            .required()
+            .messages({
+                'string.pattern.base': 'Invalid invitation code',
+                'string.empty': 'Invitation code is required',
+                'any.required': 'Invitation code is required',
+            }),
+    });
+
+    const { error } = schema.validate(req.params);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+
+    next();
+}
+
+module.exports = { validateJudge, validateJudgeCount, validateInvitationCode };
