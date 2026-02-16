@@ -36,40 +36,61 @@ function JudgeModal({ isOpen, onClose, onSave, initialData = null }) {
             name: name.trim(),
             suffix: suffix || null,
         });
+
+        onClose();
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-                <h2 className="mb-4 text-lg font-semibold">
-                    {initialData ? "Edit Judge" : "Add Judge"}
-                </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                {/* CLOSE BUTTON */}
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="absolute right-4 top-4 px-2 py-1 rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition"
+                    aria-label="Close"
+                >
+                    ✕
+                </button>
+
+                {/* HEADER */}
+                <div className="px-6 py-4 border-b">
+                    <h2 className="text-xl font-semibold text-gray-900 text-center">
+                        Judge Information
+                    </h2>
+                    <p className="text-sm text-gray-500 text-center mt-1">
+                        Please enter your details to continue
+                    </p>
+                </div>
+
+                {/* BODY */}
+                <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5">
+
                     {/* Judge Name */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                             Judge Name
                         </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring"
-                            placeholder="Enter judge name"
+                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+                            placeholder="Enter your full name"
                             required
                         />
                     </div>
 
-                    {/* Suffix Dropdown */}
+                    {/* Suffix */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                             Suffix
                         </label>
                         <select
                             value={suffix}
                             onChange={(e) => setSuffix(e.target.value)}
-                            className="w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring"
+                            className="w-full rounded-lg border border-gray-300 px-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
                         >
                             {SUFFIX_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -79,20 +100,13 @@ function JudgeModal({ isOpen, onClose, onSave, initialData = null }) {
                         </select>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-2 pt-4">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded border px-4 py-2 text-sm"
-                        >
-                            Cancel
-                        </button>
+                    {/* ACTION */}
+                    <div className="pt-4">
                         <button
                             type="submit"
-                            className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                            className="w-full rounded-md bg-[#FA824C] py-2.5 text-sm font-semibold text-white hover:bg-[#FF9768] transition"
                         >
-                            Save
+                            Continue to Scoring
                         </button>
                     </div>
                 </form>

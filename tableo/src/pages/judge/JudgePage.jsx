@@ -1,6 +1,8 @@
+// src/pages/judge/JudgePage.jsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JudgeTable from "../../components/JudgeTable";
+import JudgeModal from "../../components/JudgeModal";
 import { getEventForJudge } from "../../services/judge_service";
 
 function JudgePage() {
@@ -14,7 +16,11 @@ function JudgePage() {
   const [activeRound, setActiveRound] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
-  // Fetch data from backend
+  // Modal Control
+  const [showJudgeModal, setShowJudgeModal] = useState(true);
+  const [judgeInfo, setJudgeInfo] = useState(null);
+
+  // Fetch event data
   useEffect(() => {
     async function fetchData() {
       try {
@@ -24,40 +30,55 @@ function JudgePage() {
         setSelectedCategory(data.event.categories[0]?.name || "");
       } catch (err) {
         setError(err.message || "Failed to load judge data");
-        // Redirect to landing if invalid
         navigate("/", { replace: true });
       } finally {
         setLoading(false);
       }
     }
-
     fetchData();
-  }, [invitationCode]);
+  }, [invitationCode, navigate]);
+
+  // Handle modal save
+  const handleJudgeSave = (data) => {
+    setJudgeInfo(data);
+    setShowJudgeModal(false);
+  };
+
+  // ✅ Handle modal close (X button)
+  const handleModalClose = () => {
+    setShowJudgeModal(false);
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
   if (!eventData) return null;
 
-  const rounds = eventData.event.stages.map(stage => stage.name);
+  const rounds = eventData.event.stages.map((stage) => stage.name);
   const currentRoundCategories =
-    eventData.event.categories.filter(cat => cat.stageId === activeRound) || [];
-
+    eventData.event.categories.filter((cat) => cat.stageId === activeRound) || [];
   const selectedCategoryData =
-    currentRoundCategories.find(cat => cat.name === selectedCategory) || null;
+    currentRoundCategories.find((cat) => cat.name === selectedCategory) || null;
 
   let normalizedCriteria = [];
   if (selectedCategoryData) {
     const totalWeight = selectedCategoryData.criteria.reduce((sum, c) => sum + c.weight, 0);
     normalizedCriteria = selectedCategoryData.criteria.map((c) => ({
       ...c,
-      weight: (c.weight / totalWeight) * 100,
+      weight: totalWeight > 0 ? (c.weight / totalWeight) * 100 : 0,
     }));
   }
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Judge Modal */}
+      <JudgeModal
+        isOpen={showJudgeModal}
+        onClose={handleModalClose} // ✅ now clicking X closes modal
+        onSave={handleJudgeSave}
+      />
+
       {/* HEADER */}
-      <div className="fixed top-0 left-0 w-full bg-white shadow-sm z-50">
+      <div className="fixed top-0 left-0 w-full bg-white shadow-sm z-40">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center px-4 sm:px-6 py-3 gap-2">
           <button
             onClick={() => navigate("/")}
@@ -65,9 +86,11 @@ function JudgePage() {
           >
             Back
           </button>
+
           <h1 className="text-lg sm:text-2xl font-semibold text-center">
             {eventData.event.title}
           </h1>
+
           <div className="hidden sm:block w-12" />
         </div>
       </div>
@@ -79,11 +102,10 @@ function JudgePage() {
             <button
               key={round}
               onClick={() => setActiveRound(round)}
-              className={`pb-3 whitespace-nowrap text-sm font-medium transition ${
-                activeRound === round
+              className={`pb-3 whitespace-nowrap text-sm font-medium transition ${activeRound === round
                   ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                   : "text-gray-400 hover:text-gray-600"
-              }`}
+                }`}
             >
               {round}
             </button>
@@ -91,7 +113,7 @@ function JudgePage() {
         </div>
 
         {/* JUDGE TABLE */}
-        {selectedCategoryData && (
+        {!showJudgeModal && selectedCategoryData && (
           <div className="max-w-6xl mx-auto">
             <JudgeTable
               participants={selectedCategoryData.participants}
