@@ -16,11 +16,11 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      category_id: {
+      category_stage_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'categories',
+          model: 'category_stages',
           key: 'id',
         },
         onUpdate: 'CASCADE',
