@@ -39,15 +39,5 @@ export const validateCriteria = (criteriaList) => {
         }
     }
 
-    // Ensure total = 100
-    const total = criteriaList.reduce(
-        (sum, c) => sum + Number(c.weight),
-        0
-    );
-
-    if (total !== 100) {
-        return "Total of all percentages must be exactly 100";
-    }
-
     return null;
 };

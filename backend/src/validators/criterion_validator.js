@@ -28,6 +28,18 @@ function validateCriteria(req, res, next) {
       )
       .min(1)
       .required()
+      .custom((criteria, helper) => {
+        const total = criteria.reduce(
+          (sum, c) => sum + Number(c.percentage || 0),
+          0
+        );
+        if (total !== 100) {
+          return helper.message(
+            `Total percentage of all criteria must equal 100%. Currently: ${total}%`
+          );
+        }
+        return criteria;
+      })
       .messages({
         "any.required": "At least one criterion is required",
         "array.min": "At least one criterion must be provided",
