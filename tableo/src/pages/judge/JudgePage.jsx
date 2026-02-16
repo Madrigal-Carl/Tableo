@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JudgeTable from "../../components/JudgeTable";
 import JudgeModal from "../../components/JudgeModal";
-import { getEventForJudge } from "../../services/judge_service";
+import { getEventForJudge, updateJudge } from "../../services/judge_service";
+import { showToast } from "../../utils/swal";
+import { validateJudgeData } from "../../validations/judge_validation";
 
 function JudgePage() {
   const { invitationCode } = useParams();
@@ -28,6 +30,16 @@ function JudgePage() {
         setEventData(data);
         setActiveRound(data.event.stages[0]?.name || "");
         setSelectedCategory(data.event.categories[0]?.name || "");
+
+        if (data.judge) {
+          const suffix = data.judge.suffix;
+          setJudgeInfo({
+            name: data.judge.name,
+            suffix: suffix,
+          });
+
+          setShowJudgeModal(suffix === null || suffix === "");
+        }
       } catch (err) {
         setError(err.message || "Failed to load judge data");
         navigate("/", { replace: true });
@@ -38,10 +50,23 @@ function JudgePage() {
     fetchData();
   }, [invitationCode, navigate]);
 
-  // Handle modal save
-  const handleJudgeSave = (data) => {
-    setJudgeInfo(data);
-    setShowJudgeModal(false);
+  const handleJudgeSave = async (data) => {
+    if (!validateJudgeData(data)) return;
+
+    try {
+      const res = await updateJudge(invitationCode, data);
+
+      setJudgeInfo({
+        name: res.judge.name,
+        suffix: res.judge.suffix ?? "",
+      });
+
+      setShowJudgeModal(false);
+      showToast("success", "Judge info saved successfully");
+    } catch (err) {
+      const backendMessage = err.message || "Failed to save judge info";
+      showToast("error", backendMessage);
+    }
   };
 
   // ✅ Handle modal close (X button)
@@ -55,13 +80,17 @@ function JudgePage() {
 
   const rounds = eventData.event.stages.map((stage) => stage.name);
   const currentRoundCategories =
-    eventData.event.categories.filter((cat) => cat.stageId === activeRound) || [];
+    eventData.event.categories.filter((cat) => cat.stageId === activeRound) ||
+    [];
   const selectedCategoryData =
     currentRoundCategories.find((cat) => cat.name === selectedCategory) || null;
 
   let normalizedCriteria = [];
   if (selectedCategoryData) {
-    const totalWeight = selectedCategoryData.criteria.reduce((sum, c) => sum + c.weight, 0);
+    const totalWeight = selectedCategoryData.criteria.reduce(
+      (sum, c) => sum + c.weight,
+      0,
+    );
     normalizedCriteria = selectedCategoryData.criteria.map((c) => ({
       ...c,
       weight: totalWeight > 0 ? (c.weight / totalWeight) * 100 : 0,
@@ -73,13 +102,15 @@ function JudgePage() {
       {/* Judge Modal */}
       <JudgeModal
         isOpen={showJudgeModal}
-        onClose={handleModalClose} // ✅ now clicking X closes modal
+        onClose={handleModalClose}
         onSave={handleJudgeSave}
+        initialData={judgeInfo}
       />
 
       {/* HEADER */}
       <div className="fixed top-0 left-0 w-full bg-white shadow-sm z-40">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center px-4 sm:px-6 py-3 gap-2">
+          {/* Back Button */}
           <button
             onClick={() => navigate("/")}
             className="px-5 py-2 rounded-full bg-[#FA824C] text-white text-sm hover:bg-[#FF9768] transition"
@@ -87,11 +118,30 @@ function JudgePage() {
             Back
           </button>
 
+          {/* Event Title */}
           <h1 className="text-lg sm:text-2xl font-semibold text-center">
             {eventData.event.title}
           </h1>
 
-          <div className="hidden sm:block w-12" />
+          {/* Profile Icon */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowJudgeModal(true)}
+              className="relative w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition"
+              title="Edit Profile"
+            >
+              {/* Use initials if name exists */}
+              <span className="text-sm font-semibold text-gray-700">
+                {judgeInfo?.name
+                  ? judgeInfo.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                  : "J"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -102,10 +152,11 @@ function JudgePage() {
             <button
               key={round}
               onClick={() => setActiveRound(round)}
-              className={`pb-3 whitespace-nowrap text-sm font-medium transition ${activeRound === round
+              className={`pb-3 whitespace-nowrap text-sm font-medium transition ${
+                activeRound === round
                   ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                   : "text-gray-400 hover:text-gray-600"
-                }`}
+              }`}
             >
               {round}
             </button>

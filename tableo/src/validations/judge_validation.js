@@ -19,3 +19,17 @@ export const validateInvitationCode = (code) => {
 
   return true;
 };
+
+export const validateJudgeData = ({ name, suffix }) => {
+  if (!name?.trim()) {
+    showToast("error", "Judge name is required");
+    return false;
+  }
+
+  if (!suffix?.trim()) {
+    showToast("error", "Suffix is required");
+    return false;
+  }
+
+  return true;
+};
