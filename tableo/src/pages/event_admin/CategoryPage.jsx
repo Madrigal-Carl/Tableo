@@ -40,13 +40,13 @@ function CategoryPage() {
 
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
-  
+
   const [sexFilter, setSexFilter] = useState("ALL");
 
   const filteredCandidates =
-  sexFilter === "ALL"
-    ? event?.candidates || []
-    : (event?.candidates || []).filter(
+    sexFilter === "ALL"
+      ? event?.candidates || []
+      : (event?.candidates || []).filter(
         (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase()
       );
 
@@ -284,7 +284,7 @@ function CategoryPage() {
                     </label>
                     <select
                       id="categoryFilter"
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      className="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
                       value={selectedCategory?.id || ""}
                       onChange={(e) => {
                         const selectedId = parseInt(e.target.value);
@@ -351,7 +351,7 @@ function CategoryPage() {
                   <select
                     value={sexFilter}
                     onChange={(e) => setSexFilter(e.target.value)}
-                    className="px-4 py-2 border rounded-md focus:ring-2 focus:ring-orange-400"
+                    className="px-4 py-2 rounded-md focus:ring-2 focus:ring-orange-400"
                   >
                     <option value="ALL">All</option>
                     <option value="MALE">Male</option>
@@ -401,7 +401,7 @@ function CategoryPage() {
                         </td>
                         {event?.judges?.map((judge) => (
                           <td key={judge.id} className="px-6 py-3 text-center">
-                            <div className="w-14 h-10 rounded-lg border border-gray-300 bg-gray-100 mx-auto" />
+                            <div className="w-14 h-10 rounded-lg bg-gray-100 mx-auto" />
                           </td>
                         ))}
                       </tr>
