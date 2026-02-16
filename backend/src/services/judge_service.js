@@ -43,7 +43,7 @@ async function updateJudge(invitationCode, data) {
 
         const payload = {
             name: data.name,
-            ...(data.suffix && { suffix: data.suffix }),
+            suffix: data.suffix ?? null,
         };
 
         await judgeRepo.update(judge.id, payload, t);
@@ -136,6 +136,7 @@ async function getEventForJudge(req) {
     judge: {
       id: judge.id,
       name: judge.name,
+      suffix: judge.suffix,
       sequence: judge.sequence,
     },
   };

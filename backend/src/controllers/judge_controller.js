@@ -1,20 +1,22 @@
 const judgeService = require('../services/judge_service');
 
 async function updateJudge(req, res, next) {
-    try {
-        const invitationCode = req.params.invitationCode;
-        const data = req.body;
+  try {
+    const invitationCode = req.params.invitationCode;
+    const data = req.body;
 
-        const updated = await judgeService.updateJudge(invitationCode, data);
+    const updatedJudges = await judgeService.updateJudge(invitationCode, data);
+    const updatedJudge = updatedJudges.find(j => j.invitationCode === invitationCode);
 
-        res.json({
-            message: 'Judge updated successfully',
-            judges: updated,
-        });
-    } catch (err) {
-        next(err);
-    }
+    res.json({
+      message: 'Judge updated successfully',
+      judge: updatedJudge,
+    });
+  } catch (err) {
+    next(err);
+  }
 }
+
 
 async function createOrUpdateJudges(req, res, next) {
     try {
