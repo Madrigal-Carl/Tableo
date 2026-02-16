@@ -41,6 +41,16 @@ function CategoryPage() {
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
 
+  const [sexFilter, setSexFilter] = useState("ALL");
+
+  const filteredCandidates =
+    sexFilter === "ALL"
+      ? event?.candidates || []
+      : (event?.candidates || []).filter(
+        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase()
+      );
+
+
   const tabs = ["Stages", "Participants", "Judges"];
 
   const handleEditParticipant = (updated) => {
@@ -274,7 +284,7 @@ function CategoryPage() {
                     </label>
                     <select
                       id="categoryFilter"
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      className="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
                       value={selectedCategory?.id || ""}
                       onChange={(e) => {
                         const selectedId = parseInt(e.target.value);
@@ -336,6 +346,19 @@ function CategoryPage() {
                   </button>
                 </div>
 
+                <div className="flex items-center gap-3">
+                  <label className="text-gray-600 font-medium">Filter by Sex:</label>
+                  <select
+                    value={sexFilter}
+                    onChange={(e) => setSexFilter(e.target.value)}
+                    className="px-4 py-2 rounded-md focus:ring-2 focus:ring-orange-400"
+                  >
+                    <option value="ALL">All</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                  </select>
+                </div>
+
                 {/* Category Button */}
                 <button
                   onClick={() => {
@@ -368,7 +391,7 @@ function CategoryPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {event?.candidates?.map((candidate) => (
+                    {filteredCandidates.map((candidate) => (
                       <tr
                         key={candidate.id}
                         className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
@@ -378,7 +401,7 @@ function CategoryPage() {
                         </td>
                         {event?.judges?.map((judge) => (
                           <td key={judge.id} className="px-6 py-3 text-center">
-                            <div className="w-14 h-10 rounded-lg border border-gray-300 bg-gray-100 mx-auto" />
+                            <div className="w-14 h-10 rounded-lg bg-gray-100 mx-auto" />
                           </td>
                         ))}
                       </tr>
@@ -392,18 +415,14 @@ function CategoryPage() {
           {activeTopTab === "Participants" && (
             <ViewOnlyTable
               title="Participants"
-              data={event?.candidates || []}
+              data={filteredCandidates}
               nameLabel="Participant Name"
               fieldLabel="Sex"
               fieldKey="sex"
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
-              onAdd={() => {
-                // your logic to add a participant
-                console.log("Add participant clicked");
-                // Example: open a modal here to create a participant
-              }}
+              onAdd={() => console.log("Add participant clicked")}
             />
           )}
 
