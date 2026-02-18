@@ -27,9 +27,15 @@ function ViewOnlyTable({
   }
 
   const openEditModal = (item) => {
-    setSelectedItem({ ...item });
+    if (!item?.id) {
+      console.error("Candidate ID is missing!", item);
+      return;
+    }
+    setSelectedItem(item); // no spread needed
     setIsEditOpen(true);
   };
+
+
 
   const openDeleteModal = (item) => {
     setSelectedItem(item);
@@ -37,8 +43,24 @@ function ViewOnlyTable({
   };
 
   const handleConfirmEdit = (updatedItem) => {
-    onEdit?.(updatedItem);
+    if (!selectedItem?.id) {
+      console.error("Cannot edit participant — missing ID!", {
+        selectedItem,
+        updatedItem,
+      });
+      return;
+    }
+
+    onEdit?.({
+      id: selectedItem.id,     // ✅ ALWAYS from original row
+      name: updatedItem.name,
+      sex: updatedItem.sex,
+      suffix: updatedItem.suffix,
+      photo: updatedItem.photo,
+    });
   };
+
+
 
   const handleConfirmDelete = () => {
     onDelete?.(selectedItem);
@@ -105,7 +127,7 @@ function ViewOnlyTable({
 
                   {/* Name with avatar for participants */}
                   <td className="px-4 py-4 text-center">
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex items-center w-full">
                       {!isJudge && (
                         <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
                           {item.photo || item.avatar ? (
@@ -125,7 +147,6 @@ function ViewOnlyTable({
                         </div>
                       )}
                       <p className="font-semibold text-gray-800">
-                        {item.suffix ? `${item.suffix}. ` : ""}
                         {item.name}
                       </p>
                     </div>

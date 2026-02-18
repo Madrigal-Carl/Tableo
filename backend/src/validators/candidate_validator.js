@@ -2,14 +2,24 @@ const Joi = require('joi');
 
 function validateCandidate(req, res, next) {
     const schema = Joi.object({
-        name: Joi.string().required().messages({
+        name: Joi.string()
+        .min(2)
+        .max(50)
+        .required()
+        .messages({
             'string.empty': 'Candidate name is required',
+            'string.min': 'Candidate name must be at least 2 characters',
+            'string.max': 'Candidate name must not exceed 50 characters',
             'any.required': 'Candidate name is required',
         }),
-        suffix: Joi.string().valid('mr', 'mrs', 'ms').required().messages({
-            'any.only': 'Suffix must be either "male" or "female"',
-            'any.required': 'Suffix is required',
-        })
+        sex: Joi.string().valid('male', 'female').required().messages({
+            'any.only': 'Sex must be either "male" or "female"',
+            'any.required': 'Sex is required',
+        }),
+        // suffix is optional for participants
+        suffix: Joi.string().valid('mr', 'mrs', 'ms').allow('').optional().messages({
+            'any.only': 'Suffix must be either "mr", "mrs", or "ms"',
+        }),
     });
 
     const { error } = schema.validate(req.body);

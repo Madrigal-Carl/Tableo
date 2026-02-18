@@ -12,6 +12,8 @@ import { showToast } from "../../utils/swal";
 import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
+import { getCandidateInEvent, editCandidate } from "../../services/candidate_service";
+
 
 import { getEvent } from "../../services/event_service";
 import {
@@ -43,19 +45,54 @@ function CategoryPage() {
 
   const [sexFilter, setSexFilter] = useState("ALL");
 
+  const [candidates, setCandidates] = useState([]);
+
   const filteredCandidates =
     sexFilter === "ALL"
-      ? event?.candidates || []
-      : (event?.candidates || []).filter(
+      ? candidates
+      : candidates.filter(
         (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase()
       );
 
 
+
   const tabs = ["Stages", "Participants", "Judges"];
 
-  const handleEditParticipant = (updated) => {
-    console.log("Edit participant:", updated);
+  const handleEditParticipant = async (updated) => {
+    try {
+      if (!updated?.id) {
+        showToast("error", "Cannot update participant — missing ID");
+        console.error("Candidate ID is missing!", updated);
+        return;
+      }
+
+      const payload = {
+        name: updated.name.trim(),
+        sex: updated.sex.toLowerCase(), // backend expects lowercase
+      };
+
+      const res = await editCandidate(updated.id, payload);
+
+      setCandidates(prev =>
+        prev.map(c =>
+          c.id === updated.id
+            ? { ...c, name: res.name, sex: res.sex }
+            : c
+        )
+      );
+
+
+
+      showToast("success", "Participant updated successfully");
+    } catch (err) {
+      console.error(err);
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to update participant"
+      );
+    }
   };
+
 
   const handleDeleteParticipant = (item) => {
     console.log("Delete participant:", item);
@@ -115,7 +152,27 @@ function CategoryPage() {
       } finally {
         setLoading(false);
       }
+
+      try {
+        const res = await getCandidateInEvent(eventId);
+        console.log("Fetched candidates:", res);
+
+        setCandidates(
+          (res || []).map(c => ({
+            id: c.id,                  // ✅ KEEP ID
+            name: c.name,
+            sex: c.sex ?? "",
+            suffix: c.suffix ?? "",
+            photo: c.photo ?? ""
+          }))
+        );
+      } catch (err) {
+        showToast("error", "Failed to load candidates");
+      }
+
+
     }
+
 
     fetchEvent();
   }, [event, eventId]);
