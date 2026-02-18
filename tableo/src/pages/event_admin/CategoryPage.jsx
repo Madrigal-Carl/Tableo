@@ -10,10 +10,18 @@ import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
 import Swal from "sweetalert2";
-import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
+import {
+  addCriteria,
+  getCriteriaByCategory,
+} from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-import { getCandidateInEvent, editCandidate, deleteCandidate, createOrUpdateCandidates } from "../../services/candidate_service";
+import {
+  getCandidateInEvent,
+  editCandidate,
+  deleteCandidate,
+  createOrUpdateCandidates,
+} from "../../services/candidate_service";
 import { getEvent } from "../../services/event_service";
 import {
   addCategoryToEvent,
@@ -37,7 +45,9 @@ function CategoryPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [categoryList, setCategoryList] = useState([{ name: "", weight: "", maxScore: "" }]);
+  const [categoryList, setCategoryList] = useState([
+    { name: "", weight: "", maxScore: "" },
+  ]);
 
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
   const [criteriaList, setCriteriaList] = useState([{ name: "", weight: "" }]);
@@ -50,10 +60,8 @@ function CategoryPage() {
     sexFilter === "ALL"
       ? candidates
       : candidates.filter(
-        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase()
-      );
-
-
+          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+        );
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -80,15 +88,24 @@ function CategoryPage() {
       setCandidates((prev) =>
         prev.map((c) =>
           c.id === updatedCandidate.id
-            ? { ...c, name: updated.name, sex: updated.sex, suffix: c.suffix, photo: c.photo }
-            : c
-        )
+            ? {
+                ...c,
+                name: updated.name,
+                sex: updated.sex,
+                suffix: c.suffix,
+                photo: c.photo,
+              }
+            : c,
+        ),
       );
 
       showToast("success", "Participant updated successfully");
     } catch (err) {
       console.error(err);
-      showToast("error", err.response?.data?.message || "Failed to update participant");
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to update participant",
+      );
     }
   };
 
@@ -113,16 +130,14 @@ function CategoryPage() {
       await deleteCandidate(candidate.id);
 
       // Remove from local state
-      setCandidates(prev =>
-        prev.filter(c => c.id !== candidate.id)
-      );
+      setCandidates((prev) => prev.filter((c) => c.id !== candidate.id));
 
       showToast("success", "Participant deleted successfully");
     } catch (err) {
       console.error(err);
       showToast(
         "error",
-        err.response?.data?.message || "Failed to delete participant"
+        err.response?.data?.message || "Failed to delete participant",
       );
     }
   };
@@ -187,21 +202,18 @@ function CategoryPage() {
         console.log("Fetched candidates:", res);
 
         setCandidates(
-          (res || []).map(c => ({
-            id: c.id,                  // ✅ KEEP ID
+          (res || []).map((c) => ({
+            id: c.id, // ✅ KEEP ID
             name: c.name,
             sex: c.sex ?? "",
             suffix: c.suffix ?? "",
-            photo: c.photo ?? ""
-          }))
+            photo: c.photo ?? "",
+          })),
         );
       } catch (err) {
         showToast("error", "Failed to load candidates");
       }
-
-
     }
-
 
     fetchEvent();
   }, [event, eventId]);
@@ -277,7 +289,7 @@ function CategoryPage() {
     try {
       setLoading(true);
 
-      const payload = criteriaList.map(c => ({
+      const payload = criteriaList.map((c) => ({
         label: c.name.trim(),
         percentage: Number(c.weight),
       }));
@@ -296,8 +308,13 @@ function CategoryPage() {
     }
   };
 
-  const stages = event?.stages?.slice().sort((a, b) => a.sequence - b.sequence).map((s) => s.name) || [];
-  const filteredCategories = categories;
+  const stages =
+    event?.stages
+      ?.slice()
+      .sort((a, b) => a.sequence - b.sequence)
+      .map((s) => s.name) || [];
+  const filteredCategories =
+    categories?.slice().sort((a, b) => a.sequence - b.sequence) || [];
 
   return (
     <>
@@ -317,7 +334,9 @@ function CategoryPage() {
                   onClick={() => navigate("/events")}
                   className="cursor-pointer hover:text-gray-900"
                 />
-                <h1 className="text-4xl font-semibold text-[#FA824C]">{event?.title}</h1>
+                <h1 className="text-4xl font-semibold text-[#FA824C]">
+                  {event?.title}
+                </h1>
               </div>
               <p className="text-sm text-gray-500 mt-2">{event?.description}</p>
             </div>
@@ -334,8 +353,9 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-[110px] h-[40px] font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
-                    }`}
+                  className={`relative z-10 w-[110px] h-[40px] font-medium ${
+                    activeTopTab === tab ? "text-gray-600" : "text-white"
+                  }`}
                 >
                   {tab}
                 </button>
@@ -351,10 +371,11 @@ function CategoryPage() {
                   <button
                     key={stage}
                     onClick={() => setActiveStage(stage)}
-                    className={`pb-3 text-lg font-semibold transition ${activeStage === stage
-                      ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                      : "text-gray-400 hover:text-gray-600"
-                      }`}
+                    className={`pb-3 text-lg font-semibold transition ${
+                      activeStage === stage
+                        ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
                   >
                     {stage}
                   </button>
@@ -365,7 +386,10 @@ function CategoryPage() {
               <div className="flex items-center justify-between gap-4 mb-6 text-lg font-semibold">
                 <div className="flex items-center gap-8">
                   <div className="flex items-center gap-4">
-                    <label htmlFor="categoryFilter" className="font-medium text-gray-700">
+                    <label
+                      htmlFor="categoryFilter"
+                      className="font-medium text-gray-700"
+                    >
                       Category:
                     </label>
                     <select
@@ -374,7 +398,9 @@ function CategoryPage() {
                       value={selectedCategory?.id || ""}
                       onChange={(e) => {
                         const selectedId = parseInt(e.target.value);
-                        const cat = filteredCategories.find((c) => c.id === selectedId);
+                        const cat = filteredCategories.find(
+                          (c) => c.id === selectedId,
+                        );
                         setSelectedCategory(cat || null);
                       }}
                     >
@@ -382,13 +408,11 @@ function CategoryPage() {
                         Select a Category
                       </option>
                       {filteredCategories.map((cat) => (
-                        <option
-                          key={cat.id}
-                          value={cat.id}
-                          title={cat.name}
-                        >
+                        <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
-                            ? cat.name.slice(0, 30).replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                            ? cat.name
+                                .slice(0, 30)
+                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -406,34 +430,41 @@ function CategoryPage() {
 
                       try {
                         setLoading(true);
-                        const res = await getCriteriaByCategory(selectedCategory.id);
+                        const res = await getCriteriaByCategory(
+                          selectedCategory.id,
+                        );
                         const criteria = res.data.data || [];
                         setCriteriaList(
                           criteria.length > 0
-                            ? criteria.map(c => ({
-                              name: c.label,
-                              weight: c.percentage
-                            }))
-                            : [{ name: "", weight: "" }]
+                            ? criteria.map((c) => ({
+                                name: c.label,
+                                weight: c.percentage,
+                              }))
+                            : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
                       } catch (err) {
                         console.error(err);
-                        showToast("error", "Failed to load criteria for this category");
+                        showToast(
+                          "error",
+                          "Failed to load criteria for this category",
+                        );
                       } finally {
                         setLoading(false);
                       }
                     }}
                     disabled={!canEditEvent}
                     className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
-    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
+    ${canEditEvent ? "hover:bg-orange-600" : "opacity-50 cursor-not-allowed"}`}
                   >
                     Criteria
                   </button>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <label className="text-gray-600 font-medium">Filter by Sex:</label>
+                  <label className="text-gray-600 font-medium">
+                    Filter by Sex:
+                  </label>
                   <select
                     value={sexFilter}
                     onChange={(e) => setSexFilter(e.target.value)}
@@ -454,7 +485,7 @@ function CategoryPage() {
                   }}
                   disabled={!canEditEvent}
                   className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
-    ${canEditEvent ? 'hover:bg-orange-600' : 'opacity-50 cursor-not-allowed'}`}
+    ${canEditEvent ? "hover:bg-orange-600" : "opacity-50 cursor-not-allowed"}`}
                 >
                   Category
                 </button>
@@ -510,17 +541,19 @@ function CategoryPage() {
               onDelete={handleDeleteParticipant}
               onAdd={async () => {
                 try {
-                  await createOrUpdateCandidates(eventId, { count: candidates.length + 1 });
+                  await createOrUpdateCandidates(eventId, {
+                    count: candidates.length + 1,
+                  });
 
-                  setCandidates(prev => [
+                  setCandidates((prev) => [
                     ...prev,
                     {
                       id: Date.now(), // temp ID
                       name: `Candidate ${prev.length + 1}`,
                       sex: "",
                       suffix: "",
-                      photo: ""
-                    }
+                      photo: "",
+                    },
                   ]);
 
                   showToast("success", "Participant added successfully");

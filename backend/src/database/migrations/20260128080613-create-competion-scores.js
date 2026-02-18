@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -9,52 +9,42 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('competition_scores', {
+    await queryInterface.createTable("competition_scores", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      category_stage_id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'category_stages',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
       candidate_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'candidates',
-          key: 'id',
+          model: "candidates",
+          key: "id",
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
       judge_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'judges',
-          key: 'id',
+          model: "judges",
+          key: "id",
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
       criterion_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'criterion',
-          key: 'id',
+          model: "criterion",
+          key: "id",
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
       score: {
         type: Sequelize.FLOAT,
@@ -64,12 +54,12 @@ module.exports = {
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.fn('NOW'),
+        defaultValue: Sequelize.fn("NOW"),
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.fn('NOW'),
+        defaultValue: Sequelize.fn("NOW"),
       },
       deleted_at: {
         type: Sequelize.DATE,
@@ -85,6 +75,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('competition_scores');
-  }
+    await queryInterface.dropTable("competition_scores");
+  },
 };

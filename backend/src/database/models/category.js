@@ -2,6 +2,7 @@
 
 module.exports = (sequelize, DataTypes) => {
     const Category = sequelize.define('Category', {
+        sequence: { type: DataTypes.INTEGER, allowNull: false },
         name: { type: DataTypes.STRING, allowNull: false },
         percentage: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
         maxScore: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },

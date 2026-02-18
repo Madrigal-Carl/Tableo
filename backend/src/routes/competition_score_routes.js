@@ -1,17 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/competition_score_controller");
-const { validateBulkScores } = require("../validators/competition_score_validator");
-const requireAuth = require("../middlewares/auth");
+const competitionScoreController = require("../controllers/competition_score_controller");
+const {
+  validateCompetitionScores,
+} = require("../validators/competition_score_validator");
+const requireJudgeInvitation = require("../middlewares/judge");
 
-// POST: create scores
-router.post("/:categoryId/scores", requireAuth, validateBulkScores, controller.addOrUpdateBulkScores);
+// Submit scores
+router.post(
+  "/submit/:invitationCode",
+  requireJudgeInvitation,
+  validateCompetitionScores,
+  competitionScoreController.submitScores,
+);
 
-// PUT: update scores
-router.put("/:categoryId/scores", requireAuth, validateBulkScores, controller.updateBulkScores);
-
-// GET routes
-router.get("/scores/category/:categoryId", requireAuth, controller.getScoresByCategory);
-router.get("/scores/candidate/:candidateId", requireAuth, controller.getScoresByCandidate);
+// Check if judge has completed a category
+router.get(
+  "/check-category/:invitationCode/:categoryId",
+  requireJudgeInvitation,
+  competitionScoreController.checkCategoryCompletion,
+);
 
 module.exports = router;

@@ -1,88 +1,46 @@
-const competitionScoreRepo = require("../repositories/competition_score_repository");
-const { getEventIdByCategoryId } = require("./category_service");
-const sequelize = require("../database/models").sequelize;
+const competitionScoreRepository = require("../repositories/competition_score_repository");
+const {
+  Candidate,
+  Criterion,
+  CompetitionScore,
+  Category,
+} = require("../database/models");
+const { Op } = require("sequelize");
 
-/**
- * Add or update a single score (existing function, still used internally)
- */
-async function setScore({ categoryId, candidateId, judgeId, criterionId, score }) {
-  return sequelize.transaction(async (t) => {
-    const eventId = await getEventIdByCategoryId(categoryId);
-    if (!eventId) throw new Error("Invalid category");
+async function submitScores(scores) {
+  // Could add additional business logic here, like checking duplicates
+  return await competitionScoreRepository.bulkUpsert(scores);
+}
 
-    let competitionScore = await competitionScoreRepo.findByUnique({
-      categoryId,
-      candidateId,
-      judgeId,
-      criterionId,
-      transaction: t,
-    });
+async function hasCompletedCategory(judgeId, categoryId) {
+  // Get the category
+  const category = await Category.findByPk(categoryId);
+  if (!category) throw new Error("Category not found");
 
-    if (competitionScore) {
-      await competitionScore.update({ score }, { transaction: t });
-    } else {
-      competitionScore = await competitionScoreRepo.create(
-        {
-          category_id: categoryId,
-          candidate_id: candidateId,
-          judge_id: judgeId,
-          criterion_id: criterionId,
-          score,
-        },
-        t
-      );
-    }
-
-    return competitionScore;
+  // Candidates belong to the category's event
+  const candidates = await Candidate.findAll({
+    where: { event_id: category.event_id },
+    attributes: ["id"],
   });
-}
 
-/**
- * Add or update multiple scores in bulk
- * @param {number} categoryId
- * @param {number} judgeId
- * @param {Array} scores - array of { candidateId, criterionId, score }
- */
-async function setBulkScores({ categoryId, judgeId, scores }) {
-  return sequelize.transaction(async (t) => {
-    const eventId = await getEventIdByCategoryId(categoryId);
-    if (!eventId) throw new Error("Invalid category");
-
-    const results = [];
-
-    // Loop through scores and upsert each one
-    for (const s of scores) {
-      const res = await setScore({
-        categoryId,
-        candidateId: s.candidateId,
-        judgeId,
-        criterionId: s.criterionId,
-        score: s.score,
-      });
-      results.push(res);
-    }
-
-    return results;
+  const criteria = await Criterion.findAll({
+    where: { category_id: categoryId },
+    attributes: ["id"],
   });
+
+  const totalRequired = candidates.length * criteria.length;
+
+  if (totalRequired === 0) return true; // edge case
+
+  const scoredCount = await CompetitionScore.count({
+    where: {
+      judge_id: judgeId,
+      criterion_id: { [Op.in]: criteria.map((c) => c.id) },
+      candidate_id: { [Op.in]: candidates.map((c) => c.id) },
+    },
+  });
+
+  return scoredCount === totalRequired;
 }
 
-/**
- * Get all scores for a category
- */
-async function getScoresByCategory(categoryId) {
-  return competitionScoreRepo.findByCategory(categoryId);
-}
-
-/**
- * Get all scores for a candidate (optionally filtered by categoryIds)
- */
-async function getScoresByCandidate(candidateId, categoryIds = []) {
-  return competitionScoreRepo.findByCandidate(candidateId, categoryIds);
-}
-
-module.exports = {
-  setScore,         // single score (still useful)
-  setBulkScores,    // new bulk scoring function
-  getScoresByCategory,
-  getScoresByCandidate,
-};
+module.exports = { submitScores, hasCompletedCategory };

@@ -1,11 +1,18 @@
-// src/pages/judge/JudgePage.jsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JudgeTable from "../../components/JudgeTable";
 import JudgeModal from "../../components/JudgeModal";
+import FullScreenLoader from "../../components/FullScreenLoader";
+import Swal from "sweetalert2";
+
 import { getEventForJudge, updateJudge } from "../../services/judge_service";
+import {
+  submitScores,
+  checkCategoryCompleted,
+} from "../../services/competition_score_service";
 import { showToast } from "../../utils/swal";
 import { validateJudgeData } from "../../validations/judge_validation";
+import { validateScores } from "../../validations/judge_score_validation";
 
 function JudgePage() {
   const { invitationCode } = useParams();
@@ -15,164 +22,236 @@ function JudgePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [activeRound, setActiveRound] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  // Sequential control
+  const [stageIndex, setStageIndex] = useState(0);
+  const [categoryIndex, setCategoryIndex] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
 
-  // Modal Control
+  // Modal
   const [showJudgeModal, setShowJudgeModal] = useState(true);
   const [judgeInfo, setJudgeInfo] = useState(null);
 
-  // Fetch event data
+  const [scores, setScores] = useState({});
+
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       try {
         const data = await getEventForJudge(invitationCode);
         setEventData(data);
-        setActiveRound(data.event.stages[0]?.name || "");
-        setSelectedCategory(data.event.categories[0]?.name || "");
 
         if (data.judge) {
           const suffix = data.judge.suffix;
-          setJudgeInfo({
-            name: data.judge.name,
-            suffix: suffix,
-          });
-
-          setShowJudgeModal(suffix === null || suffix === "");
+          setJudgeInfo({ name: data.judge.name, suffix });
+          setShowJudgeModal(!suffix);
         }
+
+        await autoSelectCategory(data);
       } catch (err) {
         setError(err.message || "Failed to load judge data");
         navigate("/", { replace: true });
       } finally {
         setLoading(false);
       }
-    }
+    };
+
     fetchData();
   }, [invitationCode, navigate]);
+
+  const autoSelectCategory = async (data) => {
+    const sortedStages = [...data.event.stages].sort(
+      (a, b) => a.sequence - b.sequence,
+    );
+
+    for (let s = 0; s < sortedStages.length; s++) {
+      const stage = sortedStages[s];
+      const categories = (stage.categories || []).sort(
+        (a, b) => a.sequence - b.sequence,
+      );
+
+      for (let c = 0; c < categories.length; c++) {
+        const cat = categories[c];
+        const completed = await checkCategoryCompleted(invitationCode, cat.id);
+
+        if (!completed) {
+          setStageIndex(s);
+          setCategoryIndex(c);
+          return;
+        }
+      }
+    }
+
+    setIsFinished(true);
+  };
 
   const handleJudgeSave = async (data) => {
     if (!validateJudgeData(data)) return;
 
     try {
       const res = await updateJudge(invitationCode, data);
-
-      setJudgeInfo({
-        name: res.judge.name,
-        suffix: res.judge.suffix ?? "",
-      });
-
+      setJudgeInfo({ name: res.judge.name, suffix: res.judge.suffix ?? "" });
       setShowJudgeModal(false);
       showToast("success", "Judge info saved successfully");
     } catch (err) {
-      const backendMessage = err.message || "Failed to save judge info";
-      showToast("error", backendMessage);
+      showToast("error", err.message || "Failed to save judge info");
     }
   };
 
-  // ✅ Handle modal close (X button)
-  const handleModalClose = () => {
-    setShowJudgeModal(false);
+  const handleProceed = async () => {
+    const selectedCategory =
+      eventData.event.stages[stageIndex].categories[categoryIndex];
+    const normalizedCriteria = normalizeCriteria(selectedCategory);
+
+    const allFilled = validateScores(
+      eventData.event.candidates,
+      normalizedCriteria,
+      scores,
+    );
+
+    if (!allFilled) {
+      showToast("error", "Please fill in all scores before proceeding");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Are you sure you want to proceed?",
+      text: "You cannot go back after proceeding.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#FA824C",
+      cancelButtonColor: "#d1d5db",
+      confirmButtonText: "Yes, Proceed",
+    });
+
+    if (!result.isConfirmed) return;
+
+    // Prepare scores for submission
+    const scoresToSubmit = [];
+    const judgeId = eventData.judge.id;
+
+    eventData.event.candidates.forEach((candidate) => {
+      normalizedCriteria.forEach((criterion) => {
+        scoresToSubmit.push({
+          candidate_id: candidate.id,
+          judge_id: judgeId,
+          criterion_id: criterion.id,
+          score: scores[candidate.id][criterion.id], // always number
+        });
+      });
+    });
+
+    try {
+      await submitScores(invitationCode, scoresToSubmit);
+      showToast("success", "Scores submitted successfully");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to submit scores";
+      showToast("error", msg);
+      return;
+    }
+
+    // Move to next category/stage
+    const currentStageCategories = eventData.event.stages[
+      stageIndex
+    ].categories.sort((a, b) => a.sequence - b.sequence);
+
+    if (categoryIndex + 1 < currentStageCategories.length) {
+      // Move to next category in the same stage
+      setCategoryIndex(categoryIndex + 1);
+      setScores({});
+    } else if (stageIndex + 1 < eventData.event.stages.length) {
+      // Move to first category of the next stage
+      setStageIndex(stageIndex + 1);
+      setCategoryIndex(0);
+      setScores({});
+    } else {
+      // Finished all stages and categories
+      setIsFinished(true);
+    }
   };
 
-  if (loading) return <p>Loading...</p>;
+  const normalizeCriteria = (category) => {
+    if (!category?.criteria?.length) return [];
+    const total = category.criteria.reduce(
+      (sum, c) => sum + Number(c.percentage || 0),
+      0,
+    );
+    return category.criteria.map((c) => ({
+      id: c.id,
+      name: c.label,
+      weight: total > 0 ? (c.percentage / total) * 100 : 0,
+      maxScore: category.maxScore || 100,
+    }));
+  };
+
   if (error) return <p>{error}</p>;
   if (!eventData) return null;
 
-  const rounds = eventData.event.stages.map((stage) => stage.name);
-  const currentRoundCategories =
-    eventData.event.categories.filter((cat) => cat.stageId === activeRound) ||
-    [];
-  const selectedCategoryData =
-    currentRoundCategories.find((cat) => cat.name === selectedCategory) || null;
-
-  let normalizedCriteria = [];
-  if (selectedCategoryData) {
-    const totalWeight = selectedCategoryData.criteria.reduce(
-      (sum, c) => sum + c.weight,
-      0,
-    );
-    normalizedCriteria = selectedCategoryData.criteria.map((c) => ({
-      ...c,
-      weight: totalWeight > 0 ? (c.weight / totalWeight) * 100 : 0,
-    }));
-  }
+  const activeStage = [...eventData.event.stages].sort(
+    (a, b) => a.sequence - b.sequence,
+  )[stageIndex];
+  const currentCategories = (activeStage?.categories || []).sort(
+    (a, b) => a.sequence - b.sequence,
+  );
+  const selectedCategory = currentCategories[categoryIndex] ?? null;
+  const normalizedCriteria = normalizeCriteria(selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Judge Modal */}
+    <div className="min-h-screen bg-gray-100 relative">
+      <FullScreenLoader show={loading} />
+
       <JudgeModal
         isOpen={showJudgeModal}
-        onClose={handleModalClose}
+        onClose={() => setShowJudgeModal(false)}
         onSave={handleJudgeSave}
         initialData={judgeInfo}
       />
 
-      {/* HEADER */}
+      {/* Header */}
       <div className="fixed top-0 left-0 w-full bg-white shadow-sm z-40">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center px-4 sm:px-6 py-3 gap-2">
-          {/* Back Button */}
+        <div className="flex justify-between items-center px-6 py-3">
           <button
             onClick={() => navigate("/")}
-            className="px-5 py-2 rounded-full bg-[#FA824C] text-white text-sm hover:bg-[#FF9768] transition"
+            className="px-5 py-2 rounded-full bg-[#FA824C] text-white hover:bg-[#FF9768]"
           >
-            Back
+            Exit
           </button>
-
-          {/* Event Title */}
-          <h1 className="text-lg sm:text-2xl font-semibold text-center">
-            {eventData.event.title}
-          </h1>
-
-          {/* Profile Icon */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowJudgeModal(true)}
-              className="relative w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition"
-              title="Edit Profile"
-            >
-              {/* Use initials if name exists */}
-              <span className="text-sm font-semibold text-gray-700">
-                {judgeInfo?.name
-                  ? judgeInfo.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
-                  : "J"}
-              </span>
-            </button>
-          </div>
+          <h1 className="text-xl font-semibold">{eventData.event.title}</h1>
+          <div className="w-10" />
         </div>
       </div>
 
-      {/* ROUND TABS */}
-      <div className="pt-28 px-4 sm:px-6">
-        <div className="flex gap-6 overflow-x-auto border-b border-gray-200 mb-4 max-w-6xl mx-auto">
-          {rounds.map((round) => (
-            <button
-              key={round}
-              onClick={() => setActiveRound(round)}
-              className={`pb-3 whitespace-nowrap text-sm font-medium transition ${
-                activeRound === round
-                  ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              {round}
-            </button>
-          ))}
-        </div>
-
-        {/* JUDGE TABLE */}
-        {!showJudgeModal && selectedCategoryData && (
+      <div className="pt-24 px-6">
+        {!showJudgeModal && !isFinished && selectedCategory && (
           <div className="max-w-6xl mx-auto">
             <JudgeTable
-              participants={selectedCategoryData.participants}
+              participants={eventData.event.candidates}
               criteria={normalizedCriteria}
-              categoryName={selectedCategoryData.name}
-              categories={currentRoundCategories}
-              onCategorySelect={setSelectedCategory}
+              categoryName={selectedCategory.name}
+              categoryMaxScore={selectedCategory.maxScore}
+              scores={scores}
+              setScores={setScores}
+              categoryKey={`${stageIndex}-${categoryIndex}`}
             />
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleProceed}
+                className="px-6 py-3 bg-[#FA824C] text-white rounded-xl hover:bg-[#FF9768]"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isFinished && (
+          <div className="text-center mt-60">
+            <h2 className="text-5xl md:text-6xl font-extrabold text-green-600 mb-4">
+              Judging Completed 🎉
+            </h2>
+            <p className="text-xl md:text-2xl text-gray-600">
+              Thank you for submitting your scores.
+            </p>
           </div>
         )}
       </div>
