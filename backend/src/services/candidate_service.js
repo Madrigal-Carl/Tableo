@@ -1,5 +1,6 @@
 const sequelize = require('../database/models').sequelize;
 const candidateRepo = require('../repositories/candidate_repository');
+const { Candidate } = require('../database/models'); // adjust path if needed
 
 // Update a candidate and return all active candidates for the event
 async function updateCandidate(candidateId, data) {
@@ -113,6 +114,18 @@ async function restoreCandidate(candidateId, transaction = null) {
         return true;
     });
 }
+async function createByCount(eventId, count, transaction) {
+    const rows = [];
+
+    for (let i = 1; i <= Number(count); i++) {
+        rows.push({
+            event_id: eventId,
+            name: `Candidate ${i}`,
+        });
+    }
+
+    await Candidate.bulkCreate(rows, { transaction });
+}
 
 module.exports = { 
     createOrUpdate,     // restoration logic
@@ -120,5 +133,6 @@ module.exports = {
     updateCandidate,
     findAllByEvent,
     deleteCandidate,   
-    restoreCandidate   
+    restoreCandidate,
+    createByCount   
 };

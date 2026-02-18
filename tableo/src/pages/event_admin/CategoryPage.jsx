@@ -57,25 +57,30 @@ function CategoryPage() {
 
   const tabs = ["Stages", "Participants", "Judges"];
 
-  const handleEditParticipant = async (updated) => {
+  const handleEditParticipant = async (updatedCandidate) => {
     try {
-      if (!updated?.id) {
+      if (!updatedCandidate?.id) {
         showToast("error", "Cannot update participant — missing ID");
-        console.error("Candidate ID is missing!", updated);
         return;
       }
 
+      // Prepare payload for API
       const payload = {
-        name: updated.name.trim(),
-        sex: updated.sex.toLowerCase(), // backend expects lowercase
+        name: updatedCandidate.name.trim(),
+        sex: updatedCandidate.sex.toLowerCase(),
       };
 
-      const res = await editCandidate(updated.id, payload);
+      // Call backend to update candidate
+      const res = await editCandidate(updatedCandidate.id, payload);
 
-      setCandidates(prev =>
-        prev.map(c =>
-          c.id === updated.id
-            ? { ...c, name: res.name, sex: res.sex }
+      // Extract updated candidate from backend response
+      const updated = res.data || { ...updatedCandidate, ...payload };
+
+      // Update local state immediately to avoid blank/wiped candidate
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === updatedCandidate.id
+            ? { ...c, name: updated.name, sex: updated.sex, suffix: c.suffix, photo: c.photo }
             : c
         )
       );
@@ -83,13 +88,9 @@ function CategoryPage() {
       showToast("success", "Participant updated successfully");
     } catch (err) {
       console.error(err);
-      showToast(
-        "error",
-        err.response?.data?.message || "Failed to update participant"
-      );
+      showToast("error", err.response?.data?.message || "Failed to update participant");
     }
   };
-
 
   const handleDeleteParticipant = async (candidate) => {
     if (!candidate?.id) return;
@@ -509,30 +510,22 @@ function CategoryPage() {
               onDelete={handleDeleteParticipant}
               onAdd={async () => {
                 try {
-                  // Calculate new total count
-                  const newCount = candidates.length + 1;
+                  await createOrUpdateCandidates(eventId, { count: candidates.length + 1 });
 
-                  // Call backend to create a new candidate (+1)
-                  const updatedCandidates = await createOrUpdateCandidates(eventId, { count: newCount });
-
-                  // Ensure it's always an array before mapping
-                  const cleanCandidates = Array.isArray(updatedCandidates) ? updatedCandidates : [];
-
-                  // Update local state
-                  setCandidates(
-                    cleanCandidates.map(c => ({
-                      id: c.id,
-                      name: c.name,
-                      sex: c.sex ?? "",
-                      suffix: c.suffix ?? "",
-                      photo: c.photo ?? ""
-                    }))
-                  );
+                  setCandidates(prev => [
+                    ...prev,
+                    {
+                      id: Date.now(), // temp ID
+                      name: `Candidate ${prev.length + 1}`,
+                      sex: "",
+                      suffix: "",
+                      photo: ""
+                    }
+                  ]);
 
                   showToast("success", "Participant added successfully");
                 } catch (err) {
-                  console.error(err);
-                  showToast("error", err.response?.data?.message || "Failed to add participant");
+                  showToast("error", "Failed to add participant");
                 }
               }}
             />
