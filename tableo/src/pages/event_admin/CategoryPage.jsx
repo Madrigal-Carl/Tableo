@@ -9,10 +9,11 @@ import CriteriaModal from "../../components/CriteriaModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
+import Swal from "sweetalert2";
 import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-
+import { getCandidateInEvent, editCandidate, deleteCandidate, createOrUpdateCandidates } from "../../services/candidate_service";
 import { getEvent } from "../../services/event_service";
 import {
   addCategoryToEvent,
@@ -43,22 +44,87 @@ function CategoryPage() {
 
   const [sexFilter, setSexFilter] = useState("ALL");
 
+  const [candidates, setCandidates] = useState([]);
+
   const filteredCandidates =
     sexFilter === "ALL"
-      ? event?.candidates || []
-      : (event?.candidates || []).filter(
+      ? candidates
+      : candidates.filter(
         (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase()
       );
 
 
+
   const tabs = ["Stages", "Participants", "Judges"];
 
-  const handleEditParticipant = (updated) => {
-    console.log("Edit participant:", updated);
+  const handleEditParticipant = async (updatedCandidate) => {
+    try {
+      if (!updatedCandidate?.id) {
+        showToast("error", "Cannot update participant — missing ID");
+        return;
+      }
+
+      // Prepare payload for API
+      const payload = {
+        name: updatedCandidate.name.trim(),
+        sex: updatedCandidate.sex.toLowerCase(),
+      };
+
+      // Call backend to update candidate
+      const res = await editCandidate(updatedCandidate.id, payload);
+
+      // Extract updated candidate from backend response
+      const updated = res.data || { ...updatedCandidate, ...payload };
+
+      // Update local state immediately to avoid blank/wiped candidate
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === updatedCandidate.id
+            ? { ...c, name: updated.name, sex: updated.sex, suffix: c.suffix, photo: c.photo }
+            : c
+        )
+      );
+
+      showToast("success", "Participant updated successfully");
+    } catch (err) {
+      console.error(err);
+      showToast("error", err.response?.data?.message || "Failed to update participant");
+    }
   };
 
-  const handleDeleteParticipant = (item) => {
-    console.log("Delete participant:", item);
+  const handleDeleteParticipant = async (candidate) => {
+    if (!candidate?.id) return;
+
+    try {
+      // Use SweetAlert2 modal for confirmation
+      const result = await Swal.fire({
+        title: `Are you sure you want to delete ${candidate.name}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#FA824C",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete",
+        cancelButtonText: "Cancel",
+      });
+
+      if (!result.isConfirmed) return;
+
+      // Call backend soft delete
+      await deleteCandidate(candidate.id);
+
+      // Remove from local state
+      setCandidates(prev =>
+        prev.filter(c => c.id !== candidate.id)
+      );
+
+      showToast("success", "Participant deleted successfully");
+    } catch (err) {
+      console.error(err);
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to delete participant"
+      );
+    }
   };
 
   const handleEditJudge = (updated) => {
@@ -115,7 +181,27 @@ function CategoryPage() {
       } finally {
         setLoading(false);
       }
+
+      try {
+        const res = await getCandidateInEvent(eventId);
+        console.log("Fetched candidates:", res);
+
+        setCandidates(
+          (res || []).map(c => ({
+            id: c.id,                  // ✅ KEEP ID
+            name: c.name,
+            sex: c.sex ?? "",
+            suffix: c.suffix ?? "",
+            photo: c.photo ?? ""
+          }))
+        );
+      } catch (err) {
+        showToast("error", "Failed to load candidates");
+      }
+
+
     }
+
 
     fetchEvent();
   }, [event, eventId]);
@@ -422,7 +508,26 @@ function CategoryPage() {
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
-              onAdd={() => console.log("Add participant clicked")}
+              onAdd={async () => {
+                try {
+                  await createOrUpdateCandidates(eventId, { count: candidates.length + 1 });
+
+                  setCandidates(prev => [
+                    ...prev,
+                    {
+                      id: Date.now(), // temp ID
+                      name: `Candidate ${prev.length + 1}`,
+                      sex: "",
+                      suffix: "",
+                      photo: ""
+                    }
+                  ]);
+
+                  showToast("success", "Participant added successfully");
+                } catch (err) {
+                  showToast("error", "Failed to add participant");
+                }
+              }}
             />
           )}
 

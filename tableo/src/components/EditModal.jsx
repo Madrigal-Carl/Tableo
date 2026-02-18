@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 const SUFFIX_OPTIONS = ["", "Mr", "Ms", "Mrs"];
-const SEX_OPTIONS = ["Male", "Female"];
+const SEX_OPTIONS = ["", "Male", "Female"];
 
 function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
   const [formData, setFormData] = useState({});
@@ -84,10 +84,11 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
               className="w-full rounded-full border-orange-400 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
             >
               {SEX_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+                <option key={option} value={option} disabled={option === ""}>
+                  {option === "" ? "Select Sex" : option}
                 </option>
               ))}
+
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
               <svg
