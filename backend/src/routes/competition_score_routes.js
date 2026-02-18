@@ -1,15 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const requireAuth = require("../middlewares/auth");
 const competitionScoreController = require("../controllers/competition_score_controller");
 const {
   validateCompetitionScores,
 } = require("../validators/competition_score_validator");
+const requireJudgeInvitation = require("../middlewares/judge");
 
 // Submit scores
 router.post(
-  "/submit",
-  requireAuth,
+  "/submit/:invitationCode",
+  requireJudgeInvitation,
   validateCompetitionScores,
   competitionScoreController.submitScores,
 );

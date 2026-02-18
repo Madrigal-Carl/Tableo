@@ -6,6 +6,7 @@ import JudgeModal from "../../components/JudgeModal";
 import { getEventForJudge, updateJudge } from "../../services/judge_service";
 import { showToast } from "../../utils/swal";
 import { validateJudgeData } from "../../validations/judge_validation";
+import { submitScores } from "../../services/competition_score_service";
 import Swal from "sweetalert2";
 
 function JudgePage() {
@@ -24,6 +25,8 @@ function JudgePage() {
   // Modal
   const [showJudgeModal, setShowJudgeModal] = useState(true);
   const [judgeInfo, setJudgeInfo] = useState(null);
+
+  const [scores, setScores] = useState({});
 
   useEffect(() => {
     async function fetchData() {
@@ -101,6 +104,19 @@ function JudgePage() {
   }
 
   const handleProceed = async () => {
+    const missingScore = eventData.event.candidates.some((candidate) =>
+      normalizedCriteria.some(
+        (criterion) =>
+          scores[candidate.id] === undefined ||
+          scores[candidate.id][criterion.id] === "", // empty input
+      ),
+    );
+
+    if (missingScore) {
+      showToast("error", "Please fill in all scores before proceeding");
+      return;
+    }
+
     const result = await Swal.fire({
       title: "Are you sure you want to proceed?",
       text: "You cannot go back after proceeding.",
@@ -111,23 +127,48 @@ function JudgePage() {
       confirmButtonText: "Yes, Proceed",
     });
 
-    if (result.isConfirmed) {
-      const isLastCategory = categoryIndex === currentCategories.length - 1;
-      const isLastStage = stageIndex === sortedStages.length - 1;
+    if (!result.isConfirmed) return;
 
-      if (!isLastCategory) {
-        setCategoryIndex((prev) => prev + 1);
-      } else if (!isLastStage) {
-        setStageIndex((prev) => prev + 1);
-        setCategoryIndex(0);
-      } else {
-        setIsFinished(true);
-        Swal.fire({
-          icon: "success",
-          title: "Judging Completed!",
-          text: "Thank you for submitting your scores.",
+    const scoresToSubmit = [];
+    const judgeId = eventData.judge.id;
+
+    eventData.event.candidates.forEach((candidate) => {
+      normalizedCriteria.forEach((criterion) => {
+        const scoreValue = scores[candidate.id]?.[criterion.id] ?? 0;
+        scoresToSubmit.push({
+          candidate_id: candidate.id,
+          judge_id: judgeId,
+          criterion_id: criterion.id,
+          score: scoreValue,
         });
-      }
+      });
+    });
+
+    try {
+      await submitScores(invitationCode, scoresToSubmit);
+      showToast("success", "Scores submitted successfully");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to submit scores";
+      showToast("error", msg);
+      return;
+    }
+
+    const isLastCategory = categoryIndex === currentCategories.length - 1;
+    const isLastStage = stageIndex === sortedStages.length - 1;
+
+    if (!isLastCategory) {
+      setCategoryIndex((prev) => prev + 1);
+    } else if (!isLastStage) {
+      setStageIndex((prev) => prev + 1);
+      setCategoryIndex(0);
+    } else {
+      setIsFinished(true);
+      Swal.fire({
+        icon: "success",
+        title: "Judging Completed!",
+        text: "Thank you for submitting your scores.",
+      });
     }
   };
 
@@ -164,6 +205,10 @@ function JudgePage() {
               participants={eventData.event.candidates}
               criteria={normalizedCriteria}
               categoryName={selectedCategory.name}
+              categoryMaxScore={selectedCategory.maxScore}
+              scores={scores}
+              setScores={setScores}
+              categoryKey={`${stageIndex}-${categoryIndex}`}
             />
 
             <div className="flex justify-end mt-6">

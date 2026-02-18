@@ -1,8 +1,15 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { calculateTotal } from "../validations/judge_score_validation";
 
-function JudgeTable({ participants = [], criteria = [], categoryName = "" }) {
-  const [scores, setScores] = useState({});
-
+function JudgeTable({
+  participants = [],
+  criteria = [],
+  categoryName = "",
+  categoryMaxScore,
+  scores,
+  setScores,
+  categoryKey,
+}) {
   const handleScoreChange = (participantId, criteriaId, value, maxScore) => {
     let newValue = value === "" ? "" : Number(value);
     if (newValue > maxScore) newValue = maxScore;
@@ -17,32 +24,25 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "" }) {
     }));
   };
 
-  const calculateTotal = (participantId) => {
-    if (!scores[participantId]) return "0.00";
-
-    return criteria
-      .reduce((sum, c) => {
-        const score = Number(scores[participantId][c.id]) || 0;
-        return sum + (score / c.maxScore) * c.weight;
-      }, 0)
-      .toFixed(2);
-  };
-
-  const gridTemplate = `minmax(200px, 1fr) repeat(${criteria.length}, minmax(100px, 1fr)) 120px`;
+  const gridTemplate = `minmax(200px, 1fr) repeat(${criteria.length}, minmax(120px, 1fr)) 150px`;
 
   useEffect(() => {
     setScores({});
-  }, [criteria, participants]);
+  }, [categoryKey]);
 
   return (
     <div className="bg-white rounded-3xl shadow-lg p-6">
       {categoryName && (
-        <h1 className="text-3xl font-bold text-[#FA824C] mb-6 px-2">
+        <h1 className="text-3xl font-bold text-[#FA824C] mb-2 px-2">
           {categoryName}
         </h1>
       )}
+      <p className="text-gray-500 mb-4 px-2">
+        Max Score: <strong>{categoryMaxScore}</strong>
+      </p>
 
       <div className="overflow-x-auto h-[600px] overflow-y-auto mt-4">
+        {/* Header Row */}
         <div
           className="grid gap-2 mb-2 text-center font-semibold text-gray-700 border-b border-gray-200"
           style={{ gridTemplateColumns: gridTemplate }}
@@ -50,12 +50,16 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "" }) {
           <div className="py-2">Participant</div>
           {criteria.map((c) => (
             <div key={c.id} className="py-2">
-              {c.name}
+              {c.name} <br />
+              <span className="text-sm text-gray-500">
+                ({c.weight.toFixed(1)}%)
+              </span>
             </div>
           ))}
           <div className="py-2">Total</div>
         </div>
 
+        {/* Participant Rows */}
         {participants.map((p) => (
           <div
             key={p.id}
@@ -76,12 +80,13 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "" }) {
                   }
                   onWheel={(e) => e.target.blur()}
                   className="w-full max-w-[60px] h-10 text-center rounded-lg bg-gray-50 border border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]"
+                  required
                 />
               </div>
             ))}
 
             <div className="font-semibold text-center">
-              {calculateTotal(p.id)}%
+              {calculateTotal(p.id, criteria, scores)}%
             </div>
           </div>
         ))}
