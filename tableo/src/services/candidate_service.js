@@ -6,9 +6,14 @@ export const getCandidateInEvent = async (eventId) => {
 };
 
 export const editCandidate = async (candidateId, updatedData) => {
-    const res = await api.put(`/candidates/${candidateId}`, updatedData);
-    return res.data;
+  const config =
+    updatedData instanceof FormData
+      ? { headers: { "Content-Type": "multipart/form-data" } }
+      : {};
+  const res = await api.put(`/candidates/${candidateId}`, updatedData, config);
+  return res.data;
 };
+
 
 export const createOrUpdateCandidates = async (eventId, payload) => {
     const res = await api.post(`/candidates/event/${eventId}`, payload);

@@ -4,16 +4,23 @@ const SUFFIX_OPTIONS = ["", "Mr", "Ms", "Mrs"];
 const SEX_OPTIONS = ["", "Male", "Female"];
 
 function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    name: "",
+    suffix: "",
+    sex: "",
+    photoFile: null, // store the actual File
+    photoPreview: "", // store preview URL
+  });
 
-  // Initialize form data
+  // Initialize form data when item changes
   useEffect(() => {
     if (item) {
       setFormData({
         name: item.name || "",
         suffix: item.suffix || "",
         sex: item.sex || "",
-        photo: item.photo || "",
+        photoFile: null,
+        photoPreview: item.photo || "", // initial preview
       });
     }
   }, [item]);
@@ -27,8 +34,23 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
     }));
   };
 
+  const handleFileChange = (file) => {
+    if (!file) return;
+    setFormData((prev) => ({
+      ...prev,
+      photoFile: file, // keep the actual file
+      photoPreview: URL.createObjectURL(file), // preview
+    }));
+  };
+
   const handleSave = () => {
-    onSave(formData);
+    // Pass the actual file along with other fields
+    onSave({
+      name: formData.name,
+      suffix: formData.suffix,
+      sex: formData.sex,
+      photoFile: formData.photoFile,
+    });
     onClose();
   };
 
@@ -88,7 +110,6 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
                   {option === "" ? "Select Sex" : option}
                 </option>
               ))}
-
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
               <svg
@@ -111,24 +132,19 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
     }
 
     // 🔹 Image upload (Participants only)
-    if (isParticipant && key === "photo") {
+    if (isParticipant && key === "photoFile") {
       return (
         <div key={key}>
-          <label className="text-sm text-gray-500 capitalize">{key}</label>
+          <label className="text-sm text-gray-500 capitalize">Photo</label>
           <input
             type="file"
             accept="image/*"
-            onChange={(e) =>
-              handleChange(
-                key,
-                e.target.files[0] ? URL.createObjectURL(e.target.files[0]) : ""
-              )
-            }
+            onChange={(e) => handleFileChange(e.target.files[0])}
             className="w-full mt-1 rounded-full border-orange-400 border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
           />
-          {value && (
+          {formData.photoPreview && (
             <img
-              src={value}
+              src={formData.photoPreview}
               alt="preview"
               className="mt-2 w-20 h-20 rounded-full object-cover border border-orange-400"
             />
@@ -155,10 +171,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
     return null;
   };
 
-  // Determine which keys to render
-  const keysToRender = isParticipant
-    ? ["name", "photo", "sex"]
-    : ["name", "suffix"];
+  const keysToRender = isParticipant ? ["name", "sex", "photoFile"] : ["name", "suffix"];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

@@ -64,23 +64,32 @@ function CategoryPage() {
         return;
       }
 
-      // Prepare payload for API
-      const payload = {
-        name: updatedCandidate.name.trim(),
-        sex: updatedCandidate.sex.toLowerCase(),
-      };
+      const formData = new FormData();
+      formData.append("name", updatedCandidate.name.trim());
+      formData.append("sex", updatedCandidate.sex.toLowerCase());
 
-      // Call backend to update candidate
-      const res = await editCandidate(updatedCandidate.id, payload);
+      // Append photo if file exists
+      if (updatedCandidate.photoFile) {
+        formData.append("photo", updatedCandidate.photoFile);
+      }
 
-      // Extract updated candidate from backend response
-      const updated = res.data || { ...updatedCandidate, ...payload };
+      // Call backend
+      const res = await editCandidate(updatedCandidate.id, formData);
 
-      // Update local state immediately to avoid blank/wiped candidate
+      // Extract candidate from response
+      const updated = res.data?.candidate || { ...updatedCandidate };
+
+      // Update local state
       setCandidates((prev) =>
         prev.map((c) =>
-          c.id === updatedCandidate.id
-            ? { ...c, name: updated.name, sex: updated.sex, suffix: c.suffix, photo: c.photo }
+          c.id === updated.id
+            ? {
+              ...c,
+              name: updated.name,
+              sex: updated.sex,
+              suffix: updated.suffix,
+              photo: updated.path || updated.photo, // <- use path returned by backend
+            }
             : c
         )
       );

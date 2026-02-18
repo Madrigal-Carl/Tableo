@@ -1,11 +1,31 @@
 const candidateService = require('../services/candidate_service');
+const path = require('path');
+const fs = require('fs');
 
+// Update a candidate with optional image upload
 async function updateCandidate(req, res, next) {
     try {
         const candidateId = req.params.id;
-        const data = req.body;
+        const data = {
+            name: req.body.name,
+            sex: req.body.sex,
+            suffix: req.body.suffix, // optional, if you added it
+        };
+
+        // Handle uploaded file
+        if (req.file) {
+            data.path = `/backend/uploads/candidate/${req.file.filename}`; // must match model
+
+            // Optionally delete old file
+            const candidate = await candidateService.findCandidateById(candidateId);
+            if (candidate && candidate.path) {
+                const oldFile = path.join(__dirname, '..', candidate.path);
+                if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
+            }
+        }
 
         const updated = await candidateService.updateCandidate(candidateId, data);
+
         res.json({ message: 'Candidate updated successfully', candidate: updated });
     } catch (err) {
         next(err);
@@ -24,7 +44,6 @@ async function createOrUpdateCandidates(req, res, next) {
     }
 }
 
-// ✅ Get all active candidates for an event
 async function getAllCandidatesForEvent(req, res, next) {
     try {
         const eventId = parseInt(req.params.eventId);
@@ -35,7 +54,6 @@ async function getAllCandidatesForEvent(req, res, next) {
     }
 }
 
-// ✅ Soft delete a candidate
 async function deleteCandidate(req, res, next) {
     try {
         const candidateId = req.params.id;
@@ -46,7 +64,6 @@ async function deleteCandidate(req, res, next) {
     }
 }
 
-// ✅ Restore a soft-deleted candidate
 async function restoreCandidate(req, res, next) {
     try {
         const candidateId = req.params.id;
@@ -61,6 +78,6 @@ module.exports = {
     updateCandidate, 
     createOrUpdateCandidates, 
     getAllCandidatesForEvent, 
-    deleteCandidate,   // added
-    restoreCandidate   // added
+    deleteCandidate,   
+    restoreCandidate   
 };

@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 module.exports = (sequelize, DataTypes) => {
     const Candidate = sequelize.define(
@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
             name: { type: DataTypes.STRING, allowNull: false },
             sex: { type: DataTypes.ENUM('male', 'female'), allowNull: true },
             sequence: { type: DataTypes.INTEGER, allowNull: false, unique: true },
+            path: { type: DataTypes.STRING, allowNull: true }, // <-- store image path
         },
         {
             paranoid: true,

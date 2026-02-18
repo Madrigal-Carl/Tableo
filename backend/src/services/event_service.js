@@ -1,5 +1,4 @@
 const sequelize = require('../database/models').sequelize;
-
 const eventRepo = require('../repositories/event_repository');
 const stageService = require('./stage_service');
 const candidateService = require('./candidate_service');

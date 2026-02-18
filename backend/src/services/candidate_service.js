@@ -5,9 +5,12 @@ const { Candidate } = require('../database/models'); // adjust path if needed
 // Update a candidate and return all active candidates for the event
 async function updateCandidate(candidateId, data) {
     return sequelize.transaction(async (t) => {
-        const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
+        // Update candidate row
         await candidateRepo.update(candidateId, data, t);
-        return await candidateRepo.findByEvent(eventId, t);
+
+        // Fetch the updated candidate only
+        const updatedCandidate = await candidateRepo.findById(candidateId, t);
+        return updatedCandidate;
     });
 }
 
