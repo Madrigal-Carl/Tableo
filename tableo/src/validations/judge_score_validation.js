@@ -16,11 +16,11 @@ export function calculateTotal(participantId, criteria, scores) {
   if (!scores[participantId]) return "-";
 
   const filledScores = criteria.map((c) => scores[participantId][c.id]);
-  if (filledScores.some((s) => s === "" || s === undefined)) return "-";
+  if (filledScores.some((s) => s === undefined || s === null)) return "-";
 
   return criteria
     .reduce((sum, c) => {
-      const score = Number(scores[participantId][c.id]);
+      const score = Number(scores[participantId][c.id] ?? 0);
       return sum + (score / c.maxScore) * c.weight;
     }, 0)
     .toFixed(2);

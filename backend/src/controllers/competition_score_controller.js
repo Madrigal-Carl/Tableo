@@ -10,4 +10,18 @@ async function submitScores(req, res, next) {
   }
 }
 
-module.exports = { submitScores };
+async function checkCategoryCompletion(req, res, next) {
+  try {
+    const { invitationCode, categoryId } = req.params;
+    const judgeId = req.judge.id; // assume `req.judge` from middleware
+    const isCompleted = await competitionScoreService.hasCompletedCategory(
+      judgeId,
+      categoryId,
+    );
+    res.status(200).json({ completed: isCompleted });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { submitScores, checkCategoryCompletion };

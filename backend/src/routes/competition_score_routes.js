@@ -14,4 +14,11 @@ router.post(
   competitionScoreController.submitScores,
 );
 
+// Check if judge has completed a category
+router.get(
+  "/check-category/:invitationCode/:categoryId",
+  requireJudgeInvitation,
+  competitionScoreController.checkCategoryCompletion,
+);
+
 module.exports = router;

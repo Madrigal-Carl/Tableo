@@ -11,7 +11,8 @@ function JudgeTable({
   categoryKey,
 }) {
   const handleScoreChange = (participantId, criteriaId, value, maxScore) => {
-    let newValue = value === "" ? "" : Number(value);
+    let newValue = Number(value); // always convert to number
+    if (isNaN(newValue)) newValue = 0; // default to 0 if empty
     if (newValue > maxScore) newValue = maxScore;
     if (newValue < 0) newValue = 0;
 
