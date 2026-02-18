@@ -9,10 +9,11 @@ import CriteriaModal from "../../components/CriteriaModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
+import Swal from "sweetalert2";
 import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-import { getCandidateInEvent, editCandidate } from "../../services/candidate_service";
+import { getCandidateInEvent, editCandidate, deleteCandidate } from "../../services/candidate_service";
 
 
 import { getEvent } from "../../services/event_service";
@@ -81,8 +82,6 @@ function CategoryPage() {
         )
       );
 
-
-
       showToast("success", "Participant updated successfully");
     } catch (err) {
       console.error(err);
@@ -94,8 +93,39 @@ function CategoryPage() {
   };
 
 
-  const handleDeleteParticipant = (item) => {
-    console.log("Delete participant:", item);
+  const handleDeleteParticipant = async (candidate) => {
+    if (!candidate?.id) return;
+
+    try {
+      // Use SweetAlert2 modal for confirmation
+      const result = await Swal.fire({
+        title: `Are you sure you want to delete ${candidate.name}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#FA824C",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete",
+        cancelButtonText: "Cancel",
+      });
+
+      if (!result.isConfirmed) return;
+
+      // Call backend soft delete
+      await deleteCandidate(candidate.id);
+
+      // Remove from local state
+      setCandidates(prev =>
+        prev.filter(c => c.id !== candidate.id)
+      );
+
+      showToast("success", "Participant deleted successfully");
+    } catch (err) {
+      console.error(err);
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to delete participant"
+      );
+    }
   };
 
   const handleEditJudge = (updated) => {

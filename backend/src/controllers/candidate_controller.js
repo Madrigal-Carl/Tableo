@@ -24,7 +24,7 @@ async function createOrUpdateCandidates(req, res, next) {
     }
 }
 
-// ✅ NEW: Get all candidates for an event
+// ✅ Get all active candidates for an event
 async function getAllCandidatesForEvent(req, res, next) {
     try {
         const eventId = parseInt(req.params.eventId);
@@ -35,8 +35,32 @@ async function getAllCandidatesForEvent(req, res, next) {
     }
 }
 
+// ✅ Soft delete a candidate
+async function deleteCandidate(req, res, next) {
+    try {
+        const candidateId = req.params.id;
+        await candidateService.deleteCandidate(candidateId);
+        res.json({ message: 'Candidate soft-deleted successfully' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+// ✅ Restore a soft-deleted candidate
+async function restoreCandidate(req, res, next) {
+    try {
+        const candidateId = req.params.id;
+        await candidateService.restoreCandidate(candidateId);
+        res.json({ message: 'Candidate restored successfully' });
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = { 
     updateCandidate, 
     createOrUpdateCandidates, 
-    getAllCandidatesForEvent, // ✅ export the new function
+    getAllCandidatesForEvent, 
+    deleteCandidate,   // added
+    restoreCandidate   // added
 };

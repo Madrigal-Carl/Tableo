@@ -10,13 +10,12 @@ function ViewOnlyTable({
   fieldKey = "sex",
   editable = false,
   onEdit,
-  onDelete,
-  onAdd, // optional add button callback
+  onDelete, // expects SweetAlert2 handling
+  onAdd,    // optional add button callback
   isJudge = false,
 }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   if (!data || data.length === 0) {
     return (
@@ -28,23 +27,16 @@ function ViewOnlyTable({
 
   const openEditModal = (item) => {
     if (!item?.id) {
-      console.error("Candidate ID is missing!", item);
+      console.error("Item ID is missing!", item);
       return;
     }
-    setSelectedItem(item); // no spread needed
-    setIsEditOpen(true);
-  };
-
-
-
-  const openDeleteModal = (item) => {
     setSelectedItem(item);
-    setIsDeleteOpen(true);
+    setIsEditOpen(true);
   };
 
   const handleConfirmEdit = (updatedItem) => {
     if (!selectedItem?.id) {
-      console.error("Cannot edit participant — missing ID!", {
+      console.error("Cannot edit item — missing ID!", {
         selectedItem,
         updatedItem,
       });
@@ -52,20 +44,12 @@ function ViewOnlyTable({
     }
 
     onEdit?.({
-      id: selectedItem.id,     // ✅ ALWAYS from original row
+      id: selectedItem.id,
       name: updatedItem.name,
       sex: updatedItem.sex,
       suffix: updatedItem.suffix,
       photo: updatedItem.photo,
     });
-  };
-
-
-
-  const handleConfirmDelete = () => {
-    onDelete?.(selectedItem);
-    setIsDeleteOpen(false);
-    setSelectedItem(null);
   };
 
   return (
@@ -106,26 +90,21 @@ function ViewOnlyTable({
                   key={item.id}
                   className="bg-gray-50 hover:bg-gray-100 transition shadow-sm"
                 >
-                  {/* Judge columns */}
                   {isJudge && (
                     <>
                       <td className="px-4 py-4 text-center font-medium text-gray-600">
                         JDG-{String(index + 1).padStart(3, "0")}
                       </td>
-                      <td className="px-4 py-4 text-center text-gray-600">
-                        {item.suffix}
-                      </td>
+                      <td className="px-4 py-4 text-center text-gray-600">{item.suffix}</td>
                     </>
                   )}
 
-                  {/* Participant number */}
                   {!isJudge && (
                     <td className="px-4 py-4 text-center font-medium text-gray-600">
                       {index + 1}
                     </td>
                   )}
 
-                  {/* Name with avatar for participants */}
                   <td className="px-4 py-4 text-center">
                     <div className="flex items-center w-full">
                       {!isJudge && (
@@ -146,20 +125,17 @@ function ViewOnlyTable({
                           )}
                         </div>
                       )}
-                      <p className="font-semibold text-gray-800">
-                        {item.name}
-                      </p>
+                      <p className="font-semibold text-gray-800">{item.name}</p>
                     </div>
                   </td>
 
-                  {/* Sex column for participants */}
                   {!isJudge && fieldKey && (
                     <td className="px-4 py-4 text-center text-gray-600">
                       {item[fieldKey]}
                     </td>
                   )}
 
-                  {/* Actions */}
+                  {/* ACTIONS */}
                   <td className="px-4 py-4 text-center">
                     {editable ? (
                       <div className="flex justify-center gap-2">
@@ -170,7 +146,7 @@ function ViewOnlyTable({
                           <SquarePen size={16} />
                         </button>
                         <button
-                          onClick={() => openDeleteModal(item)}
+                          onClick={() => onDelete?.(item)} // SweetAlert2 handles confirmation
                           className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
                         >
                           <Trash2 size={16} />
@@ -209,40 +185,8 @@ function ViewOnlyTable({
         onClose={() => setIsEditOpen(false)}
         onSave={handleConfirmEdit}
         item={selectedItem}
-        isParticipant={!isJudge} // Pass true for participants
+        isParticipant={!isJudge}
       />
-
-      {/* DELETE MODAL */}
-      {isDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Delete {title.slice(0, -1)}
-            </h2>
-
-            <p className="text-center text-gray-500 mb-6">
-              Are you sure you want to delete{" "}
-              <span className="font-medium text-gray-700">{selectedItem?.name}</span>?
-            </p>
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="px-6 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleConfirmDelete}
-                className="px-6 py-2 rounded-full bg-red-500 text-white hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

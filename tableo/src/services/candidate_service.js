@@ -14,3 +14,8 @@ export const createOrUpdateCandidates = async (eventId, payload) => {
     const res = await api.post(`/candidates/event/${eventId}`, payload);
     return res.data;
 };
+
+export const deleteCandidate = async (candidateId) => {
+    const res = await api.delete(`/candidates/${candidateId}`);
+    return res.data;
+};

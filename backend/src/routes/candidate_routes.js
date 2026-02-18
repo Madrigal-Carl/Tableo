@@ -13,5 +13,14 @@ router.post('/event/:eventId', requireAuth, validateCandidateCount, candidateCon
 // Get all candidates for an event
 router.get('/event/:eventId', requireAuth, candidateController.getAllCandidatesForEvent);
 
+// Soft delete a candidate
+router.delete('/:id', requireAuth, async (req, res, next) => {
+    try {
+        const candidateId = req.params.id;
+        await candidateController.deleteCandidate(req, res, next); // call controller
+    } catch (err) {
+        next(err);
+    }
+});
 
 module.exports = router;
