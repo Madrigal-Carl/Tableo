@@ -6,6 +6,7 @@ import JudgeModal from "../../components/JudgeModal";
 import { getEventForJudge, updateJudge } from "../../services/judge_service";
 import { showToast } from "../../utils/swal";
 import { validateJudgeData } from "../../validations/judge_validation";
+import Swal from "sweetalert2";
 
 function JudgePage() {
   const { invitationCode } = useParams();
@@ -15,31 +16,20 @@ function JudgePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [activeRound, setActiveRound] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  // 🔥 Sequential control
+  const [stageIndex, setStageIndex] = useState(0);
+  const [categoryIndex, setCategoryIndex] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
 
-  // Modal Control
+  // Modal
   const [showJudgeModal, setShowJudgeModal] = useState(true);
   const [judgeInfo, setJudgeInfo] = useState(null);
 
-  // Fetch event data
   useEffect(() => {
     async function fetchData() {
       try {
         const data = await getEventForJudge(invitationCode);
-
-        console.log("EVENT STAGES:", data.event.stages);
-        console.log("EVENT CATEGORIES:", data.event.categories);
-        console.log("CATEGORY[0]:", data.event.categories?.[0]);
         setEventData(data);
-        const firstStageName = data.event.stages[0]?.name || "";
-        setActiveRound(firstStageName);
-
-        const firstStage = data.event.stages.sort(
-          (a, b) => a.sequence - b.sequence,
-        )[0];
-
-        setSelectedCategory(firstStage?.categories?.[0]?.name || "");
 
         if (data.judge) {
           const suffix = data.judge.suffix;
@@ -48,7 +38,7 @@ function JudgePage() {
             suffix: suffix,
           });
 
-          setShowJudgeModal(suffix === null || suffix === "");
+          setShowJudgeModal(!suffix);
         }
       } catch (err) {
         setError(err.message || "Failed to load judge data");
@@ -57,16 +47,9 @@ function JudgePage() {
         setLoading(false);
       }
     }
+
     fetchData();
   }, [invitationCode, navigate]);
-
-  useEffect(() => {
-    if (!eventData) return;
-
-    const stage = eventData.event.stages.find((s) => s.name === activeRound);
-
-    setSelectedCategory(stage?.categories?.[0]?.name || "");
-  }, [activeRound]);
 
   const handleJudgeSave = async (data) => {
     if (!validateJudgeData(data)) return;
@@ -82,127 +65,128 @@ function JudgePage() {
       setShowJudgeModal(false);
       showToast("success", "Judge info saved successfully");
     } catch (err) {
-      const backendMessage = err.message || "Failed to save judge info";
-      showToast("error", backendMessage);
+      showToast("error", err.message || "Failed to save judge info");
     }
-  };
-
-  // ✅ Handle modal close (X button)
-  const handleModalClose = () => {
-    setShowJudgeModal(false);
   };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
   if (!eventData) return null;
 
-  const rounds = eventData.event.stages
-    .sort((a, b) => a.sequence - b.sequence)
-    .map((stage) => stage.name);
+  const sortedStages = [...eventData.event.stages].sort(
+    (a, b) => a.sequence - b.sequence,
+  );
 
-  const activeStage =
-    eventData.event.stages.find((s) => s.name === activeRound) ||
-    eventData.event.stages[0];
+  const activeStage = sortedStages[stageIndex];
 
-  const currentRoundCategories = activeStage?.categories || [];
-  const selectedCategoryData =
-    currentRoundCategories.find((cat) => cat.name === selectedCategory) || null;
+  const currentCategories =
+    activeStage?.categories?.sort((a, b) => a.sequence - b.sequence) || [];
 
+  const selectedCategory = currentCategories[categoryIndex] || null;
+
+  // Normalize criteria
   let normalizedCriteria = [];
-  if (selectedCategoryData?.criteria?.length) {
-    const totalPercentage = selectedCategoryData.criteria.reduce(
+  if (selectedCategory?.criteria?.length) {
+    const totalPercentage = selectedCategory.criteria.reduce(
       (sum, c) => sum + Number(c.percentage || 0),
       0,
     );
 
-    normalizedCriteria = selectedCategoryData.criteria.map((c) => ({
+    normalizedCriteria = selectedCategory.criteria.map((c) => ({
       id: c.id,
-      name: c.label, // ✅ FIX
+      name: c.label,
       weight: totalPercentage > 0 ? (c.percentage / totalPercentage) * 100 : 0,
-      maxScore: selectedCategoryData.maxScore || 100, // ✅ FIX
+      maxScore: selectedCategory.maxScore || 100,
     }));
   }
 
+  const handleProceed = async () => {
+    const result = await Swal.fire({
+      title: "Are you sure you want to proceed?",
+      text: "You cannot go back after proceeding.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#FA824C",
+      cancelButtonColor: "#d1d5db",
+      confirmButtonText: "Yes, Proceed",
+    });
+
+    if (result.isConfirmed) {
+      const isLastCategory = categoryIndex === currentCategories.length - 1;
+      const isLastStage = stageIndex === sortedStages.length - 1;
+
+      if (!isLastCategory) {
+        setCategoryIndex((prev) => prev + 1);
+      } else if (!isLastStage) {
+        setStageIndex((prev) => prev + 1);
+        setCategoryIndex(0);
+      } else {
+        setIsFinished(true);
+        Swal.fire({
+          icon: "success",
+          title: "Judging Completed!",
+          text: "Thank you for submitting your scores.",
+        });
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Judge Modal */}
+      {/* Judge Info Modal */}
       <JudgeModal
         isOpen={showJudgeModal}
-        onClose={handleModalClose}
+        onClose={() => setShowJudgeModal(false)}
         onSave={handleJudgeSave}
         initialData={judgeInfo}
       />
 
-      {/* HEADER */}
+      {/* Header */}
       <div className="fixed top-0 left-0 w-full bg-white shadow-sm z-40">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center px-4 sm:px-6 py-3 gap-2">
-          {/* Back Button */}
+        <div className="flex justify-between items-center px-6 py-3">
           <button
             onClick={() => navigate("/")}
-            className="px-5 py-2 rounded-full bg-[#FA824C] text-white text-sm hover:bg-[#FF9768] transition"
+            className="px-5 py-2 rounded-full bg-[#FA824C] text-white hover:bg-[#FF9768]"
           >
-            Back
+            Exit
           </button>
 
-          {/* Event Title */}
-          <h1 className="text-lg sm:text-2xl font-semibold text-center">
-            {eventData.event.title}
-          </h1>
+          <h1 className="text-xl font-semibold">{eventData.event.title}</h1>
 
-          {/* Profile Icon */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowJudgeModal(true)}
-              className="relative w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition"
-              title="Edit Profile"
-            >
-              {/* Use initials if name exists */}
-              <span className="text-sm font-semibold text-gray-700">
-                {judgeInfo?.name
-                  ? judgeInfo.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
-                  : "J"}
-              </span>
-            </button>
-          </div>
+          <div className="w-10" />
         </div>
       </div>
 
-      {/* ROUND TABS */}
-      <div className="pt-28 px-4 sm:px-6">
-        <div className="flex gap-6 overflow-x-auto border-b border-gray-200 mb-4 max-w-6xl mx-auto">
-          {rounds.map((round) => (
-            <button
-              key={round}
-              onClick={() => setActiveRound(round)}
-              className={`pb-3 whitespace-nowrap text-sm font-medium transition ${
-                activeRound === round
-                  ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              {round}
-            </button>
-          ))}
-        </div>
+      <div className="pt-24 px-6">
+        {!showJudgeModal && !isFinished && selectedCategory && (
+          <div className="max-w-6xl mx-auto">
+            <JudgeTable
+              participants={eventData.event.candidates}
+              criteria={normalizedCriteria}
+              categoryName={selectedCategory.name}
+            />
 
-        {/* JUDGE TABLE */}
-        {!showJudgeModal &&
-          selectedCategoryData &&
-          normalizedCriteria.length > 0 && (
-            <div className="max-w-6xl mx-auto">
-              <JudgeTable
-                participants={eventData.event.candidates}
-                criteria={normalizedCriteria}
-                categoryName={selectedCategoryData.name}
-                categories={currentRoundCategories}
-                onCategorySelect={setSelectedCategory}
-              />
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleProceed}
+                className="px-6 py-3 bg-[#FA824C] text-white rounded-xl hover:bg-[#FF9768]"
+              >
+                Proceed
+              </button>
             </div>
-          )}
+          </div>
+        )}
+
+        {isFinished && (
+          <div className="text-center mt-20">
+            <h2 className="text-2xl font-bold text-green-600">
+              Judging Completed 🎉
+            </h2>
+            <p className="text-gray-500 mt-2">
+              Thank you for submitting your scores.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

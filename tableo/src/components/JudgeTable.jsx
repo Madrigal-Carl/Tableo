@@ -1,16 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
 
-function JudgeTable({
-  participants = [],
-  criteria = [],
-  categoryName = "",
-  categories = [],
-  onCategorySelect,
-}) {
+function JudgeTable({ participants = [], criteria = [], categoryName = "" }) {
   const [scores, setScores] = useState({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const modalRef = useRef();
 
   const handleScoreChange = (participantId, criteriaId, value, maxScore) => {
     let newValue = value === "" ? "" : Number(value);
@@ -43,66 +34,17 @@ function JudgeTable({
     setScores({});
   }, [criteria, participants]);
 
-  // Auto-close modal when clicked outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        setIsModalOpen(false);
-      }
-    };
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isModalOpen]);
-
   return (
     <div className="bg-white rounded-3xl shadow-lg p-6">
-      {/* CATEGORY TITLE */}
       {categoryName && (
-        <div className="relative">
-          <h1
-            className="text-2xl sm:text-3xl font-bold text-[#FA824C] mb-4 cursor-pointer flex items-center gap-2 px-2"
-            onClick={() => setIsModalOpen((prev) => !prev)}
-          >
-            {categoryName}
-            <ChevronDown
-              className={`transition-transform ${isModalOpen ? "rotate-180" : ""}`}
-              size={16}
-            />
-          </h1>
-
-          {/* CATEGORY MODAL */}
-          {isModalOpen && categories.length > 0 && (
-            <div
-              ref={modalRef}
-              className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl z-50 p-4"
-            >
-              <h2 className="text-lg mb-3 text-gray-400">Select Category</h2>
-              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.name}
-                    className="p-2 rounded-lg text-left hover:bg-[#FFF2EF] text-gray-700 transition"
-                    onClick={() => {
-                      onCategorySelect(cat.name);
-                      setIsModalOpen(false); // auto-close after selection
-                    }}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <h1 className="text-3xl font-bold text-[#FA824C] mb-6 px-2">
+          {categoryName}
+        </h1>
       )}
 
-      {/* TABLE */}
       <div className="overflow-x-auto h-[600px] overflow-y-auto mt-4">
-        {/* HEADER: CRITERIA */}
         <div
-          className="grid gap-2 mb-2 text-center font-semibold text-gray-700 sticky top-0 bg-white z-10 border-b border-gray-200"
+          className="grid gap-2 mb-2 text-center font-semibold text-gray-700 border-b border-gray-200"
           style={{ gridTemplateColumns: gridTemplate }}
         >
           <div className="py-2">Participant</div>
@@ -114,25 +56,10 @@ function JudgeTable({
           <div className="py-2">Total</div>
         </div>
 
-        {/* HEADER: WEIGHT/MAX */}
-        <div
-          className="grid gap-2 mb-3 text-xs text-gray-400 text-center pb-2 border-b border-gray-100"
-          style={{ gridTemplateColumns: gridTemplate }}
-        >
-          <div></div>
-          {criteria.map((c) => (
-            <div key={c.id}>
-              {c.weight.toFixed(2)}% | Max: {c.maxScore}
-            </div>
-          ))}
-          <div></div>
-        </div>
-
-        {/* PARTICIPANT ROWS */}
         {participants.map((p) => (
           <div
             key={p.id}
-            className="grid gap-2 items-center py-2 hover:bg-gray-50 rounded-lg transition"
+            className="grid gap-2 items-center py-2 hover:bg-gray-50 rounded-lg"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <div className="font-medium text-gray-800 px-2">{p.name}</div>
@@ -148,12 +75,12 @@ function JudgeTable({
                     handleScoreChange(p.id, c.id, e.target.value, c.maxScore)
                   }
                   onWheel={(e) => e.target.blur()}
-                  className="w-full max-w-[60px] h-10 text-center text-sm text-gray-700 rounded-lg bg-gray-50 border border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C] focus:border-[#FA824C] transition"
+                  className="w-full max-w-[60px] h-10 text-center rounded-lg bg-gray-50 border border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]"
                 />
               </div>
             ))}
 
-            <div className="font-semibold text-gray-800 text-center">
+            <div className="font-semibold text-center">
               {calculateTotal(p.id)}%
             </div>
           </div>
