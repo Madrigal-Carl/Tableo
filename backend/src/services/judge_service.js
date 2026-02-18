@@ -1,6 +1,7 @@
 const sequelize = require('../database/models').sequelize;
 const { isEventEditable } = require('../utils/event_time_guard');
 const judgeRepo = require('../repositories/judge_repository');
+const categoryRepo = require('../repositories/category_repository');
 const crypto = require('crypto');
 
 function generateInvitationCode(length = 6) {
@@ -108,17 +109,22 @@ function hasEventEnded({ date, timeEnd }) {
 async function getEventForJudge(req) {
   const { event, judge } = req;
 
-  if (!hasEventStarted(event)) {
-    const err = new Error('Event has not started yet');
-    err.status = 403;
-    throw err;
-  }
+  if (!hasEventStarted(event)) throw createError('Event has not started yet', 403);
+  if (hasEventEnded(event)) throw createError('Event has already ended', 403);
 
-  if (hasEventEnded(event)) {
-    const err = new Error('Event has already ended');
-    err.status = 403;
-    throw err;
-  }
+  const stagesWithCategories = await Promise.all(
+    event.stages.map(async (stage) => {
+      const categories = await categoryRepo.findByEventWithStagesAndCriteria(event.id, stage.id);
+
+      return {
+        ...stage.get({ plain: true }),
+        categories: categories.map(cat => ({
+          ...cat.get({ plain: true }),
+          criteria: cat.criteria, 
+        })),
+      };
+    })
+  );
 
   return {
     event: {
@@ -129,8 +135,7 @@ async function getEventForJudge(req) {
       timeStart: event.timeStart,
       timeEnd: event.timeEnd,
       location: event.location,
-      stages: event.stages,
-      categories: event.categories,
+      stages: stagesWithCategories,
       candidates: event.candidates,
     },
     judge: {

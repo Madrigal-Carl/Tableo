@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
-function JudgeTable({ participants = [], criteria = [], categoryName = "", categories = [], onCategorySelect }) {
+function JudgeTable({
+  participants = [],
+  criteria = [],
+  categoryName = "",
+  categories = [],
+  onCategorySelect,
+}) {
   const [scores, setScores] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef();
@@ -33,6 +39,10 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "", categ
 
   const gridTemplate = `minmax(200px, 1fr) repeat(${criteria.length}, minmax(100px, 1fr)) 120px`;
 
+  useEffect(() => {
+    setScores({});
+  }, [criteria, participants]);
+
   // Auto-close modal when clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -56,7 +66,10 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "", categ
             onClick={() => setIsModalOpen((prev) => !prev)}
           >
             {categoryName}
-            <ChevronDown className={`transition-transform ${isModalOpen ? "rotate-180" : ""}`} size={16} />
+            <ChevronDown
+              className={`transition-transform ${isModalOpen ? "rotate-180" : ""}`}
+              size={16}
+            />
           </h1>
 
           {/* CATEGORY MODAL */}
@@ -69,14 +82,14 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "", categ
               <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
                 {categories.map((cat) => (
                   <button
-                    key={cat.categoryName}
+                    key={cat.name}
                     className="p-2 rounded-lg text-left hover:bg-[#FFF2EF] text-gray-700 transition"
                     onClick={() => {
-                      onCategorySelect(cat.categoryName);
+                      onCategorySelect(cat.name);
                       setIsModalOpen(false); // auto-close after selection
                     }}
                   >
-                    {cat.categoryName}
+                    {cat.name}
                   </button>
                 ))}
               </div>
@@ -94,7 +107,9 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "", categ
         >
           <div className="py-2">Participant</div>
           {criteria.map((c) => (
-            <div key={c.id} className="py-2">{c.name}</div>
+            <div key={c.id} className="py-2">
+              {c.name}
+            </div>
           ))}
           <div className="py-2">Total</div>
         </div>
@@ -129,7 +144,9 @@ function JudgeTable({ participants = [], criteria = [], categoryName = "", categ
                   min="0"
                   max={c.maxScore}
                   value={scores[p.id]?.[c.id] ?? ""}
-                  onChange={(e) => handleScoreChange(p.id, c.id, e.target.value, c.maxScore)}
+                  onChange={(e) =>
+                    handleScoreChange(p.id, c.id, e.target.value, c.maxScore)
+                  }
                   onWheel={(e) => e.target.blur()}
                   className="w-full max-w-[60px] h-10 text-center text-sm text-gray-700 rounded-lg bg-gray-50 border border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C] focus:border-[#FA824C] transition"
                 />

@@ -27,9 +27,19 @@ function JudgePage() {
     async function fetchData() {
       try {
         const data = await getEventForJudge(invitationCode);
+
+        console.log("EVENT STAGES:", data.event.stages);
+        console.log("EVENT CATEGORIES:", data.event.categories);
+        console.log("CATEGORY[0]:", data.event.categories?.[0]);
         setEventData(data);
-        setActiveRound(data.event.stages[0]?.name || "");
-        setSelectedCategory(data.event.categories[0]?.name || "");
+        const firstStageName = data.event.stages[0]?.name || "";
+        setActiveRound(firstStageName);
+
+        const firstStage = data.event.stages.sort(
+          (a, b) => a.sequence - b.sequence,
+        )[0];
+
+        setSelectedCategory(firstStage?.categories?.[0]?.name || "");
 
         if (data.judge) {
           const suffix = data.judge.suffix;
@@ -49,6 +59,14 @@ function JudgePage() {
     }
     fetchData();
   }, [invitationCode, navigate]);
+
+  useEffect(() => {
+    if (!eventData) return;
+
+    const stage = eventData.event.stages.find((s) => s.name === activeRound);
+
+    setSelectedCategory(stage?.categories?.[0]?.name || "");
+  }, [activeRound]);
 
   const handleJudgeSave = async (data) => {
     if (!validateJudgeData(data)) return;
@@ -78,22 +96,30 @@ function JudgePage() {
   if (error) return <p>{error}</p>;
   if (!eventData) return null;
 
-  const rounds = eventData.event.stages.map((stage) => stage.name);
-  const currentRoundCategories =
-    eventData.event.categories.filter((cat) => cat.stageId === activeRound) ||
-    [];
+  const rounds = eventData.event.stages
+    .sort((a, b) => a.sequence - b.sequence)
+    .map((stage) => stage.name);
+
+  const activeStage =
+    eventData.event.stages.find((s) => s.name === activeRound) ||
+    eventData.event.stages[0];
+
+  const currentRoundCategories = activeStage?.categories || [];
   const selectedCategoryData =
     currentRoundCategories.find((cat) => cat.name === selectedCategory) || null;
 
   let normalizedCriteria = [];
-  if (selectedCategoryData) {
-    const totalWeight = selectedCategoryData.criteria.reduce(
-      (sum, c) => sum + c.weight,
+  if (selectedCategoryData?.criteria?.length) {
+    const totalPercentage = selectedCategoryData.criteria.reduce(
+      (sum, c) => sum + Number(c.percentage || 0),
       0,
     );
+
     normalizedCriteria = selectedCategoryData.criteria.map((c) => ({
-      ...c,
-      weight: totalWeight > 0 ? (c.weight / totalWeight) * 100 : 0,
+      id: c.id,
+      name: c.label, // ✅ FIX
+      weight: totalPercentage > 0 ? (c.percentage / totalPercentage) * 100 : 0,
+      maxScore: selectedCategoryData.maxScore || 100, // ✅ FIX
     }));
   }
 
@@ -164,17 +190,19 @@ function JudgePage() {
         </div>
 
         {/* JUDGE TABLE */}
-        {!showJudgeModal && selectedCategoryData && (
-          <div className="max-w-6xl mx-auto">
-            <JudgeTable
-              participants={selectedCategoryData.participants}
-              criteria={normalizedCriteria}
-              categoryName={selectedCategoryData.name}
-              categories={currentRoundCategories}
-              onCategorySelect={setSelectedCategory}
-            />
-          </div>
-        )}
+        {!showJudgeModal &&
+          selectedCategoryData &&
+          normalizedCriteria.length > 0 && (
+            <div className="max-w-6xl mx-auto">
+              <JudgeTable
+                participants={eventData.event.candidates}
+                criteria={normalizedCriteria}
+                categoryName={selectedCategoryData.name}
+                categories={currentRoundCategories}
+                onCategorySelect={setSelectedCategory}
+              />
+            </div>
+          )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-const { Category, Stage } = require("../database/models");
+const { Category, Stage, Criterion, sequelize } = require("../database/models");
 
 function create(data, transaction) {
   return Category.create(data, { transaction });
@@ -91,6 +91,32 @@ function findByEventAndStage(eventId, stageId) {
   });
 }
 
+async function findByEventWithStagesAndCriteria(eventId, stageId = null, transaction = null) {
+  const includeStages = {
+    model: Stage,
+    as: 'stages',
+    attributes: ['id', 'name', 'sequence'],
+    through: { attributes: [] },
+  };
+
+  if (stageId) includeStages.where = { id: stageId };
+
+  return Category.findAll({
+    where: { event_id: eventId },
+    include: [
+      includeStages,
+      {
+        model: Criterion,
+        as: 'criteria',
+        attributes: ['id', 'label', 'percentage'],
+        order: [['id', 'ASC']], // works without separate: true
+      },
+    ],
+    order: [['id', 'ASC']],
+    transaction,
+  });
+}
+
 module.exports = {
   create,
   findByEvent,
@@ -98,5 +124,6 @@ module.exports = {
   sumPercentageByStage,
   findByEventIncludingSoftDeleted,
   restore,
-  findByEventAndStage
+  findByEventAndStage,
+  findByEventWithStagesAndCriteria,
 };
