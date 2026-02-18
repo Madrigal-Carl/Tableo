@@ -37,8 +37,7 @@ async function createEvent({
 
         await stageService.createOrUpdate(event.id, stages, t);
         await judgeService.createOrUpdate(event.id, judges, t);
-        await candidateService.createOrUpdate(event.id, candidates, t);
-
+        await candidateService.createByCount(event.id, candidates, t);
         return event;
     });
 }
@@ -107,7 +106,8 @@ async function updateEvent(eventId, userId, payload) {
 
         await eventRepo.update(eventId, payload, t);
 
-        await candidateService.createOrUpdate(eventId, payload.candidates, t);
+        // NEW (correct)
+        await candidateService.syncByCount(eventId, payload.candidates, t);
         await judgeService.createOrUpdate(eventId, payload.judges, t);
         await stageService.createOrUpdate(eventId, payload.stages, t);
 
