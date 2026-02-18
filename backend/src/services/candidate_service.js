@@ -42,6 +42,7 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
 
 // NEW: used for Edit Event "number of candidates"
 async function syncByCount(eventId, targetCount, transaction = null) {
+    // Fetch all candidates including soft-deleted
     const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
         eventId,
         transaction
@@ -52,29 +53,31 @@ async function syncByCount(eventId, targetCount, transaction = null) {
 
     const currentCount = active.length;
 
+    // Determine the last used sequence among ALL candidates
+    let lastSequence = allCandidates.length
+        ? Math.max(...allCandidates.map(c => c.sequence))
+        : 0;
+
     // ADD candidates
     if (targetCount > currentCount) {
         let toAdd = targetCount - currentCount;
 
-        // Restore first
+        // Restore soft-deleted candidates first
         for (let i = 0; i < toAdd && deleted.length > 0; i++) {
             const c = deleted.shift();
+            lastSequence++;
             await c.restore({ transaction });
+            await candidateRepo.update(c.id, { sequence: lastSequence }, transaction);
+            toAdd--; // one restored
         }
 
-        // Create remaining
-        const updatedAll = await candidateRepo.findByEventIncludingSoftDeleted(
-            eventId,
-            transaction
-        );
-
-        const lastSequence = Math.max(...updatedAll.map(c => c.sequence), 0);
-
-        for (let i = currentCount + 1; i <= targetCount; i++) {
+        // Create remaining new candidates
+        for (let i = 0; i < toAdd; i++) {
+            lastSequence++;
             await candidateRepo.create(
                 {
-                    name: `Candidate ${i}`,
-                    sequence: i,
+                    name: `Candidate ${lastSequence}`,
+                    sequence: lastSequence,
                     event_id: eventId,
                 },
                 transaction
@@ -82,7 +85,7 @@ async function syncByCount(eventId, targetCount, transaction = null) {
         }
     }
 
-    // REMOVE candidates
+    // REMOVE candidates if targetCount < currentCount
     if (targetCount < currentCount) {
         const toRemove = currentCount - targetCount;
         const toDelete = active.slice(-toRemove);
@@ -92,6 +95,7 @@ async function syncByCount(eventId, targetCount, transaction = null) {
         }
     }
 
+    // Return updated list of active candidates
     return await candidateRepo.findByEvent(eventId, transaction);
 }
 
@@ -124,11 +128,13 @@ async function createByCount(eventId, count, transaction) {
         rows.push({
             event_id: eventId,
             name: `Candidate ${i}`,
+            sequence: i, // Assign sequence here!
         });
     }
 
     await Candidate.bulkCreate(rows, { transaction });
 }
+
 
 module.exports = { 
     createOrUpdate,     // restoration logic
