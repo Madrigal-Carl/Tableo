@@ -107,7 +107,8 @@ async function updateEvent(eventId, userId, payload) {
 
         await eventRepo.update(eventId, payload, t);
 
-        await candidateService.createOrUpdate(eventId, payload.candidates, t);
+        // NEW (correct)
+        await candidateService.syncByCount(eventId, payload.candidates, t);
         await judgeService.createOrUpdate(eventId, payload.judges, t);
         await stageService.createOrUpdate(eventId, payload.stages, t);
 

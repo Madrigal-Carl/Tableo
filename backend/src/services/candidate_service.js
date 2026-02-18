@@ -4,33 +4,24 @@ const candidateRepo = require('../repositories/candidate_repository');
 // Update a candidate and return all active candidates for the event
 async function updateCandidate(candidateId, data) {
     return sequelize.transaction(async (t) => {
-        // Find the candidate's event
         const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
-
-        // Update candidate data
         await candidateRepo.update(candidateId, data, t);
-
-        // Return only active candidates as an array
-        const activeCandidates = await candidateRepo.findByEvent(eventId, t);
-        return Array.isArray(activeCandidates) ? activeCandidates : [];
+        return await candidateRepo.findByEvent(eventId, t);
     });
 }
-// Create or update candidates by count for an event
+
+// ORIGINAL: used for restoration flow (kept as-is)
 async function createOrUpdate(eventId, newCount, transaction = null) {
-    // Get all candidates including soft-deleted
     const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
         eventId,
         transaction
     );
 
-    // Try to restore **one soft-deleted candidate** first
     const candidateToRestore = allCandidates.find(c => c.deletedAt !== null);
 
     if (candidateToRestore) {
-        // Restore only one
         await candidateToRestore.restore({ transaction });
     } else {
-        // No deleted candidates to restore → create a new one
         const lastSequence = Math.max(...allCandidates.map(c => c.sequence), 0);
         await candidateRepo.create(
             {
@@ -42,19 +33,70 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
         );
     }
 
-    // Return only active candidates after add/restore
-    const activeCandidates = await candidateRepo.findByEvent(eventId, transaction);
-    return Array.isArray(activeCandidates) ? activeCandidates : [];
+    return await candidateRepo.findByEvent(eventId, transaction);
 }
 
+// NEW: used for Edit Event "number of candidates"
+async function syncByCount(eventId, targetCount, transaction = null) {
+    const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
+        eventId,
+        transaction
+    );
 
-// Fetch all active candidates for a given event (exclude soft-deleted)
+    const active = allCandidates.filter(c => c.deletedAt === null);
+    const deleted = allCandidates.filter(c => c.deletedAt !== null);
+
+    const currentCount = active.length;
+
+    // ADD candidates
+    if (targetCount > currentCount) {
+        let toAdd = targetCount - currentCount;
+
+        // Restore first
+        for (let i = 0; i < toAdd && deleted.length > 0; i++) {
+            const c = deleted.shift();
+            await c.restore({ transaction });
+        }
+
+        // Create remaining
+        const updatedAll = await candidateRepo.findByEventIncludingSoftDeleted(
+            eventId,
+            transaction
+        );
+
+        const lastSequence = Math.max(...updatedAll.map(c => c.sequence), 0);
+
+        for (let i = currentCount + 1; i <= targetCount; i++) {
+            await candidateRepo.create(
+                {
+                    name: `Candidate ${i}`,
+                    sequence: i,
+                    event_id: eventId,
+                },
+                transaction
+            );
+        }
+    }
+
+    // REMOVE candidates
+    if (targetCount < currentCount) {
+        const toRemove = currentCount - targetCount;
+        const toDelete = active.slice(-toRemove);
+
+        for (const c of toDelete) {
+            await c.destroy({ transaction });
+        }
+    }
+
+    return await candidateRepo.findByEvent(eventId, transaction);
+}
+
+// Fetch all active candidates for a given event
 async function findAllByEvent(eventId, transaction = null) {
-    const activeCandidates = await candidateRepo.findByEvent(eventId, transaction);
-    return Array.isArray(activeCandidates) ? activeCandidates : [];
+    return await candidateRepo.findByEvent(eventId, transaction);
 }
 
-// Optional: Soft delete a candidate by ID
+// Soft delete a candidate
 async function deleteCandidate(candidateId, transaction = null) {
     return sequelize.transaction(async (t) => {
         const tx = transaction || t;
@@ -63,7 +105,7 @@ async function deleteCandidate(candidateId, transaction = null) {
     });
 }
 
-// Optional: Restore a soft-deleted candidate by ID
+// Restore a candidate
 async function restoreCandidate(candidateId, transaction = null) {
     return sequelize.transaction(async (t) => {
         const tx = transaction || t;
@@ -73,8 +115,9 @@ async function restoreCandidate(candidateId, transaction = null) {
 }
 
 module.exports = { 
-    createOrUpdate, 
-    updateCandidate, 
+    createOrUpdate,     // restoration logic
+    syncByCount,       // admin "set number"
+    updateCandidate,
     findAllByEvent,
     deleteCandidate,   
     restoreCandidate   
