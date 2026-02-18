@@ -10,8 +10,9 @@ async function updateCandidate(candidateId, data) {
         // Update candidate data
         await candidateRepo.update(candidateId, data, t);
 
-        // Return only active candidates
-        return await candidateRepo.findByEvent(eventId, t);
+        // Return only active candidates as an array
+        const activeCandidates = await candidateRepo.findByEvent(eventId, t);
+        return Array.isArray(activeCandidates) ? activeCandidates : [];
     });
 }
 
@@ -52,13 +53,15 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
         }
     }
 
-    // Return only active candidates after sync
-    return await candidateRepo.findByEvent(eventId, transaction);
+    // Return only active candidates after sync as a clean array
+    const activeCandidates = await candidateRepo.findByEvent(eventId, transaction);
+    return Array.isArray(activeCandidates) ? activeCandidates : [];
 }
 
 // Fetch all active candidates for a given event (exclude soft-deleted)
 async function findAllByEvent(eventId, transaction = null) {
-    return candidateRepo.findByEvent(eventId, transaction);
+    const activeCandidates = await candidateRepo.findByEvent(eventId, transaction);
+    return Array.isArray(activeCandidates) ? activeCandidates : [];
 }
 
 // Optional: Soft delete a candidate by ID
@@ -83,6 +86,6 @@ module.exports = {
     createOrUpdate, 
     updateCandidate, 
     findAllByEvent,
-    deleteCandidate,   // optional soft-delete API
-    restoreCandidate   // optional restore API
+    deleteCandidate,   
+    restoreCandidate   
 };

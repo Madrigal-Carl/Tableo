@@ -13,9 +13,7 @@ import Swal from "sweetalert2";
 import { addCriteria, getCriteriaByCategory } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-import { getCandidateInEvent, editCandidate, deleteCandidate } from "../../services/candidate_service";
-
-
+import { getCandidateInEvent, editCandidate, deleteCandidate, createOrUpdateCandidates } from "../../services/candidate_service";
 import { getEvent } from "../../services/event_service";
 import {
   addCategoryToEvent,
@@ -509,7 +507,34 @@ function CategoryPage() {
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
-              onAdd={() => console.log("Add participant clicked")}
+              onAdd={async () => {
+                try {
+                  // Calculate new total count
+                  const newCount = candidates.length + 1;
+
+                  // Call backend to create a new candidate (+1)
+                  const updatedCandidates = await createOrUpdateCandidates(eventId, { count: newCount });
+
+                  // Ensure it's always an array before mapping
+                  const cleanCandidates = Array.isArray(updatedCandidates) ? updatedCandidates : [];
+
+                  // Update local state
+                  setCandidates(
+                    cleanCandidates.map(c => ({
+                      id: c.id,
+                      name: c.name,
+                      sex: c.sex ?? "",
+                      suffix: c.suffix ?? "",
+                      photo: c.photo ?? ""
+                    }))
+                  );
+
+                  showToast("success", "Participant added successfully");
+                } catch (err) {
+                  console.error(err);
+                  showToast("error", err.response?.data?.message || "Failed to add participant");
+                }
+              }}
             />
           )}
 

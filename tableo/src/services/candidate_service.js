@@ -19,3 +19,4 @@ export const deleteCandidate = async (candidateId) => {
     const res = await api.delete(`/candidates/${candidateId}`);
     return res.data;
 };
+
