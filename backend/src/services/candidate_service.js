@@ -15,7 +15,6 @@ async function updateCandidate(candidateId, data) {
         return Array.isArray(activeCandidates) ? activeCandidates : [];
     });
 }
-
 // Create or update candidates by count for an event
 async function createOrUpdate(eventId, newCount, transaction = null) {
     // Get all candidates including soft-deleted
@@ -24,39 +23,30 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
         transaction
     );
 
-    // Ensure candidates exist for each sequence
-    for (let seq = 1; seq <= newCount; seq++) {
-        let candidate = allCandidates.find(c => c.sequence === seq);
+    // Try to restore **one soft-deleted candidate** first
+    const candidateToRestore = allCandidates.find(c => c.deletedAt !== null);
 
-        if (candidate) {
-            // Restore if soft-deleted
-            if (candidate.deletedAt) {
-                await candidate.restore({ transaction });
-            }
-        } else {
-            // Create new candidate
-            await candidateRepo.create(
-                {
-                    name: `Candidate ${seq}`,
-                    sequence: seq,
-                    event_id: eventId,
-                },
-                transaction
-            );
-        }
+    if (candidateToRestore) {
+        // Restore only one
+        await candidateToRestore.restore({ transaction });
+    } else {
+        // No deleted candidates to restore → create a new one
+        const lastSequence = Math.max(...allCandidates.map(c => c.sequence), 0);
+        await candidateRepo.create(
+            {
+                name: `Candidate ${lastSequence + 1}`,
+                sequence: lastSequence + 1,
+                event_id: eventId,
+            },
+            transaction
+        );
     }
 
-    // Soft-delete candidates beyond newCount
-    for (const candidate of allCandidates) {
-        if (candidate.sequence > newCount && !candidate.deletedAt) {
-            await candidate.destroy({ transaction });
-        }
-    }
-
-    // Return only active candidates after sync as a clean array
+    // Return only active candidates after add/restore
     const activeCandidates = await candidateRepo.findByEvent(eventId, transaction);
     return Array.isArray(activeCandidates) ? activeCandidates : [];
 }
+
 
 // Fetch all active candidates for a given event (exclude soft-deleted)
 async function findAllByEvent(eventId, transaction = null) {
