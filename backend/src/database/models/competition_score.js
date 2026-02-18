@@ -14,9 +14,9 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   CompetitionScore.associate = function (models) {
-    CompetitionScore.belongsTo(models.CategoryStage, {
-      foreignKey: "category_stage_id",
-      as: "category_stage",
+    CompetitionScore.belongsTo(models.Candidate, {
+      foreignKey: "candidate_id",
+      as: "candidate",
     });
     CompetitionScore.belongsTo(models.Judge, {
       foreignKey: "judge_id",
