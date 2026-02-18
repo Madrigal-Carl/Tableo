@@ -87,7 +87,6 @@ function findByEventAndStage(eventId, stageId) {
         through: { attributes: [] },
       },
     ],
-    order: [["id", "ASC"]],
   });
 }
 
@@ -97,6 +96,7 @@ async function findByEventWithStagesAndCriteria(eventId, stageId = null, transac
     as: 'stages',
     attributes: ['id', 'name', 'sequence'],
     through: { attributes: [] },
+    order: [['sequence', 'ASC']]
   };
 
   if (stageId) includeStages.where = { id: stageId };
