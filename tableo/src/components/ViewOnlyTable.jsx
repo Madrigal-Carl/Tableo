@@ -148,7 +148,6 @@ function ViewOnlyTable({
                         </button>
                         <button
                           onClick={() => onDelete?.(item)}
-                          onClick={() => onDelete?.(item)}
                           className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
                         >
                           <Trash2 size={16} />
