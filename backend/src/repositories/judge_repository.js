@@ -18,6 +18,12 @@ function findByEvent(eventId, transaction) {
         transaction,
     });
 }
+function findByIdIncludingSoftDeleted(id, transaction = null) {
+    return Judge.findByPk(id, {
+        paranoid: false,   // include soft-deleted judges
+        transaction,
+    });
+}
 
 function findByEventIncludingSoftDeleted(eventId, transaction) {
     return Judge.findAll({
@@ -52,4 +58,5 @@ module.exports = {
     findByEventIncludingSoftDeleted,
     findEventByJudgeId,
     update,
+    findByIdIncludingSoftDeleted
 };

@@ -155,5 +155,45 @@ async function getEventForJudge(req) {
     },
   };
 }
+async function deleteJudge(judgeId) {
+  return sequelize.transaction(async (t) => {
+    const judge = await judgeRepo.findByIdIncludingSoftDeleted(judgeId, t);
 
-module.exports = { updateJudge, createOrUpdate, getEventForJudge };
+    if (!judge || judge.deletedAt) {
+      const err = new Error("Judge not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const event = await judge.getEvent({ transaction: t });
+
+    if (hasEventEnded(event)) {
+      const err = new Error("Event has already ended");
+      err.status = 403;
+      throw err;
+    }
+
+    const deletedSequence = judge.sequence;
+
+    // Soft delete
+    await judge.destroy({ transaction: t });
+
+    // Reorder remaining active judges
+    const remainingJudges =
+      await judgeRepo.findByEventIncludingSoftDeleted(event.id, t);
+
+    for (const j of remainingJudges) {
+      if (!j.deletedAt && j.sequence > deletedSequence) {
+        await judgeRepo.update(
+          j.id,
+          { sequence: j.sequence - 1 },
+          t
+        );
+      }
+    }
+
+    return await judgeRepo.findByEventIncludingSoftDeleted(event.id, t);
+  });
+}
+
+module.exports = { updateJudge, createOrUpdate, getEventForJudge, deleteJudge };

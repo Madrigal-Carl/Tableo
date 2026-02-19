@@ -9,3 +9,8 @@ export const updateJudge = async (invitationCode, payload) => {
   const res = await api.put(`/judge/me/${invitationCode}`, payload);
   return res.data;
 };
+
+export const deleteJudge = async (judgeId) => {
+  const res = await api.delete(`/judge/${judgeId}`);
+  return res.data;
+};
