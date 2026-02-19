@@ -4,6 +4,7 @@ const requireAuth = require("../middlewares/auth");
 const {
   validateCandidate,
   validateCandidateCount,
+  validateCandidateId,
 } = require("../validators/candidate_validator");
 const candidateController = require("../controllers/candidate_controller");
 
@@ -21,6 +22,14 @@ router.post(
   requireAuth,
   validateCandidateCount,
   candidateController.createOrUpdateCandidates,
+);
+
+// Soft delete candidate
+router.delete(
+  "/:id",
+  requireAuth,
+  validateCandidateId,
+  candidateController.deleteCandidate,
 );
 
 module.exports = router;

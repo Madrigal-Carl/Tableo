@@ -35,10 +35,18 @@ function countActiveByEvent(eventId, transaction) {
   });
 }
 
+function softDelete(candidateId, transaction) {
+  return Candidate.destroy({
+    where: { id: candidateId },
+    transaction,
+  });
+}
+
 module.exports = {
   create,
   findByEventIncludingSoftDeleted,
   update,
   findEventByCandidateId,
   countActiveByEvent,
+  softDelete,
 };

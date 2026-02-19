@@ -68,4 +68,19 @@ async function syncCandidates(eventId) {
   });
 }
 
-module.exports = { createOrUpdate, updateCandidate, syncCandidates };
+async function deleteCandidate(candidateId) {
+  return sequelize.transaction(async (t) => {
+    const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
+
+    await candidateRepo.softDelete(candidateId, t);
+
+    return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
+  });
+}
+
+module.exports = {
+  createOrUpdate,
+  updateCandidate,
+  syncCandidates,
+  deleteCandidate,
+};

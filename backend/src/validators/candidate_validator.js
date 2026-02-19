@@ -39,4 +39,18 @@ function validateCandidateCount(req, res, next) {
   next();
 }
 
-module.exports = { validateCandidate, validateCandidateCount };
+function validateCandidateId(req, res, next) {
+  const id = parseInt(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: "Invalid candidate ID" });
+  }
+
+  next();
+}
+
+module.exports = {
+  validateCandidate,
+  validateCandidateCount,
+  validateCandidateId,
+};

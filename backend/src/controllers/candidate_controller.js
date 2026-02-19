@@ -29,4 +29,19 @@ async function createOrUpdateCandidates(req, res, next) {
   }
 }
 
-module.exports = { updateCandidate, createOrUpdateCandidates };
+async function deleteCandidate(req, res, next) {
+  try {
+    const candidateId = parseInt(req.params.id);
+
+    const result = await candidateService.deleteCandidate(candidateId);
+
+    res.json({
+      message: "Candidate deleted successfully",
+      candidates: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { updateCandidate, createOrUpdateCandidates, deleteCandidate };
