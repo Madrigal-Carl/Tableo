@@ -21,6 +21,7 @@ import {
   addCategoryToEvent,
   getCategoriesByStage,
 } from "../../services/category_service";
+import { createOrUpdateCandidates } from "../../services/candidate_service";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -63,6 +64,23 @@ function CategoryPage() {
 
   const handleDeleteParticipant = (item) => {
     console.log("Delete participant:", item);
+  };
+
+  const handleAddParticipant = async () => {
+    try {
+      setLoading(true);
+
+      await createOrUpdateCandidates(eventId);
+
+      const res = await getEvent(eventId);
+      setEvent(res.data);
+
+      showToast("success", "Participant added successfully");
+    } catch (err) {
+      showToast("error", err.message || "Failed to add participant");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditJudge = (updated) => {
@@ -444,7 +462,7 @@ function CategoryPage() {
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
-              onAdd={() => console.log("Add participant clicked")}
+              onAdd={handleAddParticipant}
             />
           )}
 
