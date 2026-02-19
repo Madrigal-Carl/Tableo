@@ -14,14 +14,12 @@ async function remapSequence(
     transaction,
   );
 
-  // Only active candidates
   candidates = candidates.filter((c) => !c.deletedAt);
 
   if (sex) {
     candidates = candidates.filter((c) => c.sex === sex);
   }
 
-  // If moveToEndId is provided, remove that candidate and append at the end
   if (moveToEndId) {
     const index = candidates.findIndex(
       (c) => Number(c.id) === Number(moveToEndId),
@@ -32,7 +30,6 @@ async function remapSequence(
     }
   }
 
-  // Remap sequence
   for (let i = 0; i < candidates.length; i++) {
     const candidate = candidates[i];
     const correctSequence = i + 1;
@@ -59,7 +56,6 @@ async function updateCandidate(candidateId, data) {
     );
     if (!candidate) throw new Error("Candidate not found");
 
-    // If a new image is uploaded, delete the old one
     if (data.path && candidate.path) {
       const oldPath = path.join("uploads/candidates", candidate.path);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -67,15 +63,11 @@ async function updateCandidate(candidateId, data) {
 
     const sexChanged = data.sex && data.sex !== candidate.sex;
 
-    // Update candidate
     await candidateRepo.update(candidateId, data, t);
 
-    // Remap sequences
     if (sexChanged) {
-      // Move updated candidate to the end of new sex group
       await remapSequence(eventId, t, data.sex, candidateId);
 
-      // Remap old sex group normally (without moving anything)
       if (candidate.sex) {
         await remapSequence(eventId, t, candidate.sex);
       }
@@ -98,18 +90,22 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
   for (let i = 0; i < newCount; i++) {
     const activeCandidates = allCandidates.filter((c) => !c.deletedAt);
     const candidate = activeCandidates[i];
-
     if (candidate) continue;
 
     const candidateToRestore = deletedCandidates.shift();
     if (candidateToRestore) {
       await candidateToRestore.restore({ transaction });
+      if (candidateToRestore.sex) {
+        await remapSequence(
+          eventId,
+          transaction,
+          candidateToRestore.sex,
+          candidateToRestore.id,
+        );
+      }
     } else {
       await candidateRepo.create(
-        {
-          name: `Candidate`,
-          event_id: eventId,
-        },
+        { name: `Candidate`, event_id: eventId },
         transaction,
       );
     }
@@ -133,15 +129,13 @@ async function syncCandidates(eventId) {
       .sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
 
     if (deletedCandidates.length > 0) {
-      await deletedCandidates[0].restore({ transaction: t });
+      const restored = deletedCandidates[0];
+      await restored.restore({ transaction: t });
+      if (restored.sex) {
+        await remapSequence(eventId, t, restored.sex, restored.id);
+      }
     } else {
-      await candidateRepo.create(
-        {
-          name: `Candidate`,
-          event_id: eventId,
-        },
-        t,
-      );
+      await candidateRepo.create({ name: `Candidate`, event_id: eventId }, t);
     }
 
     const sexes = ["male", "female"];
@@ -160,7 +154,6 @@ async function deleteCandidate(candidateId) {
     const candidate = (
       await candidateRepo.findByEventIncludingSoftDeleted(eventId, t)
     ).find((c) => c.id === candidateId);
-
     if (!candidate) throw new Error("Candidate not found");
 
     await candidateRepo.softDelete(candidateId, t);
