@@ -1,5 +1,7 @@
 const sequelize = require("../database/models").sequelize;
 const candidateRepo = require("../repositories/candidate_repository");
+const eventRepo = require("../repositories/event_repository");
+const { isEventEditable } = require("../utils/event_time_guard");
 const fs = require("fs");
 const path = require("path");
 
@@ -47,6 +49,13 @@ async function updateCandidate(candidateId, data) {
   return sequelize.transaction(async (t) => {
     const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
 
+    const event = await eventRepo.findById(eventId, t);
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
+      err.status = 403;
+      throw err;
+    }
+
     const candidates = await candidateRepo.findByEventIncludingSoftDeleted(
       eventId,
       t,
@@ -78,6 +87,14 @@ async function updateCandidate(candidateId, data) {
 }
 
 async function createOrUpdate(eventId, newCount, transaction = null) {
+  const event = await eventRepo.findById(eventId, transaction);
+
+  if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+    const err = new Error("Event has already started or ended");
+    err.status = 403;
+    throw err;
+  }
+
   const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
     eventId,
     transaction,
@@ -119,6 +136,14 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
 
 async function syncCandidates(eventId) {
   return sequelize.transaction(async (t) => {
+    const event = await eventRepo.findById(eventId, t);
+
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
+      err.status = 403;
+      throw err;
+    }
+
     const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
       eventId,
       t,
@@ -150,6 +175,14 @@ async function syncCandidates(eventId) {
 async function deleteCandidate(candidateId) {
   return sequelize.transaction(async (t) => {
     const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
+
+    const event = await eventRepo.findById(eventId, t);
+
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
+      err.status = 403;
+      throw err;
+    }
 
     const candidate = (
       await candidateRepo.findByEventIncludingSoftDeleted(eventId, t)

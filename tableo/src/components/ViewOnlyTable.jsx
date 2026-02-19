@@ -9,6 +9,7 @@ function ViewOnlyTable({
   fieldLabel = "Sex",
   fieldKey = "sex",
   editable = false,
+  canEdit = true,
   onEdit,
   onDelete,
   onAdd,
@@ -180,26 +181,35 @@ function ViewOnlyTable({
                     <td className="px-4 py-4 text-center">
                       {editable ? (
                         <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() =>
-                              isJudge ? onDelete?.(item) : openEditModal(item)
-                            }
-                            className="p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition"
-                          >
-                            {isJudge ? (
-                              <Trash2 size={16} />
-                            ) : (
-                              <SquarePen size={16} />
-                            )}
-                          </button>
+                          {/* EDIT (Participants only) */}
                           {!isJudge && (
                             <button
-                              onClick={() => onDelete?.(item)}
-                              className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
+                              onClick={() => canEdit && openEditModal(item)}
+                              disabled={!canEdit}
+                              className={`p-2 rounded-lg transition
+            ${
+              canEdit
+                ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
                             >
-                              <Trash2 size={16} />
+                              <SquarePen size={16} />
                             </button>
                           )}
+
+                          {/* DELETE */}
+                          <button
+                            onClick={() => canEdit && onDelete?.(item)}
+                            disabled={!canEdit}
+                            className={`p-2 rounded-lg transition
+          ${
+            canEdit
+              ? "text-gray-500 hover:text-red-600 hover:bg-red-50"
+              : "text-gray-300 cursor-not-allowed"
+          }`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">View only</span>
@@ -210,7 +220,11 @@ function ViewOnlyTable({
 
                 {/* ADD ROW */}
                 {onAdd && (
-                  <tr className="bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
+                  <tr
+                    className={`bg-gray-100 transition
+      ${canEdit ? "hover:bg-gray-200 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
+                    onClick={() => canEdit && onAdd()}
+                  >
                     <td
                       colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
                       className="px-4 py-4 text-center text-blue-600 font-semibold"
