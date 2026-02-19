@@ -27,6 +27,8 @@ import {
   editCandidate,
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
+import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
+
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -633,8 +635,7 @@ function CategoryPage() {
                 name: j.name,
                 invitationCode: j.invitationCode || "",
                 suffix: j.suffix || "",
-                displayInfo:
-                  `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
+                displayInfo: `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
               }))}
               nameLabel="Judge Name"
               fieldLabel="Info"
@@ -643,8 +644,23 @@ function CategoryPage() {
               isJudge={true}
               onEdit={handleEditJudge}
               onDelete={handleDeleteJudge}
-              onAdd={() => {
-                console.log("Add Judge clicked");
+              // CategoryPage.jsx
+              onAdd={async () => {
+                if (!canEditEvent) return;
+
+                try {
+                  setLoading(true);
+                  const newCount = Number((event?.judges || []).length + 1);
+                  await createOrUpdateJudges(eventId, newCount); // pass number directly
+                  const res = await getEvent(eventId);
+                  setEvent(res.data);
+                  showToast("success", "Judge added successfully");
+                } catch (err) {
+                  console.error(err);
+                  showToast("error", err.message || "Failed to add judge");
+                } finally {
+                  setLoading(false);
+                }
               }}
             />
           )}

@@ -56,39 +56,45 @@ async function updateJudge(invitationCode, data) {
 async function createOrUpdate(eventId, newCount, transaction = null) {
   const allJudges = await judgeRepo.findByEventIncludingSoftDeleted(
     eventId,
-    transaction,
+    transaction
   );
 
-  // Ensure required judges exist
-  for (let seq = 1; seq <= newCount; seq++) {
-    const judge = allJudges.find((j) => j.sequence === seq);
+  const deletedJudges = allJudges
+    .filter((j) => j.deletedAt)
+    .sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
 
-    if (judge) {
-      if (judge.deletedAt) {
-        await judge.restore({ transaction });
-      }
+  for (let i = 0; i < newCount; i++) {
+    // Only active judges
+    const activeJudges = allJudges.filter((j) => !j.deletedAt);
+    const judge = activeJudges[i];
+
+    if (judge) continue; // already exists
+
+    // Restore soft-deleted judge if available
+    const judgeToRestore = deletedJudges.shift();
+    if (judgeToRestore) {
+      await judgeToRestore.restore({ transaction });
     } else {
       const invitationCode = await generateUniqueInvitationCode();
-
       await judgeRepo.create(
         {
-          name: `Judge ${seq}`,
-          sequence: seq,
+          name: `Judge ${i + 1}`,
+          sequence: i + 1,
           invitationCode,
           event_id: eventId,
         },
-        transaction,
+        transaction
       );
     }
   }
 
-  // Soft-delete extra judges
-  for (const judge of allJudges) {
-    if (judge.sequence > newCount && !judge.deletedAt) {
-      await judge.destroy({ transaction });
-    }
+  // Soft-delete any extra active judges
+  const activeJudges = allJudges.filter((j) => !j.deletedAt);
+  for (let i = newCount; i < activeJudges.length; i++) {
+    await activeJudges[i].destroy({ transaction });
   }
 }
+
 
 function hasEventStarted({ date, timeStart }) {
   return !isEventEditable({ date, timeStart });
