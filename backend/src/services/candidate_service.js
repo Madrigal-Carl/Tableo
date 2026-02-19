@@ -1,5 +1,7 @@
 const sequelize = require("../database/models").sequelize;
 const candidateRepo = require("../repositories/candidate_repository");
+const fs = require("fs");
+const path = require("path");
 
 async function remapSequence(eventId, transaction, sex = null) {
   let candidates = await candidateRepo.findByEventIncludingSoftDeleted(
@@ -31,10 +33,29 @@ async function remapSequence(eventId, transaction, sex = null) {
 async function updateCandidate(candidateId, data) {
   return sequelize.transaction(async (t) => {
     const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
+
+    const candidates = await candidateRepo.findByEventIncludingSoftDeleted(
+      eventId,
+      t,
+    );
+    const candidate = candidates.find(
+      (c) => Number(c.id) === Number(candidateId),
+    );
+    if (!candidate) throw new Error("Candidate not found");
+
+    // If a new image is uploaded, delete the old one
+    if (data.path && candidate.path) {
+      const oldPath = path.join("uploads/candidates", candidate.path);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    const sexChanged = data.sex && data.sex !== candidate.sex;
+
     await candidateRepo.update(candidateId, data, t);
 
-    if (data.sex) {
+    if (sexChanged) {
       await remapSequence(eventId, t, data.sex);
+      if (candidate.sex) await remapSequence(eventId, t, candidate.sex);
     }
 
     return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);

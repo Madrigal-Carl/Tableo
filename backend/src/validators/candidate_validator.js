@@ -2,6 +2,10 @@ const Joi = require("joi");
 
 function validateCandidate(req, res, next) {
   const schema = Joi.object({
+    path: Joi.string().uri().optional().messages({
+      "string.base": "Image path must be a string",
+      "string.uri": "Image must be a valid URL",
+    }),
     name: Joi.string().min(2).max(50).required().messages({
       "string.empty": "Candidate name is required",
       "string.min": "Candidate name must be at least 2 characters",

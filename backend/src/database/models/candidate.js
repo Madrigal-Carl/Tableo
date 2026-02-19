@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   const Candidate = sequelize.define(
     "Candidate",
     {
+      path: { type: DataTypes.STRING, allowNull: true },
       name: { type: DataTypes.STRING, allowNull: false },
       sex: { type: DataTypes.ENUM("male", "female"), allowNull: true },
       sequence: { type: DataTypes.INTEGER, allowNull: true },
