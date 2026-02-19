@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -9,7 +9,7 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('candidates', {
+    await queryInterface.createTable("candidates", {
       id: {
         autoIncrement: true,
         primaryKey: true,
@@ -20,33 +20,33 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'events',
-          key: 'id',
+          model: "events",
+          key: "id",
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
       sequence: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       sex: {
-        type: Sequelize.ENUM('male', 'female'),
+        type: Sequelize.ENUM("male", "female"),
         allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.fn('NOW'),
+        defaultValue: Sequelize.fn("NOW"),
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.fn('NOW'),
+        defaultValue: Sequelize.fn("NOW"),
       },
       deleted_at: {
         type: Sequelize.DATE,
@@ -62,6 +62,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('candidates');
-  }
+    await queryInterface.dropTable("candidates");
+  },
 };

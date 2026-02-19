@@ -54,12 +54,24 @@ function CategoryPage() {
 
   const [sexFilter, setSexFilter] = useState("ALL");
 
-  const filteredCandidates =
+  const filteredCandidates = (
     sexFilter === "ALL"
       ? event?.candidates || []
       : (event?.candidates || []).filter(
           (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-        );
+        )
+  ).sort((a, b) => {
+    if (a.sequence == null && b.sequence != null) return 1;
+    if (a.sequence != null && b.sequence == null) return -1;
+
+    if (!a.sex && b.sex) return 1;
+    if (a.sex && !b.sex) return -1;
+
+    if (a.sequence != null && b.sequence != null)
+      return a.sequence - b.sequence;
+
+    return 0;
+  });
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -328,7 +340,7 @@ function CategoryPage() {
 
             <div className="relative flex bg-[#FA824C] p-1 rounded-md w-fit">
               <div
-                className="absolute top-1 left-1 h-[40px] bg-white rounded-sm transition-transform"
+                className="absolute top-1 left-1 h-10 bg-white rounded-sm transition-transform"
                 style={{
                   width: "110px",
                   transform: `translateX(${tabs.indexOf(activeTopTab) * 110}px)`,
@@ -338,7 +350,7 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-[110px] h-[40px] font-medium ${
+                  className={`relative z-10 w-27.5 h-10 font-medium ${
                     activeTopTab === tab ? "text-gray-600" : "text-white"
                   }`}
                 >
@@ -439,7 +451,7 @@ function CategoryPage() {
                       }
                     }}
                     disabled={!canEditEvent}
-                    className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
+                    className={`bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium 
     ${canEditEvent ? "hover:bg-orange-600" : "opacity-50 cursor-not-allowed"}`}
                   >
                     Criteria
@@ -469,7 +481,7 @@ function CategoryPage() {
                     setIsCategoryModalOpen(true);
                   }}
                   disabled={!canEditEvent}
-                  className={`bg-[#FA824C] px-6 h-[50px] rounded-lg text-white font-medium 
+                  className={`bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium 
     ${canEditEvent ? "hover:bg-orange-600" : "opacity-50 cursor-not-allowed"}`}
                 >
                   Category
@@ -477,7 +489,7 @@ function CategoryPage() {
               </div>
 
               {/* JUDGING GRID */}
-              <div className="overflow-x-auto bg-white rounded-2xl shadow-sm max-h-[520px] overflow-y-auto">
+              <div className="overflow-x-auto bg-white rounded-2xl shadow-sm max-h-130 overflow-y-auto">
                 <table className="min-w-full border-separate border-spacing-y-2">
                   <thead className="sticky top-0 bg-white z-10">
                     <tr>
