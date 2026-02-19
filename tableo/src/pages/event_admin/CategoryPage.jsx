@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ChevronLeft, PlusCircle } from "lucide-react";
-
+import { ChevronLeft, PlusCircle, Pencil } from "lucide-react";
+import EditStageModal from "../../components/EditStageModal";
 import SideNavigation from "../../components/SideNavigation";
 import ViewOnlyTable from "../../components/ViewOnlyTable";
 import AddCategoryModal from "../../components/AddCategoryModal";
@@ -43,6 +43,9 @@ function CategoryPage() {
   const [activeTopTab, setActiveTopTab] = useState("Stages");
   const [activeStage, setActiveStage] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
+  const [selectedStageObj, setSelectedStageObj] = useState(null);
+
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryList, setCategoryList] = useState([
@@ -180,6 +183,31 @@ function CategoryPage() {
       setLoading(false);
     }
   };
+
+  const handleUpdateStage = async (updatedStage) => {
+    try {
+      setLoading(true);
+
+      // 👉 Replace this with your actual API service if you have one
+      // Example:
+      // await updateStage(updatedStage.id, { name: updatedStage.name });
+
+      // For now: update locally
+      const updatedStages = event.stages.map((s) =>
+        s.id === updatedStage.id ? { ...s, name: updatedStage.name } : s
+      );
+
+      setEvent({ ...event, stages: updatedStages });
+      setActiveStage(updatedStage.name);
+
+      showToast("success", "Stage updated successfully");
+    } catch (err) {
+      showToast("error", "Failed to update stage");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     if (event) return;
@@ -364,19 +392,37 @@ function CategoryPage() {
           {activeTopTab === "Stages" && (
             <>
               <div className="flex gap-8 border-b mb-8 pl-6">
-                {stages.map((stage) => (
-                  <button
-                    key={stage}
-                    onClick={() => setActiveStage(stage)}
-                    className={`pb-3 text-lg font-semibold transition ${
-                      activeStage === stage
-                        ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                  >
-                    {stage}
-                  </button>
-                ))}
+                {event?.stages
+                  ?.slice()
+                  .sort((a, b) => a.sequence - b.sequence)
+                  .map((stageObj) => (
+                    <div
+                      key={stageObj.id}
+                      className="flex items-center gap-2 group"
+                    >
+                      <button
+                        onClick={() => setActiveStage(stageObj.name)}
+                        className={`pb-3 text-lg font-semibold transition ${
+                          activeStage === stageObj.name
+                            ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                            : "text-gray-400 hover:text-gray-600"
+                        }`}
+                      >
+                        {stageObj.name}
+                      </button>
+
+                      {canEditEvent && (
+                        <Pencil
+                          size={16}
+                          className="cursor-pointer text-gray-400 hover:text-[#FA824C] transition"
+                          onClick={() => {
+                            setSelectedStageObj(stageObj);
+                            setIsEditStageModalOpen(true);
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
               </div>
 
               {/* CATEGORY SELECT */}
@@ -476,7 +522,7 @@ function CategoryPage() {
                 {/* Category Button */}
                 <button
                   onClick={() => {
-                    if (!canEditEvent) return; // Prevent opening
+                    if (!canEditEvent) return;
                     resetCategoryForm();
                     setIsCategoryModalOpen(true);
                   }}
@@ -553,7 +599,7 @@ function CategoryPage() {
               }))}
               nameLabel="Judge Name"
               fieldLabel="Info"
-              fieldKey="displayInfo" // <-- this is important
+              fieldKey="displayInfo"
               editable
               isJudge={true}
               onEdit={handleEditJudge}
@@ -595,8 +641,15 @@ function CategoryPage() {
           handleRemoveCriteriaRow={(i) =>
             setCriteriaList(criteriaList.filter((_, idx) => idx !== i))
           }
-          handleConfirmCriteria={handleConfirmCriteria} // <-- use your new handler
+          handleConfirmCriteria={handleConfirmCriteria}
           setIsCriteriaModalOpen={setIsCriteriaModalOpen}
+        />
+
+        <EditStageModal
+          isOpen={isEditStageModalOpen}
+          setIsOpen={setIsEditStageModalOpen}
+          currentStage={selectedStageObj}
+          onSave={handleUpdateStage}
         />
       </div>
     </>
