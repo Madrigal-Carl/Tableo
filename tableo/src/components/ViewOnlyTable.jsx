@@ -10,8 +10,8 @@ function ViewOnlyTable({
   fieldKey = "sex",
   editable = false,
   onEdit,
-  onDelete, // expects SweetAlert2 handling
-  onAdd,    // optional add button callback
+  onDelete,
+  onAdd, // optional add button callback
   isJudge = false,
 }) {
   const [selectedItem, setSelectedItem] = useState(null);
@@ -26,31 +26,19 @@ function ViewOnlyTable({
   }
 
   const openEditModal = (item) => {
-    if (!item?.id) {
-      console.error("Item ID is missing!", item);
-      return;
-    }
-    setSelectedItem(item);
+    console.log(item);
+    setSelectedItem({ ...item });
     setIsEditOpen(true);
   };
 
   const handleConfirmEdit = (updatedItem) => {
-    if (!selectedItem?.id) {
-      console.error("Cannot edit item — missing ID!", {
-        selectedItem,
-        updatedItem,
-      });
-      return;
-    }
+    onEdit?.(updatedItem);
+  };
 
-    onEdit?.({
-      id: selectedItem.id,
-      name: updatedItem.name,
-      sex: updatedItem.sex,
-      suffix: updatedItem.suffix,
-      photo: updatedItem.photo,
-      invitationCode: updatedItem.invitationCode,
-    });
+  const handleConfirmDelete = () => {
+    onDelete?.(selectedItem);
+    setIsDeleteOpen(false);
+    setSelectedItem(null);
   };
 
   return (
@@ -75,11 +63,13 @@ function ViewOnlyTable({
                   </>
                 )}
                 {!isJudge && (
-                  <>
-                    <th className="px-4 py-3 w-1/4 text-center">Participant No.</th>
-                    <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
-                    {fieldKey && <th className="px-4 py-3 w-1/4 text-center">{fieldLabel}</th>}
-                  </>
+                  <th className="px-4 py-3 w-1/4 text-center">
+                    Participant No.
+                  </th>
+                )}
+                <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
+                {!isJudge && fieldKey && (
+                  <th className="px-4 py-3 w-1/4 text-center">{fieldLabel}</th>
                 )}
                 <th className="px-4 py-3 w-1/4 text-center">Actions</th>
               </tr>
@@ -92,51 +82,61 @@ function ViewOnlyTable({
                   key={item.id}
                   className="bg-gray-50 hover:bg-gray-100 transition shadow-sm"
                 >
-                  {isJudge ? (
+                  {/* Judge columns */}
+                  {isJudge && (
                     <>
                       <td className="px-4 py-4 text-center font-medium text-gray-600">
-                        {item.invitationCode || `JDG-${String(index + 1).padStart(3, "0")}`}
+                        JDG-{String(index + 1).padStart(3, "0")}
                       </td>
-                      <td className="px-4 py-4 text-center font-semibold text-gray-800">
-                        {item.name}
+                      <td className="px-4 py-4 text-center text-gray-600">
+                        {item.suffix}
                       </td>
-                      <td className="px-4 py-4 text-center text-gray-600">{item.suffix}</td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-4 py-4 text-center font-medium text-gray-600">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center w-full justify-center">
-                          <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
-                            {item.photo || item.avatar ? (
-                              <img
-                                src={item.photo || item.avatar}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              item.name
-                                ?.split(" ")
-                                .map((n) => n[0])
-                                .slice(0, 2)
-                                .join("")
-                                .toUpperCase()
-                            )}
-                          </div>
-                          <p className="font-semibold text-gray-800 ml-2">{item.name}</p>
-                        </div>
-                      </td>
-                      {fieldKey && (
-                        <td className="px-4 py-4 text-center text-gray-600">
-                          {item[fieldKey]}
-                        </td>
-                      )}
                     </>
                   )}
 
-                  {/* ACTIONS */}
+                  {/* Participant number */}
+                  {!isJudge && (
+                    <td className="px-4 py-4 text-center font-medium text-gray-600">
+                      {item.sequence || index + 1}
+                    </td>
+                  )}
+
+                  {/* Name with avatar for participants */}
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      {!isJudge && (
+                        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
+                          {item.photo || item.avatar ? (
+                            <img
+                              src={item.photo || item.avatar}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            item.name
+                              ?.split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()
+                          )}
+                        </div>
+                      )}
+                      <p className="font-semibold text-gray-800">
+                        {item.suffix ? `${item.suffix}. ` : ""}
+                        {item.name}
+                      </p>
+                    </div>
+                  </td>
+
+                  {/* Sex column for participants */}
+                  {!isJudge && fieldKey && (
+                    <td className="px-4 py-4 text-center text-gray-600 capitalize">
+                      {item[fieldKey]}
+                    </td>
+                  )}
+
+                  {/* Actions */}
                   <td className="px-4 py-4 text-center">
                     {editable ? (
                       <div className="flex justify-center gap-2">
@@ -186,7 +186,7 @@ function ViewOnlyTable({
         onClose={() => setIsEditOpen(false)}
         onSave={handleConfirmEdit}
         item={selectedItem}
-        isParticipant={!isJudge}
+        isParticipant={!isJudge} // Pass true for participants
       />
     </>
   );

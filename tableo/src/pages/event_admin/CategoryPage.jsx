@@ -9,24 +9,24 @@ import CriteriaModal from "../../components/CriteriaModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
 import { showToast } from "../../utils/swal";
-import Swal from "sweetalert2";
 import {
   addCriteria,
   getCriteriaByCategory,
 } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-import {
-  getCandidateInEvent,
-  editCandidate,
-  deleteCandidate,
-  createOrUpdateCandidates,
-} from "../../services/candidate_service";
+
 import { getEvent } from "../../services/event_service";
 import {
   addCategoryToEvent,
   getCategoriesByStage,
 } from "../../services/category_service";
+import {
+  createOrUpdateCandidates,
+  deleteCandidate,
+  editCandidate,
+} from "../../services/candidate_service";
+import Swal from "sweetalert2";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -54,91 +54,85 @@ function CategoryPage() {
 
   const [sexFilter, setSexFilter] = useState("ALL");
 
-  const [candidates, setCandidates] = useState([]);
-
   const filteredCandidates =
     sexFilter === "ALL"
-      ? candidates
-      : candidates.filter(
-        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-      );
+      ? event?.candidates || []
+      : (event?.candidates || []).filter(
+          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+        );
 
   const tabs = ["Stages", "Participants", "Judges"];
 
-  const handleEditParticipant = async (updatedCandidate) => {
+  const handleEditParticipant = async (updated) => {
     try {
-      if (!updatedCandidate?.id) {
-        showToast("error", "Cannot update participant — missing ID");
-        return;
-      }
+      setLoading(true);
 
-      // Prepare payload for API
-      const payload = {
-        name: updatedCandidate.name.trim(),
-        sex: updatedCandidate.sex.toLowerCase(),
-      };
+      const { id, ...payload } = updated;
+      await editCandidate(id, payload);
 
-      // Call backend to update candidate
-      const res = await editCandidate(updatedCandidate.id, payload);
-
-      // Extract updated candidate from backend response
-      const updated = res.data || { ...updatedCandidate, ...payload };
-
-      // Update local state immediately to avoid blank/wiped candidate
-      setCandidates((prev) =>
-        prev.map((c) =>
-          c.id === updatedCandidate.id
-            ? {
-              ...c,
-              name: updated.name,
-              sex: updated.sex,
-              suffix: c.suffix,
-              photo: c.photo,
-            }
-            : c,
-        ),
-      );
+      const eventRes = await getEvent(eventId);
+      setEvent(eventRes.data);
 
       showToast("success", "Participant updated successfully");
     } catch (err) {
-      console.error(err);
       showToast(
         "error",
         err.response?.data?.message || "Failed to update participant",
       );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteParticipant = async (candidate) => {
-    if (!candidate?.id) return;
+  const handleDeleteParticipant = async (item) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `You want to delete ${item.name}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
-      // Use SweetAlert2 modal for confirmation
-      const result = await Swal.fire({
-        title: `Are you sure you want to delete ${candidate.name}?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#FA824C",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, delete",
-        cancelButtonText: "Cancel",
+      setLoading(true);
+
+      await deleteCandidate(item.id);
+
+      const res = await getEvent(eventId);
+      setEvent(res.data);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Participant has been deleted.",
+        timer: 1500,
+        showConfirmButton: false,
       });
-
-      if (!result.isConfirmed) return;
-
-      // Call backend soft delete
-      await deleteCandidate(candidate.id);
-
-      // Remove from local state
-      setCandidates((prev) => prev.filter((c) => c.id !== candidate.id));
-
-      showToast("success", "Participant deleted successfully");
     } catch (err) {
-      console.error(err);
-      showToast(
-        "error",
-        err.response?.data?.message || "Failed to delete participant",
-      );
+      Swal.fire("Error", err.message || "Failed to delete", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddParticipant = async () => {
+    try {
+      setLoading(true);
+
+      await createOrUpdateCandidates(eventId);
+
+      const res = await getEvent(eventId);
+      setEvent(res.data);
+
+      showToast("success", "Participant added successfully");
+    } catch (err) {
+      showToast("error", err.message || "Failed to add participant");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -189,12 +183,11 @@ function CategoryPage() {
           id: j.id,
           name: j.name,
           invitationCode: j.invitationCode || "", // default if null
-          suffix: j.suffix || "",                 // default if null
+          suffix: j.suffix || "", // default if null
           sequence: j.sequence || 0,
         }));
 
         setEvent(evt);
-
 
         if (evt.stages?.length) {
           setActiveStage(evt.stages[0].name);
@@ -205,23 +198,6 @@ function CategoryPage() {
         showToast("error", "Failed to load event");
       } finally {
         setLoading(false);
-      }
-
-      try {
-        const res = await getCandidateInEvent(eventId);
-        console.log("Fetched candidates:", res);
-
-        setCandidates(
-          (res || []).map((c) => ({
-            id: c.id, // ✅ KEEP ID
-            name: c.name,
-            sex: c.sex ?? "",
-            suffix: c.suffix ?? "",
-            photo: c.photo ?? "",
-          })),
-        );
-      } catch (err) {
-        showToast("error", "Failed to load candidates");
       }
     }
 
@@ -323,8 +299,7 @@ function CategoryPage() {
       ?.slice()
       .sort((a, b) => a.sequence - b.sequence)
       .map((s) => s.name) || [];
-  const filteredCategories =
-    categories?.slice().sort((a, b) => a.sequence - b.sequence) || [];
+  const filteredCategories = categories;
 
   return (
     <>
@@ -363,8 +338,9 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-[110px] h-[40px] font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
-                    }`}
+                  className={`relative z-10 w-[110px] h-[40px] font-medium ${
+                    activeTopTab === tab ? "text-gray-600" : "text-white"
+                  }`}
                 >
                   {tab}
                 </button>
@@ -380,10 +356,11 @@ function CategoryPage() {
                   <button
                     key={stage}
                     onClick={() => setActiveStage(stage)}
-                    className={`pb-3 text-lg font-semibold transition ${activeStage === stage
-                      ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                      : "text-gray-400 hover:text-gray-600"
-                      }`}
+                    className={`pb-3 text-lg font-semibold transition ${
+                      activeStage === stage
+                        ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
                   >
                     {stage}
                   </button>
@@ -419,8 +396,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                              .slice(0, 30)
-                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                                .slice(0, 30)
+                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -445,9 +422,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                              name: c.label,
-                              weight: c.percentage,
-                            }))
+                                name: c.label,
+                                weight: c.percentage,
+                              }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -547,28 +524,7 @@ function CategoryPage() {
               editable
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
-              onAdd={async () => {
-                try {
-                  await createOrUpdateCandidates(eventId, {
-                    count: candidates.length + 1,
-                  });
-
-                  setCandidates((prev) => [
-                    ...prev,
-                    {
-                      id: Date.now(), // temp ID
-                      name: `Candidate ${prev.length + 1}`,
-                      sex: "",
-                      suffix: "",
-                      photo: "",
-                    },
-                  ]);
-
-                  showToast("success", "Participant added successfully");
-                } catch (err) {
-                  showToast("error", "Failed to add participant");
-                }
-              }}
+              onAdd={handleAddParticipant}
             />
           )}
 
@@ -580,11 +536,12 @@ function CategoryPage() {
                 name: j.name,
                 invitationCode: j.invitationCode || "",
                 suffix: j.suffix || "",
-                displayInfo: `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
+                displayInfo:
+                  `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
               }))}
               nameLabel="Judge Name"
               fieldLabel="Info"
-              fieldKey="displayInfo"   // <-- this is important
+              fieldKey="displayInfo" // <-- this is important
               editable
               isJudge={true}
               onEdit={handleEditJudge}

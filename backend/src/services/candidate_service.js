@@ -1,138 +1,110 @@
-const sequelize = require('../database/models').sequelize;
-const candidateRepo = require('../repositories/candidate_repository');
-const { Candidate } = require('../database/models'); // adjust path if needed
+const sequelize = require("../database/models").sequelize;
+const candidateRepo = require("../repositories/candidate_repository");
 
-// Update a candidate and return all active candidates for the event
 async function updateCandidate(candidateId, data) {
-    return sequelize.transaction(async (t) => {
-        const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
-        await candidateRepo.update(candidateId, data, t);
-        return await candidateRepo.findByEvent(eventId, t);
-    });
+  return sequelize.transaction(async (t) => {
+    const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
+
+    await candidateRepo.update(candidateId, data, t);
+
+    if (data.sex) {
+      const candidatesOfSex = await candidateRepo.findByEventAndSex(
+        eventId,
+        data.sex,
+        t,
+      );
+
+      for (let i = 0; i < candidatesOfSex.length; i++) {
+        const candidate = candidatesOfSex[i];
+        if (candidate.sequence !== i + 1) {
+          await candidateRepo.update(candidate.id, { sequence: i + 1 }, t);
+        }
+      }
+    }
+
+    return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
+  });
 }
 
-// ORIGINAL: used for restoration flow (kept as-is)
 async function createOrUpdate(eventId, newCount, transaction = null) {
-    const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
-        eventId,
-        transaction
-    );
+  const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
+    eventId,
+    transaction,
+  );
 
-    const candidateToRestore = allCandidates.find(c => c.deletedAt !== null);
+  const map = new Map(allCandidates.map((c) => [c.sequence, c]));
 
-    if (candidateToRestore) {
-        await candidateToRestore.restore({ transaction });
+  for (let seq = 1; seq <= newCount; seq++) {
+    const candidate = map.get(seq);
+
+    if (candidate) {
+      if (candidate.deletedAt) {
+        await candidate.restore({ transaction });
+      }
     } else {
-        const lastSequence = Math.max(...allCandidates.map(c => c.sequence), 0);
-        await candidateRepo.create(
-            {
-                name: `Candidate ${lastSequence + 1}`,
-                sequence: lastSequence + 1,
-                event_id: eventId,
-            },
-            transaction
-        );
+      await candidateRepo.create(
+        {
+          name: `Candidate ${seq}`,
+          sequence: seq,
+          event_id: eventId,
+        },
+        transaction,
+      );
     }
+  }
 
-    return await candidateRepo.findByEvent(eventId, transaction);
+  for (const candidate of allCandidates) {
+    if (candidate.sequence > newCount && !candidate.deletedAt) {
+      await candidate.destroy({ transaction });
+    }
+  }
 }
 
-// NEW: used for Edit Event "number of candidates"
-async function syncByCount(eventId, targetCount, transaction = null) {
+async function syncCandidates(eventId) {
+  return sequelize.transaction(async (t) => {
     const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
-        eventId,
-        transaction
+      eventId,
+      t,
     );
 
-    const active = allCandidates.filter(c => c.deletedAt === null);
-    const deleted = allCandidates.filter(c => c.deletedAt !== null);
+    const deletedCandidates = allCandidates
+      .filter((c) => c.deletedAt)
+      .sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
 
-    const currentCount = active.length;
+    if (deletedCandidates.length > 0) {
+      await deletedCandidates[0].restore({ transaction: t });
+    } else {
+      const maxSequence = allCandidates.length
+        ? Math.max(...allCandidates.map((c) => c.sequence))
+        : 0;
 
-    // ADD candidates
-    if (targetCount > currentCount) {
-        let toAdd = targetCount - currentCount;
-
-        // Restore first
-        for (let i = 0; i < toAdd && deleted.length > 0; i++) {
-            const c = deleted.shift();
-            await c.restore({ transaction });
-        }
-
-        // Create remaining
-        const updatedAll = await candidateRepo.findByEventIncludingSoftDeleted(
-            eventId,
-            transaction
-        );
-
-        const lastSequence = Math.max(...updatedAll.map(c => c.sequence), 0);
-
-        for (let i = currentCount + 1; i <= targetCount; i++) {
-            await candidateRepo.create(
-                {
-                    name: `Candidate ${i}`,
-                    sequence: i,
-                    event_id: eventId,
-                },
-                transaction
-            );
-        }
+      await candidateRepo.create(
+        {
+          name: `Candidate ${maxSequence + 1}`,
+          sequence: maxSequence + 1,
+          event_id: eventId,
+        },
+        t,
+      );
     }
 
-    // REMOVE candidates
-    if (targetCount < currentCount) {
-        const toRemove = currentCount - targetCount;
-        const toDelete = active.slice(-toRemove);
-
-        for (const c of toDelete) {
-            await c.destroy({ transaction });
-        }
-    }
-
-    return await candidateRepo.findByEvent(eventId, transaction);
+    return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
+  });
 }
 
-// Fetch all active candidates for a given event
-async function findAllByEvent(eventId, transaction = null) {
-    return await candidateRepo.findByEvent(eventId, transaction);
+async function deleteCandidate(candidateId) {
+  return sequelize.transaction(async (t) => {
+    const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
+
+    await candidateRepo.softDelete(candidateId, t);
+
+    return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
+  });
 }
 
-// Soft delete a candidate
-async function deleteCandidate(candidateId, transaction = null) {
-    return sequelize.transaction(async (t) => {
-        const tx = transaction || t;
-        await candidateRepo.softDelete(candidateId, tx);
-        return true;
-    });
-}
-
-// Restore a candidate
-async function restoreCandidate(candidateId, transaction = null) {
-    return sequelize.transaction(async (t) => {
-        const tx = transaction || t;
-        await candidateRepo.restore(candidateId, tx);
-        return true;
-    });
-}
-async function createByCount(eventId, count, transaction) {
-    const rows = [];
-
-    for (let i = 1; i <= Number(count); i++) {
-        rows.push({
-            event_id: eventId,
-            name: `Candidate ${i}`,
-        });
-    }
-
-    await Candidate.bulkCreate(rows, { transaction });
-}
-
-module.exports = { 
-    createOrUpdate,     // restoration logic
-    syncByCount,       // admin "set number"
-    updateCandidate,
-    findAllByEvent,
-    deleteCandidate,   
-    restoreCandidate,
-    createByCount   
+module.exports = {
+  createOrUpdate,
+  updateCandidate,
+  syncCandidates,
+  deleteCandidate,
 };
