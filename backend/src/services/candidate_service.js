@@ -3,20 +3,36 @@ const candidateRepo = require("../repositories/candidate_repository");
 const fs = require("fs");
 const path = require("path");
 
-async function remapSequence(eventId, transaction, sex = null) {
+async function remapSequence(
+  eventId,
+  transaction,
+  sex = null,
+  moveToEndId = null,
+) {
   let candidates = await candidateRepo.findByEventIncludingSoftDeleted(
     eventId,
     transaction,
   );
 
+  // Only active candidates
   candidates = candidates.filter((c) => !c.deletedAt);
 
   if (sex) {
     candidates = candidates.filter((c) => c.sex === sex);
   }
 
-  candidates.sort((a, b) => a.sequence - b.sequence);
+  // If moveToEndId is provided, remove that candidate and append at the end
+  if (moveToEndId) {
+    const index = candidates.findIndex(
+      (c) => Number(c.id) === Number(moveToEndId),
+    );
+    if (index !== -1) {
+      const [updatedCandidate] = candidates.splice(index, 1);
+      candidates.push(updatedCandidate);
+    }
+  }
 
+  // Remap sequence
   for (let i = 0; i < candidates.length; i++) {
     const candidate = candidates[i];
     const correctSequence = i + 1;
@@ -51,11 +67,18 @@ async function updateCandidate(candidateId, data) {
 
     const sexChanged = data.sex && data.sex !== candidate.sex;
 
+    // Update candidate
     await candidateRepo.update(candidateId, data, t);
 
+    // Remap sequences
     if (sexChanged) {
-      await remapSequence(eventId, t, data.sex);
-      if (candidate.sex) await remapSequence(eventId, t, candidate.sex);
+      // Move updated candidate to the end of new sex group
+      await remapSequence(eventId, t, data.sex, candidateId);
+
+      // Remap old sex group normally (without moving anything)
+      if (candidate.sex) {
+        await remapSequence(eventId, t, candidate.sex);
+      }
     }
 
     return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
