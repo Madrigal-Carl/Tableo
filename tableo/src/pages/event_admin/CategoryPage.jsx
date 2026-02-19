@@ -23,6 +23,7 @@ import {
   createOrUpdateCandidates,
 } from "../../services/candidate_service";
 import { getEvent } from "../../services/event_service";
+import { deleteJudge } from "../../services/judge_service";
 import {
   addCategoryToEvent,
   getCategoriesByStage,

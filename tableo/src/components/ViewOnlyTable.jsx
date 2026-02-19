@@ -140,12 +140,17 @@ function ViewOnlyTable({
                   <td className="px-4 py-4 text-center">
                     {editable ? (
                       <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => openEditModal(item)}
-                          className="p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition"
-                        >
-                          <SquarePen size={16} />
-                        </button>
+                        {/* Only show edit button if not a judge */}
+                        {!isJudge && (
+                          <button
+                            onClick={() => openEditModal(item)}
+                            className="p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition"
+                          >
+                            <SquarePen size={16} />
+                          </button>
+                        )}
+
+                        {/* Delete button always visible if editable */}
                         <button
                           onClick={() => onDelete?.(item)}
                           className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
