@@ -3,7 +3,6 @@ const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
 
-// Ensure the folder exists
 const candidateUploadPath = "uploads/candidates";
 if (!fs.existsSync(candidateUploadPath)) {
   fs.mkdirSync(candidateUploadPath, { recursive: true });
@@ -11,7 +10,7 @@ if (!fs.existsSync(candidateUploadPath)) {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, candidateUploadPath); // save in uploads/candidates
+    cb(null, candidateUploadPath);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -31,7 +30,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 module.exports = upload;
