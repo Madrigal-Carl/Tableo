@@ -36,8 +36,8 @@ async function updateJudge(invitationCode, data) {
 
     const event = await judge.getEvent({ transaction: t });
 
-    if (hasEventEnded(event)) {
-      const err = new Error("Event has already ended");
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
       err.status = 403;
       throw err;
     }
@@ -54,6 +54,14 @@ async function updateJudge(invitationCode, data) {
 }
 
 async function createOrUpdate(eventId, newCount, transaction = null) {
+  const event = await sequelize.models.Event.findByPk(eventId, { transaction });
+
+  if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+    const err = new Error("Event has already started or ended");
+    err.status = 403;
+    throw err;
+  }
+
   const allJudges = await judgeRepo.findByEventIncludingSoftDeleted(
     eventId,
     transaction
@@ -112,14 +120,8 @@ function hasEventEnded({ date, timeEnd }) {
 async function getEventForJudge(req) {
   const { event, judge } = req;
 
-  if (!hasEventStarted(event)) {
-    const err = new Error("Event has not started yet");
-    err.status = 403;
-    throw err;
-  }
-
-  if (hasEventEnded(event)) {
-    const err = new Error("Event has already ended");
+  if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+    const err = new Error("Event has already started or ended");
     err.status = 403;
     throw err;
   }
@@ -173,8 +175,8 @@ async function deleteJudge(judgeId) {
 
     const event = await judge.getEvent({ transaction: t });
 
-    if (hasEventEnded(event)) {
-      const err = new Error("Event has already ended");
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
       err.status = 403;
       throw err;
     }
@@ -185,16 +187,14 @@ async function deleteJudge(judgeId) {
     await judge.destroy({ transaction: t });
 
     // Reorder remaining active judges
-    const remainingJudges =
-      await judgeRepo.findByEventIncludingSoftDeleted(event.id, t);
+    const remainingJudges = await judgeRepo.findByEventIncludingSoftDeleted(
+      event.id,
+      t,
+    );
 
     for (const j of remainingJudges) {
       if (!j.deletedAt && j.sequence > deletedSequence) {
-        await judgeRepo.update(
-          j.id,
-          { sequence: j.sequence - 1 },
-          t
-        );
+        await judgeRepo.update(j.id, { sequence: j.sequence - 1 }, t);
       }
     }
 

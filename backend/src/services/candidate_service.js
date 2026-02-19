@@ -1,9 +1,16 @@
 const sequelize = require("../database/models").sequelize;
 const candidateRepo = require("../repositories/candidate_repository");
+const eventRepo = require("../repositories/event_repository");
+const { isEventEditable } = require("../utils/event_time_guard");
 const fs = require("fs");
 const path = require("path");
 
-async function remapSequence(eventId, transaction, sex = null) {
+async function remapSequence(
+  eventId,
+  transaction,
+  sex = null,
+  moveToEndId = null,
+) {
   let candidates = await candidateRepo.findByEventIncludingSoftDeleted(
     eventId,
     transaction,
@@ -15,7 +22,15 @@ async function remapSequence(eventId, transaction, sex = null) {
     candidates = candidates.filter((c) => c.sex === sex);
   }
 
-  candidates.sort((a, b) => a.sequence - b.sequence);
+  if (moveToEndId) {
+    const index = candidates.findIndex(
+      (c) => Number(c.id) === Number(moveToEndId),
+    );
+    if (index !== -1) {
+      const [updatedCandidate] = candidates.splice(index, 1);
+      candidates.push(updatedCandidate);
+    }
+  }
 
   for (let i = 0; i < candidates.length; i++) {
     const candidate = candidates[i];
@@ -34,6 +49,13 @@ async function updateCandidate(candidateId, data) {
   return sequelize.transaction(async (t) => {
     const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
 
+    const event = await eventRepo.findById(eventId, t);
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
+      err.status = 403;
+      throw err;
+    }
+
     const candidates = await candidateRepo.findByEventIncludingSoftDeleted(
       eventId,
       t,
@@ -43,7 +65,6 @@ async function updateCandidate(candidateId, data) {
     );
     if (!candidate) throw new Error("Candidate not found");
 
-    // If a new image is uploaded, delete the old one
     if (data.path && candidate.path) {
       const oldPath = path.join("uploads/candidates", candidate.path);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -54,8 +75,11 @@ async function updateCandidate(candidateId, data) {
     await candidateRepo.update(candidateId, data, t);
 
     if (sexChanged) {
-      await remapSequence(eventId, t, data.sex);
-      if (candidate.sex) await remapSequence(eventId, t, candidate.sex);
+      await remapSequence(eventId, t, data.sex, candidateId);
+
+      if (candidate.sex) {
+        await remapSequence(eventId, t, candidate.sex);
+      }
     }
 
     return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
@@ -63,6 +87,14 @@ async function updateCandidate(candidateId, data) {
 }
 
 async function createOrUpdate(eventId, newCount, transaction = null) {
+  const event = await eventRepo.findById(eventId, transaction);
+
+  if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+    const err = new Error("Event has already started or ended");
+    err.status = 403;
+    throw err;
+  }
+
   const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
     eventId,
     transaction,
@@ -75,18 +107,22 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
   for (let i = 0; i < newCount; i++) {
     const activeCandidates = allCandidates.filter((c) => !c.deletedAt);
     const candidate = activeCandidates[i];
-
     if (candidate) continue;
 
     const candidateToRestore = deletedCandidates.shift();
     if (candidateToRestore) {
       await candidateToRestore.restore({ transaction });
+      if (candidateToRestore.sex) {
+        await remapSequence(
+          eventId,
+          transaction,
+          candidateToRestore.sex,
+          candidateToRestore.id,
+        );
+      }
     } else {
       await candidateRepo.create(
-        {
-          name: `Candidate`,
-          event_id: eventId,
-        },
+        { name: `Candidate`, event_id: eventId },
         transaction,
       );
     }
@@ -100,6 +136,14 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
 
 async function syncCandidates(eventId) {
   return sequelize.transaction(async (t) => {
+    const event = await eventRepo.findById(eventId, t);
+
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
+      err.status = 403;
+      throw err;
+    }
+
     const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
       eventId,
       t,
@@ -110,15 +154,13 @@ async function syncCandidates(eventId) {
       .sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
 
     if (deletedCandidates.length > 0) {
-      await deletedCandidates[0].restore({ transaction: t });
+      const restored = deletedCandidates[0];
+      await restored.restore({ transaction: t });
+      if (restored.sex) {
+        await remapSequence(eventId, t, restored.sex, restored.id);
+      }
     } else {
-      await candidateRepo.create(
-        {
-          name: `Candidate`,
-          event_id: eventId,
-        },
-        t,
-      );
+      await candidateRepo.create({ name: `Candidate`, event_id: eventId }, t);
     }
 
     const sexes = ["male", "female"];
@@ -134,10 +176,17 @@ async function deleteCandidate(candidateId) {
   return sequelize.transaction(async (t) => {
     const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
 
+    const event = await eventRepo.findById(eventId, t);
+
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
+      const err = new Error("Event has already started or ended");
+      err.status = 403;
+      throw err;
+    }
+
     const candidate = (
       await candidateRepo.findByEventIncludingSoftDeleted(eventId, t)
     ).find((c) => c.id === candidateId);
-
     if (!candidate) throw new Error("Candidate not found");
 
     await candidateRepo.softDelete(candidateId, t);

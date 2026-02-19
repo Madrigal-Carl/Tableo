@@ -28,7 +28,10 @@ import {
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -47,7 +50,6 @@ function CategoryPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
   const [selectedStageObj, setSelectedStageObj] = useState(null);
-
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryList, setCategoryList] = useState([
@@ -97,10 +99,7 @@ function CategoryPage() {
 
       showToast("success", "Participant updated successfully");
     } catch (err) {
-      showToast(
-        "error",
-        err.response?.data?.message || "Failed to update participant",
-      );
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -135,7 +134,7 @@ function CategoryPage() {
         showConfirmButton: false,
       });
     } catch (err) {
-      Swal.fire("Error", err.message || "Failed to delete", "error");
+      Swal.fire("Error", err.message);
     } finally {
       setLoading(false);
     }
@@ -152,7 +151,7 @@ function CategoryPage() {
 
       showToast("success", "Participant added successfully");
     } catch (err) {
-      showToast("error", err.message || "Failed to add participant");
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -191,16 +190,11 @@ function CategoryPage() {
         showConfirmButton: false,
       });
     } catch (err) {
-      Swal.fire(
-        "Error",
-        err.response?.data?.message || "Failed to delete judge",
-        "error"
-      );
+      Swal.fire("Error", err.message);
     } finally {
       setLoading(false);
     }
   };
-
 
   const getStageIdByName = (stageName) =>
     event?.stages.find((s) => s.name === stageName)?.id;
@@ -237,7 +231,7 @@ function CategoryPage() {
 
       // For now: update locally
       const updatedStages = event.stages.map((s) =>
-        s.id === updatedStage.id ? { ...s, name: updatedStage.name } : s
+        s.id === updatedStage.id ? { ...s, name: updatedStage.name } : s,
       );
 
       setEvent({ ...event, stages: updatedStages });
@@ -250,7 +244,6 @@ function CategoryPage() {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     if (event) return;
@@ -337,7 +330,7 @@ function CategoryPage() {
 
       showToast("success", "Categories added successfully");
     } catch (err) {
-      showToast("error", err.message || "Failed to add categories");
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -371,7 +364,7 @@ function CategoryPage() {
       setIsCriteriaModalOpen(false);
     } catch (err) {
       console.error(err);
-      showToast("error", err.message || "Failed to save criteria");
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -445,8 +438,8 @@ function CategoryPage() {
                       <button
                         onClick={() => setActiveStage(stageObj.name)}
                         className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
-                          ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                          : "text-gray-400 hover:text-gray-600"
+                            ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                            : "text-gray-400 hover:text-gray-600"
                           }`}
                       >
                         {stageObj.name}
@@ -621,6 +614,7 @@ function CategoryPage() {
               fieldLabel="Sex"
               fieldKey="sex"
               editable
+              canEdit={canEditEvent}
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
               onAdd={handleAddParticipant}
@@ -641,6 +635,7 @@ function CategoryPage() {
               fieldLabel="Info"
               fieldKey="displayInfo"
               editable
+              canEdit={canEditEvent}
               isJudge={true}
               onEdit={handleEditJudge}
               onDelete={handleDeleteJudge}
@@ -657,7 +652,7 @@ function CategoryPage() {
                   showToast("success", "Judge added successfully");
                 } catch (err) {
                   console.error(err);
-                  showToast("error", err.message || "Failed to add judge");
+                  showToast("error", err.message);
                 } finally {
                   setLoading(false);
                 }
