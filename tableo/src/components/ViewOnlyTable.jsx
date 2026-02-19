@@ -42,7 +42,19 @@ function ViewOnlyTable({
   };
 
   const handleConfirmEdit = (updatedItem) => {
-    onEdit?.(updatedItem);
+    if (updatedItem.photo instanceof File) {
+      const formData = new FormData();
+      formData.append("name", updatedItem.name);
+      formData.append("sex", updatedItem.sex || "");
+
+      if (updatedItem.photo) {
+        formData.append("image", updatedItem.photo);
+      }
+
+      onEdit?.({ id: updatedItem.id, formData, isFile: true });
+    } else {
+      onEdit?.(updatedItem);
+    }
   };
 
   return (
@@ -119,9 +131,9 @@ function ViewOnlyTable({
                       <div className="flex items-center justify-center gap-3">
                         {!isJudge && (
                           <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
-                            {item.photo || item.avatar ? (
+                            {item.path ? (
                               <img
-                                src={item.photo || item.avatar}
+                                src={`${import.meta.env.VITE_ASSET_URL}/uploads/candidates/${item.path}`}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                               />

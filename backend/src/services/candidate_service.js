@@ -1,5 +1,7 @@
 const sequelize = require("../database/models").sequelize;
 const candidateRepo = require("../repositories/candidate_repository");
+const fs = require("fs");
+const path = require("path");
 
 async function remapSequence(eventId, transaction, sex = null) {
   let candidates = await candidateRepo.findByEventIncludingSoftDeleted(

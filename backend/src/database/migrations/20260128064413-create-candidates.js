@@ -30,6 +30,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
+      path: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       name: {
         type: Sequelize.STRING,
         allowNull: false,

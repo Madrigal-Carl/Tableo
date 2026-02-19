@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const requireAuth = require("../middlewares/auth");
+const upload = require("../middlewares/candidate_upload");
 const {
   validateCandidate,
   validateCandidateCount,
@@ -13,6 +14,7 @@ router.put(
   "/:id",
   requireAuth,
   validateCandidateId,
+  upload.single("image"),
   validateCandidate,
   candidateController.updateCandidate,
 );

@@ -43,7 +43,14 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
           <div className="relative mt-1">
             <select
               value={value}
-              onChange={(e) => handleChange(key, e.target.value)}
+              onChange={(e) =>
+                handleChange(
+                  key,
+                  e.target.files[0]
+                    ? URL.createObjectURL(e.target.files[0])
+                    : "",
+                )
+              }
               className="w-full rounded-full border-orange-400 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
             >
               {SUFFIX_OPTIONS.map((option) => (
@@ -81,7 +88,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
             <select
               value={value}
               onChange={(e) => handleChange(key, e.target.value)}
-              className="w-full rounded-full border-orange-400 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
+              className="w-full rounded-full border-orange-400 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#FA824C] capitalize"
             >
               {SEX_OPTIONS.map((option) => (
                 <option key={option} value={option} disabled={option === ""}>
@@ -117,21 +124,17 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
           <input
             type="file"
             accept="image/*"
-            onChange={(e) =>
-              handleChange(
-                key,
-                e.target.files[0] ? URL.createObjectURL(e.target.files[0]) : "",
-              )
-            }
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              setFormData((prev) => ({
+                ...prev,
+                photo: file,
+                preview: URL.createObjectURL(file),
+              }));
+            }}
             className="w-full mt-1 rounded-full border-orange-400 border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
           />
-          {value && (
-            <img
-              src={value}
-              alt="preview"
-              className="mt-2 w-20 h-20 rounded-full object-cover border border-orange-400"
-            />
-          )}
         </div>
       );
     }
