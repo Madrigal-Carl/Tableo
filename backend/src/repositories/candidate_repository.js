@@ -26,9 +26,19 @@ function update(id, data, transaction) {
   });
 }
 
+function countActiveByEvent(eventId, transaction) {
+  return Candidate.count({
+    where: {
+      event_id: eventId,
+    },
+    transaction,
+  });
+}
+
 module.exports = {
   create,
   findByEventIncludingSoftDeleted,
   update,
   findEventByCandidateId,
+  countActiveByEvent,
 };

@@ -19,8 +19,10 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
     transaction,
   );
 
+  const map = new Map(allCandidates.map((c) => [c.sequence, c]));
+
   for (let seq = 1; seq <= newCount; seq++) {
-    let candidate = allCandidates.find((c) => c.sequence === seq);
+    const candidate = map.get(seq);
 
     if (candidate) {
       if (candidate.deletedAt) {
@@ -45,4 +47,25 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
   }
 }
 
-module.exports = { createOrUpdate, updateCandidate };
+async function syncCandidates(eventId) {
+  return sequelize.transaction(async (t) => {
+    const currentActiveCount = await candidateRepo.countActiveByEvent(
+      eventId,
+      t,
+    );
+
+    const newCount = currentActiveCount + 1;
+    await createOrUpdate(eventId, newCount, t);
+
+    const updatedCandidates =
+      await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
+
+    return {
+      before: currentActiveCount,
+      after: newCount,
+      candidates: updatedCandidates,
+    };
+  });
+}
+
+module.exports = { createOrUpdate, updateCandidate, syncCandidates };
