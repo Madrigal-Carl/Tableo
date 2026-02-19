@@ -133,15 +133,11 @@ function ViewOnlyTable({
                         <td className="px-4 py-4 text-center font-medium text-gray-600">
                           {item.invitationCode}
                         </td>
-
-                        {/* Judge Name */}
-                        <td className="px-4 py-4 text-center font-semibold text-gray-800 capitalize">
+                        <td className="px-4 py-4 text-center font-semibold text-gray-800">
                           {item.name}
                         </td>
-
-                        {/* Suffix */}
-                        <td className="px-4 py-4 text-center text-gray-600 capitalize">
-                          {item.suffix}
+                        <td className="px-4 py-4 text-center text-gray-600">
+                          {item.suffix || "-"}
                         </td>
                       </>
                     ) : (
