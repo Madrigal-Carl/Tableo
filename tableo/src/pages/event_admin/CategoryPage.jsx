@@ -28,10 +28,6 @@ import {
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 
 function CategoryPage() {
   const navigate = useNavigate();
