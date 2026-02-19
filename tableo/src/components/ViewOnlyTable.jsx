@@ -49,6 +49,7 @@ function ViewOnlyTable({
       sex: updatedItem.sex,
       suffix: updatedItem.suffix,
       photo: updatedItem.photo,
+      invitationCode: updatedItem.invitationCode,
     });
   };
 
@@ -69,15 +70,16 @@ function ViewOnlyTable({
                 {isJudge && (
                   <>
                     <th className="px-4 py-3 w-1/4 text-center">Judge Code</th>
+                    <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
                     <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
                   </>
                 )}
                 {!isJudge && (
-                  <th className="px-4 py-3 w-1/4 text-center">Participant No.</th>
-                )}
-                <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
-                {!isJudge && fieldKey && (
-                  <th className="px-4 py-3 w-1/4 text-center">{fieldLabel}</th>
+                  <>
+                    <th className="px-4 py-3 w-1/4 text-center">Participant No.</th>
+                    <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
+                    {fieldKey && <th className="px-4 py-3 w-1/4 text-center">{fieldLabel}</th>}
+                  </>
                 )}
                 <th className="px-4 py-3 w-1/4 text-center">Actions</th>
               </tr>
@@ -90,49 +92,48 @@ function ViewOnlyTable({
                   key={item.id}
                   className="bg-gray-50 hover:bg-gray-100 transition shadow-sm"
                 >
-                  {isJudge && (
+                  {isJudge ? (
                     <>
                       <td className="px-4 py-4 text-center font-medium text-gray-600">
-                        JDG-{String(index + 1).padStart(3, "0")}
+                        {item.invitationCode || `JDG-${String(index + 1).padStart(3, "0")}`}
+                      </td>
+                      <td className="px-4 py-4 text-center font-semibold text-gray-800">
+                        {item.name}
                       </td>
                       <td className="px-4 py-4 text-center text-gray-600">{item.suffix}</td>
                     </>
-                  )}
-
-                  {!isJudge && (
-                    <td className="px-4 py-4 text-center font-medium text-gray-600">
-                      {index + 1}
-                    </td>
-                  )}
-
-                  <td className="px-4 py-4 text-center">
-                    <div className="flex items-center w-full">
-                      {!isJudge && (
-                        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
-                          {item.photo || item.avatar ? (
-                            <img
-                              src={item.photo || item.avatar}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            item.name
-                              ?.split(" ")
-                              .map((n) => n[0])
-                              .slice(0, 2)
-                              .join("")
-                              .toUpperCase()
-                          )}
+                  ) : (
+                    <>
+                      <td className="px-4 py-4 text-center font-medium text-gray-600">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center w-full justify-center">
+                          <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
+                            {item.photo || item.avatar ? (
+                              <img
+                                src={item.photo || item.avatar}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              item.name
+                                ?.split(" ")
+                                .map((n) => n[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase()
+                            )}
+                          </div>
+                          <p className="font-semibold text-gray-800 ml-2">{item.name}</p>
                         </div>
+                      </td>
+                      {fieldKey && (
+                        <td className="px-4 py-4 text-center text-gray-600">
+                          {item[fieldKey]}
+                        </td>
                       )}
-                      <p className="font-semibold text-gray-800">{item.name}</p>
-                    </div>
-                  </td>
-
-                  {!isJudge && fieldKey && (
-                    <td className="px-4 py-4 text-center text-gray-600">
-                      {item[fieldKey]}
-                    </td>
+                    </>
                   )}
 
                   {/* ACTIONS */}
@@ -146,7 +147,7 @@ function ViewOnlyTable({
                           <SquarePen size={16} />
                         </button>
                         <button
-                          onClick={() => onDelete?.(item)} // SweetAlert2 handles confirmation
+                          onClick={() => onDelete?.(item)}
                           className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
                         >
                           <Trash2 size={16} />
@@ -163,7 +164,7 @@ function ViewOnlyTable({
               {onAdd && (
                 <tr className="bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
                   <td
-                    colSpan={isJudge ? data.length + 2 : fieldKey ? 4 : 3}
+                    colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
                     className="px-4 py-4 text-center text-blue-600 font-semibold"
                     onClick={onAdd}
                   >

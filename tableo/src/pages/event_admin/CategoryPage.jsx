@@ -60,8 +60,8 @@ function CategoryPage() {
     sexFilter === "ALL"
       ? candidates
       : candidates.filter(
-          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-        );
+        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+      );
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -89,12 +89,12 @@ function CategoryPage() {
         prev.map((c) =>
           c.id === updatedCandidate.id
             ? {
-                ...c,
-                name: updated.name,
-                sex: updated.sex,
-                suffix: c.suffix,
-                photo: c.photo,
-              }
+              ...c,
+              name: updated.name,
+              sex: updated.sex,
+              suffix: c.suffix,
+              photo: c.photo,
+            }
             : c,
         ),
       );
@@ -184,7 +184,17 @@ function CategoryPage() {
         const res = await getEvent(eventId);
         const evt = res.data;
 
+        // Normalize judges so every judge has name, invitationCode, and suffix
+        evt.judges = (evt.judges || []).map((j) => ({
+          id: j.id,
+          name: j.name,
+          invitationCode: j.invitationCode || "", // default if null
+          suffix: j.suffix || "",                 // default if null
+          sequence: j.sequence || 0,
+        }));
+
         setEvent(evt);
+
 
         if (evt.stages?.length) {
           setActiveStage(evt.stages[0].name);
@@ -353,9 +363,8 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-[110px] h-[40px] font-medium ${
-                    activeTopTab === tab ? "text-gray-600" : "text-white"
-                  }`}
+                  className={`relative z-10 w-[110px] h-[40px] font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
+                    }`}
                 >
                   {tab}
                 </button>
@@ -371,11 +380,10 @@ function CategoryPage() {
                   <button
                     key={stage}
                     onClick={() => setActiveStage(stage)}
-                    className={`pb-3 text-lg font-semibold transition ${
-                      activeStage === stage
-                        ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
+                    className={`pb-3 text-lg font-semibold transition ${activeStage === stage
+                      ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
                   >
                     {stage}
                   </button>
@@ -411,8 +419,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                                .slice(0, 30)
-                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                              .slice(0, 30)
+                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -437,9 +445,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                                name: c.label,
-                                weight: c.percentage,
-                              }))
+                              name: c.label,
+                              weight: c.percentage,
+                            }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -567,8 +575,16 @@ function CategoryPage() {
           {activeTopTab === "Judges" && (
             <ViewOnlyTable
               title="Judges"
-              data={event?.judges || []}
+              data={(event?.judges || []).map((j) => ({
+                id: j.id,
+                name: j.name,
+                invitationCode: j.invitationCode || "",
+                suffix: j.suffix || "",
+                displayInfo: `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
+              }))}
               nameLabel="Judge Name"
+              fieldLabel="Info"
+              fieldKey="displayInfo"   // <-- this is important
               editable
               isJudge={true}
               onEdit={handleEditJudge}
