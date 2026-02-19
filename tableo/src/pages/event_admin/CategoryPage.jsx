@@ -612,6 +612,7 @@ function CategoryPage() {
               fieldLabel="Sex"
               fieldKey="sex"
               editable
+              canEdit={canEditEvent}
               onEdit={handleEditParticipant}
               onDelete={handleDeleteParticipant}
               onAdd={handleAddParticipant}
@@ -633,6 +634,7 @@ function CategoryPage() {
               fieldLabel="Info"
               fieldKey="displayInfo"
               editable
+              canEdit={canEditEvent}
               isJudge={true}
               onEdit={handleEditJudge}
               onDelete={handleDeleteJudge}
