@@ -58,6 +58,7 @@ function ViewOnlyTable({
                 {isJudge && (
                   <>
                     <th className="px-4 py-3 w-1/4 text-center">Judge Code</th>
+                    <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
                     <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
                   </>
                 )}
@@ -147,6 +148,7 @@ function ViewOnlyTable({
                         </button>
                         <button
                           onClick={() => onDelete?.(item)}
+                          onClick={() => onDelete?.(item)}
                           className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
                         >
                           <Trash2 size={16} />
@@ -163,7 +165,7 @@ function ViewOnlyTable({
               {onAdd && (
                 <tr className="bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
                   <td
-                    colSpan={isJudge ? data.length + 2 : fieldKey ? 4 : 3}
+                    colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
                     className="px-4 py-4 text-center text-blue-600 font-semibold"
                     onClick={onAdd}
                   >

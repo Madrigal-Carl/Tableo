@@ -178,6 +178,15 @@ function CategoryPage() {
         const res = await getEvent(eventId);
         const evt = res.data;
 
+        // Normalize judges so every judge has name, invitationCode, and suffix
+        evt.judges = (evt.judges || []).map((j) => ({
+          id: j.id,
+          name: j.name,
+          invitationCode: j.invitationCode || "", // default if null
+          suffix: j.suffix || "", // default if null
+          sequence: j.sequence || 0,
+        }));
+
         setEvent(evt);
 
         if (evt.stages?.length) {
@@ -522,8 +531,17 @@ function CategoryPage() {
           {activeTopTab === "Judges" && (
             <ViewOnlyTable
               title="Judges"
-              data={event?.judges || []}
+              data={(event?.judges || []).map((j) => ({
+                id: j.id,
+                name: j.name,
+                invitationCode: j.invitationCode || "",
+                suffix: j.suffix || "",
+                displayInfo:
+                  `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
+              }))}
               nameLabel="Judge Name"
+              fieldLabel="Info"
+              fieldKey="displayInfo" // <-- this is important
               editable
               isJudge={true}
               onEdit={handleEditJudge}
