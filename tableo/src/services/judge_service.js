@@ -14,3 +14,8 @@ export const deleteJudge = async (judgeId) => {
   const res = await api.delete(`/judge/${judgeId}`);
   return res.data;
 };
+
+export const createOrUpdate = async (eventId, count) => {
+  const res = await api.post(`/judge/event/${eventId}`, { count });
+  return res.data;
+};
