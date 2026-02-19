@@ -29,7 +29,6 @@ import {
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
 
-
 function CategoryPage() {
   const navigate = useNavigate();
   const { eventId } = useParams();
@@ -48,7 +47,6 @@ function CategoryPage() {
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
   const [selectedStageObj, setSelectedStageObj] = useState(null);
 
-
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryList, setCategoryList] = useState([
     { name: "", weight: "", maxScore: "" },
@@ -63,8 +61,8 @@ function CategoryPage() {
     sexFilter === "ALL"
       ? event?.candidates || []
       : (event?.candidates || []).filter(
-        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-      )
+          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+        )
   ).sort((a, b) => {
     if (a.sequence == null && b.sequence != null) return 1;
     if (a.sequence != null && b.sequence == null) return -1;
@@ -97,10 +95,7 @@ function CategoryPage() {
 
       showToast("success", "Participant updated successfully");
     } catch (err) {
-      showToast(
-        "error",
-        err.response?.data?.message || "Failed to update participant",
-      );
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -135,7 +130,7 @@ function CategoryPage() {
         showConfirmButton: false,
       });
     } catch (err) {
-      Swal.fire("Error", err.message || "Failed to delete", "error");
+      Swal.fire("Error", err.message);
     } finally {
       setLoading(false);
     }
@@ -152,7 +147,7 @@ function CategoryPage() {
 
       showToast("success", "Participant added successfully");
     } catch (err) {
-      showToast("error", err.message || "Failed to add participant");
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -191,16 +186,11 @@ function CategoryPage() {
         showConfirmButton: false,
       });
     } catch (err) {
-      Swal.fire(
-        "Error",
-        err.response?.data?.message || "Failed to delete judge",
-        "error"
-      );
+      Swal.fire("Error", err.message);
     } finally {
       setLoading(false);
     }
   };
-
 
   const getStageIdByName = (stageName) =>
     event?.stages.find((s) => s.name === stageName)?.id;
@@ -237,7 +227,7 @@ function CategoryPage() {
 
       // For now: update locally
       const updatedStages = event.stages.map((s) =>
-        s.id === updatedStage.id ? { ...s, name: updatedStage.name } : s
+        s.id === updatedStage.id ? { ...s, name: updatedStage.name } : s,
       );
 
       setEvent({ ...event, stages: updatedStages });
@@ -250,7 +240,6 @@ function CategoryPage() {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     if (event) return;
@@ -337,7 +326,7 @@ function CategoryPage() {
 
       showToast("success", "Categories added successfully");
     } catch (err) {
-      showToast("error", err.message || "Failed to add categories");
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -371,7 +360,7 @@ function CategoryPage() {
       setIsCriteriaModalOpen(false);
     } catch (err) {
       console.error(err);
-      showToast("error", err.message || "Failed to save criteria");
+      showToast("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -421,8 +410,9 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
-                    }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${
+                    activeTopTab === tab ? "text-gray-600" : "text-white"
+                  }`}
                 >
                   {tab}
                 </button>
@@ -444,10 +434,11 @@ function CategoryPage() {
                     >
                       <button
                         onClick={() => setActiveStage(stageObj.name)}
-                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
-                          ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                          : "text-gray-400 hover:text-gray-600"
-                          }`}
+                        className={`pb-3 text-lg font-semibold transition ${
+                          activeStage === stageObj.name
+                            ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                            : "text-gray-400 hover:text-gray-600"
+                        }`}
                       >
                         {stageObj.name}
                       </button>
@@ -495,8 +486,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                              .slice(0, 30)
-                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                                .slice(0, 30)
+                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -521,9 +512,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                              name: c.label,
-                              weight: c.percentage,
-                            }))
+                                name: c.label,
+                                weight: c.percentage,
+                              }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -635,7 +626,8 @@ function CategoryPage() {
                 name: j.name,
                 invitationCode: j.invitationCode || "",
                 suffix: j.suffix || "",
-                displayInfo: `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
+                displayInfo:
+                  `${j.invitationCode || ""} ${j.suffix || ""}`.trim(),
               }))}
               nameLabel="Judge Name"
               fieldLabel="Info"
@@ -657,7 +649,7 @@ function CategoryPage() {
                   showToast("success", "Judge added successfully");
                 } catch (err) {
                   console.error(err);
-                  showToast("error", err.message || "Failed to add judge");
+                  showToast("error", err.message);
                 } finally {
                   setLoading(false);
                 }
