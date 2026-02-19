@@ -15,8 +15,8 @@ import {
 } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-
 import { getEvent } from "../../services/event_service";
+import { deleteJudge } from "../../services/judge_service";
 import {
   addCategoryToEvent,
   getCategoriesByStage,
@@ -61,8 +61,8 @@ function CategoryPage() {
     sexFilter === "ALL"
       ? event?.candidates || []
       : (event?.candidates || []).filter(
-          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-        )
+        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+      )
   ).sort((a, b) => {
     if (a.sequence == null && b.sequence != null) return 1;
     if (a.sequence != null && b.sequence == null) return -1;
@@ -155,9 +155,45 @@ function CategoryPage() {
     console.log("Edit judge:", updated);
   };
 
-  const handleDeleteJudge = (item) => {
-    console.log("Delete judge:", item);
+  const handleDeleteJudge = async (item) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `You want to delete ${item.name}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setLoading(true);
+
+      await deleteJudge(item.id);
+
+      const res = await getEvent(eventId);
+      setEvent(res.data);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Judge has been deleted.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire(
+        "Error",
+        err.response?.data?.message || "Failed to delete judge",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const getStageIdByName = (stageName) =>
     event?.stages.find((s) => s.name === stageName)?.id;
@@ -378,9 +414,8 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${
-                    activeTopTab === tab ? "text-gray-600" : "text-white"
-                  }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
+                    }`}
                 >
                   {tab}
                 </button>
@@ -402,11 +437,10 @@ function CategoryPage() {
                     >
                       <button
                         onClick={() => setActiveStage(stageObj.name)}
-                        className={`pb-3 text-lg font-semibold transition ${
-                          activeStage === stageObj.name
-                            ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                            : "text-gray-400 hover:text-gray-600"
-                        }`}
+                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
+                          ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                          : "text-gray-400 hover:text-gray-600"
+                          }`}
                       >
                         {stageObj.name}
                       </button>
@@ -454,8 +488,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                                .slice(0, 30)
-                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                              .slice(0, 30)
+                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -480,9 +514,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                                name: c.label,
-                                weight: c.percentage,
-                              }))
+                              name: c.label,
+                              weight: c.percentage,
+                            }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);

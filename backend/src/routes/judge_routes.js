@@ -34,4 +34,10 @@ router.get(
   judgeController.getEventForJudge,
 );
 
+// Soft delete a judge
+router.delete(
+  "/:judgeId",
+  requireAuth,
+  judgeController.deleteJudge
+);
 module.exports = router;
