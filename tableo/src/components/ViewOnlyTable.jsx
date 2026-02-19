@@ -11,7 +11,7 @@ function ViewOnlyTable({
   editable = false,
   onEdit,
   onDelete,
-  onAdd, // optional add button callback
+  onAdd,
   isJudge = false,
 }) {
   const [selectedItem, setSelectedItem] = useState(null);
@@ -19,12 +19,13 @@ function ViewOnlyTable({
   const [sexFilter, setSexFilter] = useState("ALL");
 
   const filteredData = useMemo(() => {
+    if (isJudge) return data; // no sex filter for judges
+
     const filtered =
       sexFilter === "ALL"
         ? data
         : data.filter((c) => c.sex?.toLowerCase() === sexFilter.toLowerCase());
 
-    // sort: sequence first, then those with no sequence/sex go to bottom
     return filtered.sort((a, b) => {
       if (a.sequence == null && b.sequence != null) return 1;
       if (a.sequence != null && b.sequence == null) return -1;
@@ -34,7 +35,7 @@ function ViewOnlyTable({
         return a.sequence - b.sequence;
       return 0;
     });
-  }, [data, sexFilter]);
+  }, [data, sexFilter, isJudge]);
 
   const openEditModal = (item) => {
     setSelectedItem({ ...item });
@@ -63,6 +64,7 @@ function ViewOnlyTable({
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
+
           {!isJudge && (
             <div className="flex items-center gap-3">
               <label className="text-gray-600 font-medium">
@@ -91,7 +93,7 @@ function ViewOnlyTable({
             <table className="min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
               <thead>
                 <tr className="text-xs uppercase tracking-wider text-gray-400">
-                  {isJudge && (
+                  {isJudge ? (
                     <>
                       <th className="px-4 py-3 w-1/4 text-center">
                         Judge Code
@@ -100,79 +102,104 @@ function ViewOnlyTable({
                         {nameLabel}
                       </th>
                       <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
+                      <th className="px-4 py-3 w-1/4 text-center">Actions</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-4 py-3 w-1/4 text-center">
+                        Participant No.
+                      </th>
+                      <th className="px-4 py-3 w-1/4 text-center">
+                        {nameLabel}
+                      </th>
+                      {fieldKey && (
+                        <th className="px-4 py-3 w-1/4 text-center">
+                          {fieldLabel}
+                        </th>
+                      )}
+                      <th className="px-4 py-3 w-1/4 text-center">Actions</th>
                     </>
                   )}
-                  {!isJudge && (
-                    <th className="px-4 py-3 w-1/4 text-center">
-                      Participant No.
-                    </th>
-                  )}
-                  <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
-                  {!isJudge && fieldKey && (
-                    <th className="px-4 py-3 w-1/4 text-center">
-                      {fieldLabel}
-                    </th>
-                  )}
-                  <th className="px-4 py-3 w-1/4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((item, index) => (
+                {filteredData.map((item) => (
                   <tr
                     key={item.id}
-                    className="bg-gray-50 hover:bg-gray-100 transition shadow-sm"
+                    className="bg-gray-50 hover:bg-gray-100 transition shadow-sm rounded-xl"
                   >
-                    {!isJudge && (
-                      <td className="px-4 py-4 text-center font-medium text-gray-600">
-                        {item.sequence}
-                      </td>
-                    )}
-                    <td className="px-4 py-4 text-center">
-                      <div className="flex items-center justify-center gap-3">
-                        {!isJudge && (
-                          <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
-                            {item.path ? (
-                              <img
-                                src={`${import.meta.env.VITE_ASSET_URL}/uploads/candidates/${item.path}`}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              item.name
-                                ?.split(" ")
-                                .map((n) => n[0])
-                                .slice(0, 2)
-                                .join("")
-                                .toUpperCase()
-                            )}
-                          </div>
-                        )}
-                        <p className="font-semibold text-gray-800">
-                          {item.suffix ? `${item.suffix}. ` : ""}
+                    {isJudge ? (
+                      <>
+                        <td className="px-4 py-4 text-center font-medium text-gray-600">
+                          {item.invitationCode}
+                        </td>
+                        <td className="px-4 py-4 text-center font-semibold text-gray-800">
                           {item.name}
-                        </p>
-                      </div>
-                    </td>
-                    {!isJudge && fieldKey && (
-                      <td className="px-4 py-4 text-center text-gray-600 capitalize">
-                        {item[fieldKey]}
-                      </td>
+                        </td>
+                        <td className="px-4 py-4 text-center text-gray-600">
+                          {item.suffix || "-"}
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-4 text-center font-medium text-gray-600">
+                          {item.sequence != null ? item.sequence : "-"}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
+                              {item.path ? (
+                                <img
+                                  src={`${import.meta.env.VITE_ASSET_URL}/uploads/candidates/${item.path}`}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                item.name
+                                  ?.split(" ")
+                                  .map((n) => n[0])
+                                  .slice(0, 2)
+                                  .join("")
+                                  .toUpperCase()
+                              )}
+                            </div>
+                            <p className="font-semibold text-gray-800">
+                              {item.name}
+                            </p>
+                          </div>
+                        </td>
+                        {fieldKey && (
+                          <td className="px-4 py-4 text-center text-gray-600 capitalize">
+                            {item[fieldKey] || "-"}
+                          </td>
+                        )}
+                      </>
                     )}
+
+                    {/* ACTIONS */}
                     <td className="px-4 py-4 text-center">
                       {editable ? (
                         <div className="flex justify-center gap-2">
                           <button
-                            onClick={() => openEditModal(item)}
+                            onClick={() =>
+                              isJudge ? onDelete?.(item) : openEditModal(item)
+                            }
                             className="p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition"
                           >
-                            <SquarePen size={16} />
+                            {isJudge ? (
+                              <Trash2 size={16} />
+                            ) : (
+                              <SquarePen size={16} />
+                            )}
                           </button>
-                          <button
-                            onClick={() => onDelete?.(item)}
-                            className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {!isJudge && (
+                            <button
+                              onClick={() => onDelete?.(item)}
+                              className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">View only</span>
@@ -180,6 +207,8 @@ function ViewOnlyTable({
                     </td>
                   </tr>
                 ))}
+
+                {/* ADD ROW */}
                 {onAdd && (
                   <tr className="bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
                     <td

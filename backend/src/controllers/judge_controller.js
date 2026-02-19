@@ -17,6 +17,20 @@ async function updateJudge(req, res, next) {
   }
 }
 
+async function deleteJudge(req, res, next) {
+  try {
+    const judgeId = parseInt(req.params.judgeId);
+
+    const updatedJudges = await judgeService.deleteJudge(judgeId);
+
+    res.json({
+      message: "Judge deleted successfully",
+      judges: updatedJudges,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 
 async function createOrUpdateJudges(req, res, next) {
     try {
@@ -43,4 +57,4 @@ async function getEventForJudge(req, res, next) {
   }
 }
 
-module.exports = { updateJudge, createOrUpdateJudges, getEventForJudge  };
+module.exports = { updateJudge, createOrUpdateJudges, getEventForJudge, deleteJudge };
