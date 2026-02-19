@@ -12,6 +12,7 @@ const candidateController = require("../controllers/candidate_controller");
 router.put(
   "/:id",
   requireAuth,
+  validateCandidateId,
   validateCandidate,
   candidateController.updateCandidate,
 );

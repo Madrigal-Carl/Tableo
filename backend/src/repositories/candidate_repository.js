@@ -42,6 +42,14 @@ function softDelete(candidateId, transaction) {
   });
 }
 
+function findByEventAndSex(eventId, sex, transaction) {
+  return Candidate.findAll({
+    where: { event_id: eventId, sex },
+    order: [["sequence", "ASC"]],
+    transaction,
+  });
+}
+
 module.exports = {
   create,
   findByEventIncludingSoftDeleted,
@@ -49,4 +57,5 @@ module.exports = {
   findEventByCandidateId,
   countActiveByEvent,
   softDelete,
+  findByEventAndSex,
 };

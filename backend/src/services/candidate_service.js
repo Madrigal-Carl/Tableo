@@ -3,11 +3,24 @@ const candidateRepo = require("../repositories/candidate_repository");
 
 async function updateCandidate(candidateId, data) {
   return sequelize.transaction(async (t) => {
-    // Use repository to find the candidate's event
     const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
 
-    await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
     await candidateRepo.update(candidateId, data, t);
+
+    if (data.sex) {
+      const candidatesOfSex = await candidateRepo.findByEventAndSex(
+        eventId,
+        data.sex,
+        t,
+      );
+
+      for (let i = 0; i < candidatesOfSex.length; i++) {
+        const candidate = candidatesOfSex[i];
+        if (candidate.sequence !== i + 1) {
+          await candidateRepo.update(candidate.id, { sequence: i + 1 }, t);
+        }
+      }
+    }
 
     return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
   });

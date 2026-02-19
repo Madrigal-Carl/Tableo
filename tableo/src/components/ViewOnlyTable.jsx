@@ -26,6 +26,7 @@ function ViewOnlyTable({
   }
 
   const openEditModal = (item) => {
+    console.log(item);
     setSelectedItem({ ...item });
     setIsEditOpen(true);
   };
@@ -95,7 +96,7 @@ function ViewOnlyTable({
                   {/* Participant number */}
                   {!isJudge && (
                     <td className="px-4 py-4 text-center font-medium text-gray-600">
-                      {index + 1}
+                      {item.sequence || index + 1}
                     </td>
                   )}
 
@@ -129,7 +130,7 @@ function ViewOnlyTable({
 
                   {/* Sex column for participants */}
                   {!isJudge && fieldKey && (
-                    <td className="px-4 py-4 text-center text-gray-600">
+                    <td className="px-4 py-4 text-center text-gray-600 capitalize">
                       {item[fieldKey]}
                     </td>
                   )}

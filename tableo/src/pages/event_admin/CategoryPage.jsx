@@ -24,6 +24,7 @@ import {
 import {
   createOrUpdateCandidates,
   deleteCandidate,
+  editCandidate,
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 
@@ -62,8 +63,25 @@ function CategoryPage() {
 
   const tabs = ["Stages", "Participants", "Judges"];
 
-  const handleEditParticipant = (updated) => {
-    console.log("Edit participant:", updated);
+  const handleEditParticipant = async (updated) => {
+    try {
+      setLoading(true);
+
+      const { id, ...payload } = updated;
+      await editCandidate(id, payload);
+
+      const eventRes = await getEvent(eventId);
+      setEvent(eventRes.data);
+
+      showToast("success", "Participant updated successfully");
+    } catch (err) {
+      showToast(
+        "error",
+        err.response?.data?.message || "Failed to update participant",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteParticipant = async (item) => {

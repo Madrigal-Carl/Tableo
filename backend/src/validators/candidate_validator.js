@@ -8,13 +8,10 @@ function validateCandidate(req, res, next) {
       "string.max": "Candidate name must not exceed 50 characters",
       "any.required": "Candidate name is required",
     }),
-    suffix: Joi.string()
-      .valid("mr", "mrs", "ms")
-      .allow("")
-      .optional()
-      .messages({
-        "any.only": 'Suffix must be either "mr", "mrs", or "ms"',
-      }),
+    sex: Joi.string().valid("male", "female").required().messages({
+      "any.only": 'Sex must be either "male" or "female"',
+      "any.required": "Sex is required",
+    }),
   });
 
   const { error } = schema.validate(req.body);
