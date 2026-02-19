@@ -1,7 +1,15 @@
 import api from "./api";
 
-export const editCandidate = async (candidateId, updatedData) => {
-  const res = await api.put(`/candidates/${candidateId}`, updatedData);
+export const editCandidate = async (
+  candidateId,
+  updatedData,
+  isFile = false,
+) => {
+  const res = await api.put(
+    `/candidates/${candidateId}`,
+    updatedData,
+    isFile ? { headers: { "Content-Type": "multipart/form-data" } } : undefined,
+  );
   return res.data;
 };
 

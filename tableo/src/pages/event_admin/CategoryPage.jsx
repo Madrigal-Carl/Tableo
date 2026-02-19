@@ -82,8 +82,13 @@ function CategoryPage() {
     try {
       setLoading(true);
 
-      const { id, ...payload } = updated;
-      await editCandidate(id, payload);
+      const { id, formData, isFile, ...rest } = updated;
+
+      if (isFile && formData) {
+        await editCandidate(id, formData, true);
+      } else {
+        await editCandidate(id, rest);
+      }
 
       const eventRes = await getEvent(eventId);
       setEvent(eventRes.data);

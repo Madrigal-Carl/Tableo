@@ -5,6 +5,10 @@ async function updateCandidate(req, res, next) {
     const candidateId = req.params.id;
     const data = req.body;
 
+    if (req.file) {
+      data.path = req.file.filename;
+    }
+
     const updated = await candidateService.updateCandidate(candidateId, data);
     res.json({ message: "Candidate updated successfully", candidate: updated });
   } catch (err) {

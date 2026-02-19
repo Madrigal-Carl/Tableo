@@ -1,5 +1,6 @@
 const sequelize = require("../database/models").sequelize;
-
+const fs = require("fs");
+const path = require("path");
 const eventRepo = require("../repositories/event_repository");
 const stageService = require("./stage_service");
 const candidateService = require("./candidate_service");
@@ -77,18 +78,17 @@ async function updateEvent(eventId, userId, payload) {
     if (!event) throw new Error("Event not found");
     if (event.user_id !== userId) throw new Error("Unauthorized");
 
-    // ⛔ Lock editing once event has started
-    if (
-      !isEventEditable({
-        date: event.date,
-        timeStart: event.timeStart,
-      })
-    ) {
+    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
       const err = new Error(
         "Event has already started and can no longer be edited",
       );
       err.status = 403;
       throw err;
+    }
+
+    if (payload.path && event.path) {
+      const oldPath = path.join("uploads/events", path.basename(event.path));
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
 
     const incomingTimeStart = normalizeTime(payload.timeStart);
@@ -98,7 +98,6 @@ async function updateEvent(eventId, userId, payload) {
       date: event.date,
       timeStart: event.timeStart,
     });
-
     if (
       eventHasStarted &&
       incomingTimeStart &&
@@ -110,10 +109,7 @@ async function updateEvent(eventId, userId, payload) {
       err.status = 400;
       throw err;
     }
-
-    if (eventHasStarted) {
-      delete payload.timeStart;
-    }
+    if (eventHasStarted) delete payload.timeStart;
 
     await eventRepo.update(eventId, payload, t);
 
