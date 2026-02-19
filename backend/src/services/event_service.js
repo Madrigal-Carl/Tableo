@@ -42,7 +42,7 @@ async function createEvent({
 
     await stageService.createOrUpdate(event.id, stages, t);
     await judgeService.createOrUpdate(event.id, judges, t);
-    await candidateService.createByCount(event.id, candidates, t);
+    await candidateService.createOrUpdate(event.id, candidates, t);
     return event;
   });
 }

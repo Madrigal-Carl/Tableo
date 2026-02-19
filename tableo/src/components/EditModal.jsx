@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-const SUFFIX_OPTIONS = ["", "Mr", "Ms", "Mrs"];
-const SEX_OPTIONS = ["", "Male", "Female"];
+const SUFFIX_OPTIONS = ["", "mr", "ms", "mrs"];
+const SEX_OPTIONS = ["", "male", "female"];
 
 function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
   const [formData, setFormData] = useState({});
@@ -11,12 +11,12 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
     if (item) {
       setFormData({
         name: item.name || "",
-        suffix: item.suffix || "",
-        sex: item.sex || "",
-        photo: item.photo || "",
+        ...(isParticipant
+          ? { sex: item.sex || "" }
+          : { suffix: item.suffix || "" }),
       });
     }
-  }, [item]);
+  }, [item, isParticipant]);
 
   if (!isOpen) return null;
 
@@ -28,7 +28,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
   };
 
   const handleSave = () => {
-    onSave(formData);
+    onSave({ ...formData, id: item.id });
     onClose();
   };
 
@@ -88,7 +88,6 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
                   {option === "" ? "Select Sex" : option}
                 </option>
               ))}
-
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
               <svg
@@ -121,7 +120,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
             onChange={(e) =>
               handleChange(
                 key,
-                e.target.files[0] ? URL.createObjectURL(e.target.files[0]) : ""
+                e.target.files[0] ? URL.createObjectURL(e.target.files[0]) : "",
               )
             }
             className="w-full mt-1 rounded-full border-orange-400 border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
