@@ -16,7 +16,6 @@ function ViewOnlyTable({
 }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   if (!data || data.length === 0) {
     return (
@@ -29,11 +28,6 @@ function ViewOnlyTable({
   const openEditModal = (item) => {
     setSelectedItem({ ...item });
     setIsEditOpen(true);
-  };
-
-  const openDeleteModal = (item) => {
-    setSelectedItem(item);
-    setIsDeleteOpen(true);
   };
 
   const handleConfirmEdit = (updatedItem) => {
@@ -151,7 +145,7 @@ function ViewOnlyTable({
                           <SquarePen size={16} />
                         </button>
                         <button
-                          onClick={() => openDeleteModal(item)}
+                          onClick={() => onDelete?.(item)}
                           className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
                         >
                           <Trash2 size={16} />
@@ -192,41 +186,6 @@ function ViewOnlyTable({
         item={selectedItem}
         isParticipant={!isJudge} // Pass true for participants
       />
-
-      {/* DELETE MODAL */}
-      {isDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Delete {title.slice(0, -1)}
-            </h2>
-
-            <p className="text-center text-gray-500 mb-6">
-              Are you sure you want to delete{" "}
-              <span className="font-medium text-gray-700">
-                {selectedItem?.name}
-              </span>
-              ?
-            </p>
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="px-6 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleConfirmDelete}
-                className="px-6 py-2 rounded-full bg-red-500 text-white hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

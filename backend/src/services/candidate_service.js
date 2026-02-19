@@ -49,22 +49,33 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
 
 async function syncCandidates(eventId) {
   return sequelize.transaction(async (t) => {
-    const currentActiveCount = await candidateRepo.countActiveByEvent(
+    const allCandidates = await candidateRepo.findByEventIncludingSoftDeleted(
       eventId,
       t,
     );
 
-    const newCount = currentActiveCount + 1;
-    await createOrUpdate(eventId, newCount, t);
+    const deletedCandidates = allCandidates
+      .filter((c) => c.deletedAt)
+      .sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
 
-    const updatedCandidates =
-      await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
+    if (deletedCandidates.length > 0) {
+      await deletedCandidates[0].restore({ transaction: t });
+    } else {
+      const maxSequence = allCandidates.length
+        ? Math.max(...allCandidates.map((c) => c.sequence))
+        : 0;
 
-    return {
-      before: currentActiveCount,
-      after: newCount,
-      candidates: updatedCandidates,
-    };
+      await candidateRepo.create(
+        {
+          name: `Candidate ${maxSequence + 1}`,
+          sequence: maxSequence + 1,
+          event_id: eventId,
+        },
+        t,
+      );
+    }
+
+    return await candidateRepo.findByEventIncludingSoftDeleted(eventId, t);
   });
 }
 

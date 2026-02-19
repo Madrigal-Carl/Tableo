@@ -21,7 +21,11 @@ import {
   addCategoryToEvent,
   getCategoriesByStage,
 } from "../../services/category_service";
-import { createOrUpdateCandidates } from "../../services/candidate_service";
+import {
+  createOrUpdateCandidates,
+  deleteCandidate,
+} from "../../services/candidate_service";
+import Swal from "sweetalert2";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -62,8 +66,39 @@ function CategoryPage() {
     console.log("Edit participant:", updated);
   };
 
-  const handleDeleteParticipant = (item) => {
-    console.log("Delete participant:", item);
+  const handleDeleteParticipant = async (item) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `You want to delete ${item.name}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setLoading(true);
+
+      await deleteCandidate(item.id);
+
+      const res = await getEvent(eventId);
+      setEvent(res.data);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Participant has been deleted.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire("Error", err.message || "Failed to delete", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddParticipant = async () => {
