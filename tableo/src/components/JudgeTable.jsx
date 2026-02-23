@@ -9,6 +9,7 @@ function JudgeTable({
   scores,
   setScores,
   categoryKey,
+  categoryPercentage,
 }) {
   const [previewImage, setPreviewImage] = useState(null);
 
@@ -41,7 +42,8 @@ function JudgeTable({
         </h1>
       )}
       <p className="text-gray-500 mb-4 px-2">
-        Max Score: <strong>{categoryMaxScore}</strong>
+        Max Score: <strong>{categoryMaxScore}</strong> | Category Weight:{" "}
+        <strong>{categoryPercentage}%</strong>
       </p>
 
       {/* Image preview modal */}
@@ -73,7 +75,7 @@ function JudgeTable({
               </span>
             </div>
           ))}
-          <div className="py-2">Total</div>
+          <div className="py-2">Average</div>
         </div>
 
         {/* Participant Rows */}
@@ -83,6 +85,7 @@ function JudgeTable({
             className="grid gap-2 items-center py-2 hover:bg-gray-50 rounded-lg"
             style={{ gridTemplateColumns: gridTemplate }}
           >
+            {/* Participant info */}
             <div className="flex items-center gap-3 px-2">
               {p.path ? (
                 <img
@@ -100,10 +103,10 @@ function JudgeTable({
                   N/A
                 </div>
               )}
-
               <span className="font-medium text-gray-800">{p.name}</span>
             </div>
 
+            {/* Criteria input */}
             {criteria.map((c) => (
               <div key={c.id} className="px-2 flex justify-center">
                 <input
@@ -121,8 +124,15 @@ function JudgeTable({
               </div>
             ))}
 
+            {/* Average per participant */}
             <div className="font-semibold text-center">
-              {calculateTotal(p.id, criteria, scores)}%
+              {calculateTotal(
+                p.id,
+                criteria,
+                scores,
+                categoryPercentage / 100, // pass weight as 0–1
+              )}
+              %
             </div>
           </div>
         ))}
