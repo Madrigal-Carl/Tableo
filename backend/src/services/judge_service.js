@@ -36,8 +36,8 @@ async function updateJudge(invitationCode, data) {
 
     const event = await judge.getEvent({ transaction: t });
 
-    if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
-      const err = new Error("Event has already started or ended");
+    if (hasEventEnded(event)) {
+      const err = new Error("Event has already ended");
       err.status = 403;
       throw err;
     }
@@ -86,7 +86,7 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
       const invitationCode = await generateUniqueInvitationCode();
       await judgeRepo.create(
         {
-          name: `Judge ${i + 1}`,
+          name: "Judge",
           sequence: i + 1,
           invitationCode,
           event_id: eventId,
@@ -119,8 +119,14 @@ function hasEventEnded({ date, timeEnd }) {
 async function getEventForJudge(req) {
   const { event, judge } = req;
 
-  if (!isEventEditable({ date: event.date, timeStart: event.timeStart })) {
-    const err = new Error("Event has already started or ended");
+  if (!hasEventStarted(event)) {
+    const err = new Error("Event has not started yet");
+    err.status = 403;
+    throw err;
+  }
+
+  if (hasEventEnded(event)) {
+    const err = new Error("Event has already ended");
     err.status = 403;
     throw err;
   }
@@ -162,6 +168,7 @@ async function getEventForJudge(req) {
     },
   };
 }
+
 async function deleteJudge(judgeId) {
   return sequelize.transaction(async (t) => {
     const judge = await judgeRepo.findByIdIncludingSoftDeleted(judgeId, t);

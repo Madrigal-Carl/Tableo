@@ -10,10 +10,7 @@ export const validateInvitationCode = (code) => {
   const pattern = /^JDG-[A-Z0-9]{6}$/;
 
   if (!pattern.test(trimmedCode)) {
-    showToast(
-      "error",
-      "Invalid invitation code format (e.g., JDG-XXXXX)"
-    );
+    showToast("error", "Invalid invitation code format (e.g., JDG-XXXXX)");
     return false;
   }
 
@@ -21,8 +18,15 @@ export const validateInvitationCode = (code) => {
 };
 
 export const validateJudgeData = ({ name, suffix }) => {
-  if (!name?.trim()) {
+  const trimmedName = name?.trim();
+
+  if (!trimmedName) {
     showToast("error", "Judge name is required");
+    return false;
+  }
+
+  if (trimmedName.toLowerCase() === "judge") {
+    showToast("error", "Please enter a valid judge name");
     return false;
   }
 
