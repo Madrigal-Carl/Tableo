@@ -61,8 +61,8 @@ function CategoryPage() {
     sexFilter === "ALL"
       ? event?.candidates || []
       : (event?.candidates || []).filter(
-          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-        )
+        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+      )
   ).sort((a, b) => {
     if (a.sequence == null && b.sequence != null) return 1;
     if (a.sequence != null && b.sequence == null) return -1;
@@ -410,9 +410,8 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${
-                    activeTopTab === tab ? "text-gray-600" : "text-white"
-                  }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
+                    }`}
                 >
                   {tab}
                 </button>
@@ -434,11 +433,10 @@ function CategoryPage() {
                     >
                       <button
                         onClick={() => setActiveStage(stageObj.name)}
-                        className={`pb-3 text-lg font-semibold transition ${
-                          activeStage === stageObj.name
+                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
                             ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                             : "text-gray-400 hover:text-gray-600"
-                        }`}
+                          }`}
                       >
                         {stageObj.name}
                       </button>
@@ -486,8 +484,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                                .slice(0, 30)
-                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                              .slice(0, 30)
+                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -512,9 +510,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                                name: c.label,
-                                weight: c.percentage,
-                              }))
+                              name: c.label,
+                              weight: c.percentage,
+                            }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -698,6 +696,7 @@ function CategoryPage() {
           isOpen={isEditStageModalOpen}
           setIsOpen={setIsEditStageModalOpen}
           currentStage={selectedStageObj}
+          stages={event?.stages || []}   // ✅ ADD THIS
           onSave={handleUpdateStage}
         />
       </div>
