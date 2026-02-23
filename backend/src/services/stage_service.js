@@ -3,8 +3,36 @@ const stageRepo = require('../repositories/stage_repository');
 
 async function updateStage(stageId, data) {
     return sequelize.transaction(async (t) => {
-        const eventId = await stageRepo.findEventByStageId(stageId, t);
 
+        const stage = await stageRepo.findById(stageId, t);
+        if (!stage) throw new Error("Stage not found");
+
+        const eventId = stage.event_id;
+
+        // If sequence is changing
+        if (
+            data.sequence !== undefined &&
+            data.sequence !== stage.sequence
+        ) {
+            const existing = await stageRepo.findByEventAndSequence(
+                eventId,
+                data.sequence,
+                t
+            );
+
+            // ✅ If another stage already uses that sequence → swap
+            if (existing && existing.id !== stageId) {
+
+                // Swap the sequences
+                await stageRepo.update(
+                    existing.id,
+                    { sequence: stage.sequence },
+                    t
+                );
+            }
+        }
+
+        // Update current stage
         await stageRepo.update(stageId, data, t);
 
         return await stageRepo.findByEventIncludingSoftDeleted(eventId, t);

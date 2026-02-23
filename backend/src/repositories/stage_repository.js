@@ -3,7 +3,19 @@ const { Stage } = require('../database/models');
 function create(data, transaction) {
     return Stage.create(data, { transaction });
 }
+function findById(id, transaction) {
+    return Stage.findByPk(id, { transaction });
+}
 
+function findByEventAndSequence(eventId, sequence, transaction) {
+    return Stage.findOne({
+        where: {
+            event_id: eventId,
+            sequence,
+        },
+        transaction,
+    });
+}
 function findByEvent(eventId, transaction) {
     return Stage.findAll({
         where: { event_id: eventId },
@@ -44,4 +56,6 @@ module.exports = {
     findByEventIncludingSoftDeleted,
     findEventByStageId,
     update,
+    findById,
+    findByEventAndSequence
 };
