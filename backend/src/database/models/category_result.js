@@ -4,7 +4,6 @@ module.exports = (sequelize, DataTypes) => {
   const CategoryResult = sequelize.define(
     "CategoryResult",
     {
-      totalScore: { type: DataTypes.FLOAT, allowNull: false },
       average: { type: DataTypes.FLOAT, allowNull: false },
       rank: { type: DataTypes.INTEGER, allowNull: false },
     },

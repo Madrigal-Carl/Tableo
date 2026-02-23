@@ -5,11 +5,30 @@ const {
   CompetitionScore,
   Category,
 } = require("../database/models");
+const { generateCategoryResults } = require("./category_result_service");
 const { Op } = require("sequelize");
 
 async function submitScores(scores) {
-  // Could add additional business logic here, like checking duplicates
-  return await competitionScoreRepository.bulkUpsert(scores);
+  // 1. Save competition scores
+  await competitionScoreRepository.bulkUpsert(scores);
+
+  // 2. Find all unique categories affected by the submitted scores
+  const categoryIds = [...new Set(scores.map((s) => s.criterion_id))];
+
+  const categories = await Criterion.findAll({
+    where: { id: categoryIds },
+    attributes: ["category_id"],
+    raw: true,
+  });
+
+  const uniqueCategoryIds = [...new Set(categories.map((c) => c.category_id))];
+
+  // 3. Generate category results for each affected category
+  for (const categoryId of uniqueCategoryIds) {
+    await generateCategoryResults(categoryId);
+  }
+
+  return { success: true };
 }
 
 async function hasCompletedCategory(judgeId, categoryId) {

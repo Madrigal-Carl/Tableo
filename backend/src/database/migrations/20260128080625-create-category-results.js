@@ -46,10 +46,6 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      total_score: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
-      },
       average: {
         type: Sequelize.FLOAT,
         allowNull: false,
@@ -72,6 +68,12 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+    });
+
+    await queryInterface.addConstraint("category_results", {
+      fields: ["category_id", "candidate_id", "judge_id"],
+      type: "unique",
+      name: "unique_category_candidate_judge",
     });
   },
 

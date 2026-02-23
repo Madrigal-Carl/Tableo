@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   const CompetitionScore = sequelize.define(
     "CompetitionScore",
     {
-      score: { type: DataTypes.FLOAT, allowNull: false, deafultValue: 0 },
+      score: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
     },
     {
       paranoid: true,
