@@ -65,8 +65,8 @@ function CategoryPage() {
     sexFilter === "ALL"
       ? event?.candidates || []
       : (event?.candidates || []).filter(
-        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-      )
+          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+        )
   ).sort((a, b) => {
     if (a.sequence == null && b.sequence != null) return 1;
     if (a.sequence != null && b.sequence == null) return -1;
@@ -415,8 +415,9 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
-                    }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${
+                    activeTopTab === tab ? "text-gray-600" : "text-white"
+                  }`}
                 >
                   {tab}
                 </button>
@@ -438,10 +439,11 @@ function CategoryPage() {
                     >
                       <button
                         onClick={() => setActiveStage(stageObj.name)}
-                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
-                          ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                          : "text-gray-400 hover:text-gray-600"
-                          }`}
+                        className={`pb-3 text-lg font-semibold transition ${
+                          activeStage === stageObj.name
+                            ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                            : "text-gray-400 hover:text-gray-600"
+                        }`}
                       >
                         {stageObj.name}
                       </button>
@@ -489,8 +491,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                              .slice(0, 30)
-                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                                .slice(0, 30)
+                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -515,9 +517,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                              name: c.label,
-                              weight: c.percentage,
-                            }))
+                                name: c.label,
+                                weight: c.percentage,
+                              }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -587,11 +589,6 @@ function CategoryPage() {
                         </th>
                       ))}
 
-                      {/* 🔥 NEW COLUMNS */}
-                      <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
-                        Total
-                      </th>
-
                       <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
                         Average
                       </th>
@@ -617,20 +614,13 @@ function CategoryPage() {
                           </td>
                         ))}
 
-                        {/* 🔥 TOTAL COLUMN */}
-                        <td className="px-6 py-3 text-center font-semibold text-gray-700">
-                          0
-                        </td>
-
                         {/* 🔥 AVERAGE COLUMN */}
                         <td className="px-6 py-3 text-center font-semibold text-gray-700">
                           0.00
                         </td>
 
                         {/* 🔥 RANKING COLUMN */}
-                        <td className="px-6 py-3 text-center font-semibold text-[#FA824C]">
-
-                        </td>
+                        <td className="px-6 py-3 text-center font-semibold text-[#FA824C]"></td>
                       </tr>
                     ))}
                   </tbody>
@@ -733,7 +723,7 @@ function CategoryPage() {
           isOpen={isEditStageModalOpen}
           setIsOpen={setIsEditStageModalOpen}
           currentStage={selectedStageObj}
-          stages={event?.stages || []}   // ✅ ADD THIS
+          stages={event?.stages || []} // ✅ ADD THIS
           onSave={handleUpdateStage}
         />
       </div>
