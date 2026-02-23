@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "category_id",
       as: "criteria",
     });
-    Category.hasOne(models.CategoryResult, {
+    Category.hasMany(models.CategoryResult, {
       foreignKey: "category_id",
       as: "category_result",
     });

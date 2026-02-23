@@ -26,6 +26,7 @@ function findByIdWithRelations(id) {
           {
             model: sequelize.models.CategoryResult,
             as: "category_result",
+            separate: true,
             order: [["id", "ASC"]],
           },
           {

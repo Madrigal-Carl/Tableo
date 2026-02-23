@@ -61,24 +61,47 @@ function CategoryPage() {
 
   const [sexFilter, setSexFilter] = useState("ALL");
 
-  const filteredCandidates = (
-    sexFilter === "ALL"
-      ? event?.candidates || []
-      : (event?.candidates || []).filter(
-          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-        )
-  ).sort((a, b) => {
-    if (a.sequence == null && b.sequence != null) return 1;
-    if (a.sequence != null && b.sequence == null) return -1;
+  const getCategoryResults = (event, categoryId) => {
+    return (
+      event?.categories?.find((c) => c.id === categoryId)?.category_result || []
+    );
+  };
 
-    if (!a.sex && b.sex) return 1;
-    if (a.sex && !b.sex) return -1;
+  const getRankForCandidate = (categoryResults, candidateId) => {
+    return (
+      categoryResults.find((r) => r.candidate_id === candidateId)?.rank ?? null
+    );
+  };
 
-    if (a.sequence != null && b.sequence != null)
-      return a.sequence - b.sequence;
+  const rankedAndFilteredCandidates = React.useMemo(() => {
+    if (!event?.candidates) return [];
 
-    return 0;
-  });
+    const categoryResults = getCategoryResults(event, selectedCategory?.id);
+
+    return (
+      [...event.candidates]
+        // ✅ FILTER BY SEX
+        .filter((c) => {
+          if (sexFilter === "ALL") return true;
+          return c.sex?.toLowerCase() === sexFilter.toLowerCase();
+        })
+        // ✅ SORT BY RANKING
+        .sort((a, b) => {
+          const rankA = getRankForCandidate(categoryResults, a.id);
+          const rankB = getRankForCandidate(categoryResults, b.id);
+
+          // If both have rank → sort by rank
+          if (rankA != null && rankB != null) return rankA - rankB;
+
+          // Ranked candidates always come first
+          if (rankA != null) return -1;
+          if (rankB != null) return 1;
+
+          // Fallback: sequence
+          return (a.sequence ?? 999) - (b.sequence ?? 999);
+        })
+    );
+  }, [event, selectedCategory, sexFilter]);
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -290,6 +313,28 @@ function CategoryPage() {
     const updated = [...categoryList];
     updated[index][field] = value;
     setCategoryList(updated);
+  };
+
+  const getAverageForJudge = (categoryResults, candidateId, judgeId) => {
+    return (
+      categoryResults.find(
+        (r) => r.candidate_id === candidateId && r.judge_id === judgeId,
+      )?.average ?? null
+    );
+  };
+
+  const getTotalForCandidate = (categoryResults, candidateId) => {
+    const scores = categoryResults.filter(
+      (r) => r.candidate_id === candidateId,
+    );
+
+    if (!scores.length) return null;
+
+    // if multiple judges later → average of judges
+    const total =
+      scores.reduce((sum, r) => sum + Number(r.average), 0) / scores.length;
+
+    return total;
   };
 
   const handleAddCategoryRow = () => {
@@ -589,8 +634,9 @@ function CategoryPage() {
                         </th>
                       ))}
 
+                      {/* 🔥 NEW COLUMNS */}
                       <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
-                        Average
+                        Total
                       </th>
 
                       <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
@@ -599,30 +645,68 @@ function CategoryPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCandidates.map((candidate) => (
-                      <tr
-                        key={candidate.id}
-                        className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
-                      >
-                        <td className="px-6 py-4 font-medium text-gray-700 rounded-l-xl">
-                          {candidate.name}
-                        </td>
-                        {/* Judge Columns */}
-                        {event?.judges?.map((judge) => (
-                          <td key={judge.id} className="px-6 py-3 text-center">
-                            <div className="w-14 h-10 rounded-lg bg-gray-100 mx-auto" />
+                    {rankedAndFilteredCandidates.map((candidate) => {
+                      const categoryResults = getCategoryResults(
+                        event,
+                        selectedCategory?.id,
+                      );
+
+                      const total = getTotalForCandidate(
+                        categoryResults,
+                        candidate.id,
+                      );
+
+                      const rank = getRankForCandidate(
+                        categoryResults,
+                        candidate.id,
+                      );
+
+                      return (
+                        <tr
+                          key={candidate.id}
+                          className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
+                        >
+                          {/* Candidate Name */}
+                          <td className="px-6 py-4 font-medium text-gray-700 rounded-l-xl">
+                            {candidate.name}
                           </td>
-                        ))}
 
-                        {/* 🔥 AVERAGE COLUMN */}
-                        <td className="px-6 py-3 text-center font-semibold text-gray-700">
-                          0.00
-                        </td>
+                          {/* Judges */}
+                          {event?.judges?.map((judge) => {
+                            const avg = getAverageForJudge(
+                              categoryResults,
+                              candidate.id,
+                              judge.id,
+                            );
 
-                        {/* 🔥 RANKING COLUMN */}
-                        <td className="px-6 py-3 text-center font-semibold text-[#FA824C]"></td>
-                      </tr>
-                    ))}
+                            return (
+                              <td
+                                key={judge.id}
+                                className="px-6 py-3 text-center"
+                              >
+                                {avg !== null ? (
+                                  <div className="w-14 h-10 rounded-lg bg-orange-100 flex items-center justify-center font-semibold text-gray-700 mx-auto">
+                                    {avg}
+                                  </div>
+                                ) : (
+                                  <div className="w-14 h-10 rounded-lg bg-gray-100 mx-auto" />
+                                )}
+                              </td>
+                            );
+                          })}
+
+                          {/* TOTAL */}
+                          <td className="px-6 py-3 text-center font-semibold text-gray-700">
+                            {total !== null ? total.toFixed(2) : ""}
+                          </td>
+
+                          {/* RANK */}
+                          <td className="px-6 py-3 text-center font-semibold text-[#FA824C]">
+                            {rank ?? ""}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
