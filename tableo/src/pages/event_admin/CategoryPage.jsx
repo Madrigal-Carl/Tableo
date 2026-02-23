@@ -28,6 +28,10 @@ import {
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
+import {
+  createOrUpdateStages,
+  updateStage,
+} from "../../services/stage_service";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -221,21 +225,22 @@ function CategoryPage() {
     try {
       setLoading(true);
 
-      // 👉 Replace this with your actual API service if you have one
-      // Example:
-      // await updateStage(updatedStage.id, { name: updatedStage.name });
+      // 🔥 Call backend to update BOTH name and sequence
+      await updateStage(updatedStage.id, {
+        name: updatedStage.name,
+        sequence: updatedStage.sequence,
+      });
 
-      // For now: update locally
-      const updatedStages = event.stages.map((s) =>
-        s.id === updatedStage.id ? { ...s, name: updatedStage.name } : s,
-      );
+      // 🔥 Refetch full event so ordering is correct
+      const res = await getEvent(eventId);
+      setEvent(res.data);
 
-      setEvent({ ...event, stages: updatedStages });
+      // Set active stage to updated name
       setActiveStage(updatedStage.name);
 
       showToast("success", "Stage updated successfully");
     } catch (err) {
-      showToast("error", "Failed to update stage");
+      showToast("error", err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
@@ -434,8 +439,8 @@ function CategoryPage() {
                       <button
                         onClick={() => setActiveStage(stageObj.name)}
                         className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
-                            ? "border-b-2 border-[#FA824C] text-[#FA824C]"
-                            : "text-gray-400 hover:text-gray-600"
+                          ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                          : "text-gray-400 hover:text-gray-600"
                           }`}
                       >
                         {stageObj.name}

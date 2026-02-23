@@ -3,12 +3,24 @@ const Joi = require('joi');
 function validateStage(req, res, next) {
     const schema = Joi.object({
         name: Joi.string().required().messages({
-            'string.empty': 'Stage name is required',
-            'any.required': 'Stage name is required',
+            "string.empty": "Stage name is required",
+            "any.required": "Stage name is required",
         }),
-    });
+
+        // ✅ Allow sequence updates
+        sequence: Joi.number()
+            .integer()
+            .min(1)
+            .optional()
+            .messages({
+                "number.base": "Sequence must be a number",
+                "number.integer": "Sequence must be an integer",
+                "number.min": "Sequence must be at least 1",
+            }),
+    }).unknown(false); // ❗ Prevent unexpected fields
 
     const { error } = schema.validate(req.body);
+
     if (error) {
         return res.status(400).json({ message: error.details[0].message });
     }
