@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { validateCandidate } from "../validations/candidate_validation";
+import { showToast } from "../utils/swal";
 
 const SUFFIX_OPTIONS = ["", "mr", "ms", "mrs"];
 const SEX_OPTIONS = ["", "male", "female"];
@@ -14,6 +16,8 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
         ...(isParticipant
           ? { sex: item.sex || "" }
           : { suffix: item.suffix || "" }),
+        photo: null,
+        existingPath: item.path || null,
       });
     }
   }, [item, isParticipant]);
@@ -28,6 +32,15 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
   };
 
   const handleSave = () => {
+    if (isParticipant) {
+      const error = validateCandidate(formData, true);
+
+      if (error) {
+        showToast("error", error);
+        return;
+      }
+    }
+
     onSave({ ...formData, id: item.id });
     onClose();
   };
