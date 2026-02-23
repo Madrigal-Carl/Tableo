@@ -215,8 +215,18 @@ function JudgePage() {
           >
             Exit
           </button>
+
           <h1 className="text-xl font-semibold">{eventData.event.title}</h1>
-          <div className="w-10" />
+
+          {/* Profile Initial */}
+          <div className="relative">
+            <button
+              onClick={() => setShowJudgeModal(true)}
+              className="w-10 h-10 rounded-full bg-[#FA824C] text-white flex items-center justify-center font-semibold hover:bg-[#FF9768]"
+            >
+              {judgeInfo?.name?.[0] ?? "J"}
+            </button>
+          </div>
         </div>
       </div>
 
