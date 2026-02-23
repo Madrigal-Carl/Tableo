@@ -19,63 +19,23 @@ function ViewOnlyTable({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [sexFilter, setSexFilter] = useState("ALL");
 
-  /* ===================================================== */
-  /* ============== TOTAL + AVERAGE + RANK ================ */
-  /* ===================================================== */
-
   const filteredData = useMemo(() => {
-    if (!data) return [];
+    if (isJudge) return data; // no sex filter for judges
 
-    let base = isJudge
-      ? [...data]
-      : sexFilter === "ALL"
-        ? [...data]
-        : data.filter(
-          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase()
-        );
+    const filtered =
+      sexFilter === "ALL"
+        ? data
+        : data.filter((c) => c.sex?.toLowerCase() === sexFilter.toLowerCase());
 
-    /* Sort by sequence first */
-    base.sort((a, b) => {
+    return filtered.sort((a, b) => {
       if (a.sequence == null && b.sequence != null) return 1;
       if (a.sequence != null && b.sequence == null) return -1;
+      if (!a.sex && b.sex) return 1;
+      if (a.sex && !b.sex) return -1;
       if (a.sequence != null && b.sequence != null)
         return a.sequence - b.sequence;
       return 0;
     });
-
-    /* ✅ Compute Total + Average */
-    base = base.map((item) => {
-      const total =
-        Number(item.total) ||
-        Number(item.score) ||
-        Number(item.scores) ||
-        0;
-
-      const judgeCount = Number(item.judgeCount) || 1;
-
-      const average =
-        judgeCount > 0 ? (total / judgeCount).toFixed(2) : 0;
-
-      return {
-        ...item,
-        total,
-        average: Number(average),
-      };
-    });
-
-    /* ✅ Sort by Highest Total */
-    base.sort((a, b) => b.total - a.total);
-
-    /* ✅ Assign Ranking (Tie Safe) */
-    let rank = 1;
-    for (let i = 0; i < base.length; i++) {
-      if (i > 0 && base[i].total < base[i - 1].total) {
-        rank = i + 1;
-      }
-      base[i].rank = rank;
-    }
-
-    return base;
   }, [data, sexFilter, isJudge]);
 
   const openEditModal = (item) => {
@@ -104,9 +64,7 @@ function ViewOnlyTable({
       <div className="bg-white rounded-2xl shadow-sm p-6">
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            {title}
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
 
           {!isJudge && (
             <div className="flex items-center gap-3">
@@ -133,150 +91,128 @@ function ViewOnlyTable({
           </h1>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-max text-sm border-separate border-spacing-y-2 table-fixed">
+            <table className="min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
               <thead>
                 <tr className="text-xs uppercase tracking-wider text-gray-400">
                   {isJudge ? (
                     <>
-                      <th className="px-4 py-3 text-center">
+                      <th className="px-4 py-3 w-1/4 text-center">
                         Judge Code
                       </th>
-                      <th className="px-4 py-3 text-center">
+                      <th className="px-4 py-3 w-1/4 text-center">
                         {nameLabel}
                       </th>
-                      <th className="px-4 py-3 text-center">Suffix</th>
-
-                      {/* ✅ TOTAL + AVERAGE + RANK */}
-                      <th className="px-4 py-3 text-center font-bold text-blue-600">
-                        Total
-                      </th>
-                      <th className="px-4 py-3 text-center font-bold text-purple-600">
-                        Avg
-                      </th>
-                      <th className="px-4 py-3 text-center font-bold text-green-600">
-                        Rank
-                      </th>
-
-                      <th className="px-4 py-3 text-center">
-                        Actions
-                      </th>
+                      <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
+                      <th className="px-4 py-3 w-1/4 text-center">Actions</th>
                     </>
                   ) : (
                     <>
-                      <th className="px-4 py-3 text-center">
+                      <th className="px-4 py-3 w-1/4 text-center">
                         Participant No.
                       </th>
-                      <th className="px-4 py-3 text-center">
+                      <th className="px-4 py-3 w-1/4 text-center">
                         {nameLabel}
                       </th>
-
                       {fieldKey && (
-                        <th className="px-4 py-3 text-center">
+                        <th className="px-4 py-3 w-1/4 text-center">
                           {fieldLabel}
                         </th>
                       )}
-
-                      {/* ✅ TOTAL + AVERAGE + RANK */}
-                      <th className="px-4 py-3 text-center font-bold text-blue-600">
-                        Total
-                      </th>
-                      <th className="px-4 py-3 text-center font-bold text-purple-600">
-                        Avg
-                      </th>
-                      <th className="px-4 py-3 text-center font-bold text-green-600">
-                        Rank
-                      </th>
-
-                      <th className="px-4 py-3 text-center">
-                        Actions
-                      </th>
+                      <th className="px-4 py-3 w-1/4 text-center">Actions</th>
                     </>
                   )}
                 </tr>
               </thead>
-
               <tbody>
                 {filteredData.map((item) => (
                   <tr
                     key={item.id}
                     className="bg-gray-50 hover:bg-gray-100 transition shadow-sm rounded-xl"
                   >
-                    {/* LEFT SIDE */}
                     {isJudge ? (
                       <>
-                        <td className="px-4 py-4 text-center">
+                        <td className="px-4 py-4 text-center font-medium text-gray-600">
                           {item.invitationCode}
                         </td>
-                        <td className="px-4 py-4 text-center font-semibold">
+                        <td className="px-4 py-4 text-center font-semibold text-gray-800">
                           {item.name}
                         </td>
-                        <td className="px-4 py-4 text-center">
+                        <td className="px-4 py-4 text-center text-gray-600">
                           {item.suffix || "-"}
                         </td>
                       </>
                     ) : (
                       <>
+                        <td className="px-4 py-4 text-center font-medium text-gray-600">
+                          {item.sequence != null ? item.sequence : "-"}
+                        </td>
                         <td className="px-4 py-4 text-center">
-                          {item.sequence ?? "-"}
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
+                              {item.path ? (
+                                <img
+                                  src={`${import.meta.env.VITE_ASSET_URL}${item.path}`}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                item.name
+                                  ?.split(" ")
+                                  .map((n) => n[0])
+                                  .slice(0, 2)
+                                  .join("")
+                                  .toUpperCase()
+                              )}
+                            </div>
+                            <p className="font-semibold text-gray-800">
+                              {item.name}
+                            </p>
+                          </div>
                         </td>
-
-                        <td className="px-4 py-4 text-center font-semibold">
-                          {item.name}
-                        </td>
-
                         {fieldKey && (
-                          <td className="px-4 py-4 text-center capitalize">
+                          <td className="px-4 py-4 text-center text-gray-600 capitalize">
                             {item[fieldKey] || "-"}
                           </td>
                         )}
                       </>
                     )}
 
-                    {/* ✅ TOTAL */}
-                    <td className="px-4 py-4 text-center font-bold text-blue-600">
-                      {item.total ?? 0}
-                    </td>
-
-                    {/* ✅ AVERAGE */}
-                    <td className="px-4 py-4 text-center font-bold text-purple-600">
-                      {item.average ?? 0}
-                    </td>
-
-                    {/* ✅ RANK */}
-                    <td className="px-4 py-4 text-center font-bold text-green-600">
-                      {item.rank ?? "-"}
-                    </td>
-
                     {/* ACTIONS */}
                     <td className="px-4 py-4 text-center">
                       {editable ? (
                         <div className="flex justify-center gap-2">
+                          {/* EDIT (Participants only) */}
                           {!isJudge && (
                             <button
-                              onClick={() =>
-                                canEdit && openEditModal(item)
-                              }
+                              onClick={() => canEdit && openEditModal(item)}
                               disabled={!canEdit}
-                              className="p-2 text-gray-500 hover:text-blue-600"
+                              className={`p-2 rounded-lg transition
+            ${
+              canEdit
+                ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
                             >
                               <SquarePen size={16} />
                             </button>
                           )}
 
+                          {/* DELETE */}
                           <button
-                            onClick={() =>
-                              canEdit && onDelete?.(item)
-                            }
+                            onClick={() => canEdit && onDelete?.(item)}
                             disabled={!canEdit}
-                            className="p-2 text-gray-500 hover:text-red-600"
+                            className={`p-2 rounded-lg transition
+          ${
+            canEdit
+              ? "text-gray-500 hover:text-red-600 hover:bg-red-50"
+              : "text-gray-300 cursor-not-allowed"
+          }`}
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">
-                          View only
-                        </span>
+                        <span className="text-sm text-gray-400">View only</span>
                       )}
                     </td>
                   </tr>
@@ -285,17 +221,14 @@ function ViewOnlyTable({
                 {/* ADD ROW */}
                 {onAdd && (
                   <tr
-                    className={`bg-gray-100 transition ${canEdit
-                      ? "hover:bg-gray-200 cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                      }`}
+                    className={`bg-gray-100 transition
+      ${canEdit ? "hover:bg-gray-200 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
                     onClick={() => canEdit && onAdd()}
                   >
                     <td
-                      colSpan={
-                        isJudge ? 7 : fieldKey ? 7 : 6
-                      }
+                      colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
                       className="px-4 py-4 text-center text-blue-600 font-semibold"
+                      onClick={onAdd}
                     >
                       <div className="flex items-center justify-center gap-2">
                         <Plus size={16} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ChevronLeft, PlusCircle, Pencil } from "lucide-react";
 import EditStageModal from "../../components/EditStageModal";
@@ -79,32 +79,6 @@ function CategoryPage() {
 
     return 0;
   });
-  /* ===============================
-     TOTAL + RANK CALCULATION
-  ================================= */
-
-  const candidatesWithRank = useMemo(() => {
-    if (!filteredCandidates) return [];
-
-    const list = filteredCandidates.map((c) => ({
-      ...c,
-      total: Number(c.total) || 0,
-    }));
-
-    // Sort by highest total
-    list.sort((a, b) => b.total - a.total);
-
-    // Assign ranking (tie-safe)
-    let rank = 1;
-    for (let i = 0; i < list.length; i++) {
-      if (i > 0 && list[i].total < list[i - 1].total) {
-        rank = i + 1;
-      }
-      list[i].rank = rank;
-    }
-
-    return list;
-  }, [filteredCandidates]);
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -601,7 +575,6 @@ function CategoryPage() {
                   <thead className="sticky top-0 bg-white z-10">
                     <tr>
                       <th className="w-64 px-6 py-4 text-left"></th>
-
                       {event?.judges?.map((judge) => (
                         <th
                           key={judge.id}
@@ -610,55 +583,22 @@ function CategoryPage() {
                           {judge.name}
                         </th>
                       ))}
-
-                      {/* ✅ TOTAL + RANK AFTER LAST JUDGE */}
-                      <th className="px-6 py-4 text-center font-bold text-blue-600">
-                        Total
-                      </th>
-
-                      <th className="px-6 py-4 text-center font-bold text-purple-600">
-                        Avg
-                      </th>
-
-                      <th className="px-6 py-4 text-center font-bold text-green-600">
-                        Rank
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {candidatesWithRank.map((candidate) => (
+                    {filteredCandidates.map((candidate) => (
                       <tr
                         key={candidate.id}
                         className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
                       >
-                        {/* Candidate Name */}
                         <td className="px-6 py-4 font-medium text-gray-700 rounded-l-xl">
                           {candidate.name}
                         </td>
-
-                        {/* Judge Columns */}
                         {event?.judges?.map((judge) => (
                           <td key={judge.id} className="px-6 py-3 text-center">
                             <div className="w-14 h-10 rounded-lg bg-gray-100 mx-auto" />
                           </td>
                         ))}
-
-                        {/* ✅ TOTAL */}
-                        <td className="px-6 py-4 text-center font-bold text-blue-600">
-                          {candidate.total}
-                        </td>
-
-                        {/* ✅ AVERAGE */}
-                        <td className="px-6 py-4 text-center font-bold text-purple-600">
-                          {candidate.total && event?.judges?.length
-                            ? (candidate.total / event.judges.length).toFixed(2)
-                            : "0.00"}
-                        </td>
-
-                        {/* ✅ RANK */}
-                        <td className="px-6 py-4 text-center font-bold text-green-600">
-                          {candidate.rank}
-                        </td>
                       </tr>
                     ))}
                   </tbody>
