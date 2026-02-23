@@ -574,7 +574,10 @@ function CategoryPage() {
                 <table className="min-w-full border-separate border-spacing-y-2">
                   <thead className="sticky top-0 bg-white z-10">
                     <tr>
+                      {/* Candidate Name */}
                       <th className="w-64 px-6 py-4 text-left"></th>
+
+                      {/* Judges */}
                       {event?.judges?.map((judge) => (
                         <th
                           key={judge.id}
@@ -583,6 +586,19 @@ function CategoryPage() {
                           {judge.name}
                         </th>
                       ))}
+
+                      {/* 🔥 NEW COLUMNS */}
+                      <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
+                        Total
+                      </th>
+
+                      <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
+                        Average
+                      </th>
+
+                      <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
+                        Ranking
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -594,11 +610,27 @@ function CategoryPage() {
                         <td className="px-6 py-4 font-medium text-gray-700 rounded-l-xl">
                           {candidate.name}
                         </td>
+                        {/* Judge Columns */}
                         {event?.judges?.map((judge) => (
                           <td key={judge.id} className="px-6 py-3 text-center">
                             <div className="w-14 h-10 rounded-lg bg-gray-100 mx-auto" />
                           </td>
                         ))}
+
+                        {/* 🔥 TOTAL COLUMN */}
+                        <td className="px-6 py-3 text-center font-semibold text-gray-700">
+                          0
+                        </td>
+
+                        {/* 🔥 AVERAGE COLUMN */}
+                        <td className="px-6 py-3 text-center font-semibold text-gray-700">
+                          0.00
+                        </td>
+
+                        {/* 🔥 RANKING COLUMN */}
+                        <td className="px-6 py-3 text-center font-semibold text-[#FA824C]">
+
+                        </td>
                       </tr>
                     ))}
                   </tbody>
