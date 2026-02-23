@@ -151,7 +151,7 @@ function ViewOnlyTable({
                             <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
                               {item.path ? (
                                 <img
-                                  src={`${import.meta.env.VITE_ASSET_URL}/uploads/candidates/${item.path}`}
+                                  src={`${import.meta.env.VITE_ASSET_URL}${item.path}`}
                                   alt={item.name}
                                   className="w-full h-full object-cover"
                                 />

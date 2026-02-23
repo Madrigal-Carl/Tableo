@@ -6,7 +6,7 @@ async function updateCandidate(req, res, next) {
     const data = req.body;
 
     if (req.file) {
-      data.path = req.file.filename;
+      data.path = `uploads/candidates/${req.file.filename}`;
     }
 
     const updated = await candidateService.updateCandidate(candidateId, data);

@@ -66,8 +66,12 @@ async function updateCandidate(candidateId, data) {
     if (!candidate) throw new Error("Candidate not found");
 
     if (data.path && candidate.path) {
-      const oldPath = path.join("uploads/candidates", candidate.path);
+      const oldPath = path.join("uploads", "candidates", candidate.path);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    if (data.path) {
+      data.path = `uploads/candidates/${data.path}`;
     }
 
     const sexChanged = data.sex && data.sex !== candidate.sex;

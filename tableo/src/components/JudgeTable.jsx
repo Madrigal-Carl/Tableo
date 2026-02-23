@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { calculateTotal } from "../validations/judge_score_validation";
 
 function JudgeTable({
@@ -10,6 +10,8 @@ function JudgeTable({
   setScores,
   categoryKey,
 }) {
+  const [previewImage, setPreviewImage] = useState(null);
+
   const handleScoreChange = (participantId, criteriaId, value, maxScore) => {
     let newValue = Number(value); // always convert to number
     if (isNaN(newValue)) newValue = 0; // default to 0 if empty
@@ -32,7 +34,7 @@ function JudgeTable({
   }, [categoryKey]);
 
   return (
-    <div className="bg-white rounded-3xl shadow-lg p-6">
+    <div className="bg-white rounded-3xl shadow-lg p-6 relative">
       {categoryName && (
         <h1 className="text-3xl font-bold text-[#FA824C] mb-2 px-2">
           {categoryName}
@@ -41,6 +43,20 @@ function JudgeTable({
       <p className="text-gray-500 mb-4 px-2">
         Max Score: <strong>{categoryMaxScore}</strong>
       </p>
+
+      {/* Image preview modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          onClick={() => setPreviewImage(null)}
+        >
+          <img
+            src={previewImage}
+            alt="Preview"
+            className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-lg"
+          />
+        </div>
+      )}
 
       <div className="overflow-x-auto h-[600px] overflow-y-auto mt-4">
         {/* Header Row */}
@@ -67,7 +83,26 @@ function JudgeTable({
             className="grid gap-2 items-center py-2 hover:bg-gray-50 rounded-lg"
             style={{ gridTemplateColumns: gridTemplate }}
           >
-            <div className="font-medium text-gray-800 px-2">{p.name}</div>
+            <div className="flex items-center gap-3 px-2">
+              {p.path ? (
+                <img
+                  src={`${import.meta.env.VITE_ASSET_URL}${p.path}`}
+                  alt={p.name}
+                  className="w-12 h-12 object-cover rounded-lg border hover:scale-110 transition cursor-pointer"
+                  onClick={() =>
+                    setPreviewImage(
+                      `${import.meta.env.VITE_ASSET_URL}${p.path}`,
+                    )
+                  }
+                />
+              ) : (
+                <div className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded-lg text-xs text-gray-500">
+                  N/A
+                </div>
+              )}
+
+              <span className="font-medium text-gray-800">{p.name}</span>
+            </div>
 
             {criteria.map((c) => (
               <div key={c.id} className="px-2 flex justify-center">
