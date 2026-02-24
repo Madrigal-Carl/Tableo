@@ -9,34 +9,32 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable("stages", {
+    await queryInterface.createTable("stage_candidates", {
       id: {
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      event_id: {
+      stage_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "events",
+          model: "stages",
           key: "id",
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      sequence: {
+      candidate_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-      },
-      name: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      max_candidates: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
+        references: {
+          model: "candidates",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
       created_at: {
         type: Sequelize.DATE,
@@ -62,6 +60,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable("stages");
+    await queryInterface.dropTable("stage_candidates");
   },
 };
