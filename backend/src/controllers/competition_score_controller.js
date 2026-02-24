@@ -9,15 +9,32 @@ async function submitScores(req, res, next) {
 
     const result = await competitionScoreService.submitScores(scores);
 
+    // ✅ Get socket instance
+    const io = req.app.get("io");
+
+    // ✅ IMPORTANT:
+    // Assume scores array contains category_id (you should confirm)
+    const categoryId = scores[0]?.category_id;
+
+    if (categoryId && io) {
+      io.to(`category_${categoryId}`).emit(
+        "category-status-updated",
+        {
+          categoryId,
+          message: "Scores updated"
+        }
+      );
+    }
+
     res.status(200).json({
       message: "Scores submitted successfully",
       result,
     });
+
   } catch (err) {
     next(err);
   }
 }
-
 /* =====================================================
    CHECK IF A SINGLE JUDGE COMPLETED CATEGORY
 ===================================================== */
