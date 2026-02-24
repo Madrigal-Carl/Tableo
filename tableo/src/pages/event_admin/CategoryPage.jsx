@@ -55,7 +55,6 @@ function CategoryPage() {
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
   const [selectedStageObj, setSelectedStageObj] = useState(null);
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
-  const [nextStageContestants, setNextStageContestants] = useState([]);
   const [advanceQueue, setAdvanceQueue] = useState([]);
   const [currentAdvanceIndex, setCurrentAdvanceIndex] = useState(0);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);

@@ -9,7 +9,7 @@ function SettingsPage() {
 
       <div className="flex-1 ml-72 px-12 py-10">
         {/* Page Title */}
-        <h1 className="text-5xl font-semibold text-[#FA824C] mb-8">
+        <h1 className="text-5xl font-bold text-[#192BC2] mb-8">
           Your Profile
         </h1>
 
@@ -47,12 +47,12 @@ function SettingsPage() {
             </div>
 
             <div className="flex gap-4">
-              <button className="flex items-center gap-2 bg-[#FA824C] text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90 transition">
+              <button className="flex items-center gap-2 bg-[#192BC2] text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90 transition">
                 <Upload size={16} />
                 Upload Photo
               </button>
 
-              <button className="px-6 py-2 border border-[#FA824C] text-[#FA824C] rounded-full text-sm font-medium hover:bg-[#FA824C] hover:text-white transition">
+              <button className="px-6 py-2 border border-[#192BC2] text-[#192BC2] rounded-full text-sm font-medium hover:bg-[#192BC2] hover:text-white transition">
                 Upload Photo
               </button>
             </div>
@@ -71,9 +71,9 @@ function SettingsPage() {
                 <input
                   type="text"
                   defaultValue="Mister Dunkin Donato"
-                  className="flex-1 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#FA824C]"
+                  className="flex-1 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#192BC2]"
                 />
-                <button className="bg-[#FA824C] text-white px-6 rounded-full text-sm font-medium hover:opacity-90 transition">
+                <button className="bg-[#192BC2] text-white px-6 rounded-full text-sm font-medium hover:opacity-90 transition">
                   Change
                 </button>
               </div>
@@ -88,9 +88,9 @@ function SettingsPage() {
                 <input
                   type="email"
                   defaultValue="dunkindonato@email.com"
-                  className="flex-1 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#FA824C]"
+                  className="flex-1 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#192BC2]"
                 />
-                <button className="bg-[#FA824C] text-white px-6 rounded-full text-sm font-medium hover:opacity-90 transition">
+                <button className="bg-[#192BC2] text-white px-6 rounded-full text-sm font-medium hover:opacity-90 transition">
                   Change
                 </button>
               </div>
@@ -107,7 +107,7 @@ function SettingsPage() {
               </label>
               <input
                 type="password"
-                className="w-full mt-3 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#FA824C]"
+                className="w-full mt-3 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#192BC2]"
               />
             </div>
 
@@ -117,7 +117,7 @@ function SettingsPage() {
               </label>
               <input
                 type="password"
-                className="w-full mt-3 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#FA824C]"
+                className="w-full mt-3 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#192BC2]"
               />
             </div>
 
@@ -127,11 +127,11 @@ function SettingsPage() {
               </label>
               <input
                 type="password"
-                className="w-full mt-3 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#FA824C]"
+                className="w-full mt-3 px-5 py-3 border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-[#192BC2]"
               />
             </div>
 
-            <button className="bg-[#FA824C] text-center font-bold text-white px-8 py-3 rounded-3xl hover:bg-[#FF9768]">
+            <button className="bg-[#192BC2] text-center font-bold text-white px-8 py-3 rounded-3xl hover:bg-[#192BC2]/80">
               Confirm
             </button>
           </div>

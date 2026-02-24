@@ -9,10 +9,12 @@ import { getEventForJudge, updateJudge } from "../../services/judge_service";
 import {
   submitScores,
   checkCategoryCompleted,
+  getCategoryJudgeStatuses,
 } from "../../services/competition_score_service";
 import { showToast } from "../../utils/swal";
 import { validateJudgeData } from "../../validations/judge_validation";
 import { validateScores } from "../../validations/judge_score_validation";
+import JudgeWaitingOverlay from "../../components/JudgeWaitingOverlay";
 
 function JudgePage() {
   const { invitationCode } = useParams();
@@ -22,16 +24,22 @@ function JudgePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sequential control
   const [stageIndex, setStageIndex] = useState(0);
   const [categoryIndex, setCategoryIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
-  // Modal
   const [showJudgeModal, setShowJudgeModal] = useState(true);
   const [judgeInfo, setJudgeInfo] = useState(null);
 
   const [scores, setScores] = useState({});
+  const [showWaitingOverlay, setShowWaitingOverlay] = useState(false);
+
+  // ✅ NEW STATE FOR LIVE JUDGE STATUSES
+  const [judgeStatuses, setJudgeStatuses] = useState([]);
+
+  /* ===================================================== */
+  /* FETCH DATA */
+  /* ===================================================== */
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,15 +65,19 @@ function JudgePage() {
     fetchData();
   }, [invitationCode, navigate]);
 
+  /* ===================================================== */
+  /* AUTO SELECT CATEGORY */
+  /* ===================================================== */
+
   const autoSelectCategory = async (data) => {
     const sortedStages = [...data.event.stages].sort(
-      (a, b) => a.sequence - b.sequence,
+      (a, b) => a.sequence - b.sequence
     );
 
     for (let s = 0; s < sortedStages.length; s++) {
       const stage = sortedStages[s];
       const categories = (stage.categories || []).sort(
-        (a, b) => a.sequence - b.sequence,
+        (a, b) => a.sequence - b.sequence
       );
 
       for (let c = 0; c < categories.length; c++) {
@@ -83,12 +95,100 @@ function JudgePage() {
     setIsFinished(true);
   };
 
+  /* ===================================================== */
+  /* POLLING FOR OTHER JUDGES (UPDATED) */
+  /* ===================================================== */
+
+  useEffect(() => {
+    if (!eventData) return;
+
+    const fetchStatuses = async () => {
+      try {
+        const currentStage = [...eventData.event.stages].sort(
+          (a, b) => a.sequence - b.sequence
+        )[stageIndex];
+
+        const currentCategories = (currentStage?.categories || []).sort(
+          (a, b) => a.sequence - b.sequence
+        );
+
+        const currentCategory = currentCategories[categoryIndex];
+        if (!currentCategory) return;
+
+        const statuses = await getCategoryJudgeStatuses(
+          invitationCode,
+          currentCategory.id
+        );
+
+        // Remove logged in judge from display list
+        const filtered = statuses.filter(
+          (j) => j.id !== eventData.judge.id
+        );
+
+        setJudgeStatuses(filtered);
+
+        // ✅ Check if THIS judge already finished
+        const myStatus = statuses.find(
+          (j) => j.id === eventData.judge.id
+        );
+
+        const iHaveScored = myStatus?.status === "done";
+
+        // ✅ Check if ALL judges finished
+        const allCompleted =
+          statuses.length > 0 &&
+          statuses.every((j) => j.status === "done");
+
+        // 🔥 FORCE overlay open if I already scored
+        if (iHaveScored) {
+          setShowWaitingOverlay(true);
+        }
+
+        // 🔥 If everyone done → move forward
+        if (allCompleted) {
+          setShowWaitingOverlay(false);
+          moveToNextCategory();
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
+
+    fetchStatuses();
+    const interval = setInterval(fetchStatuses, 3000);
+
+    return () => clearInterval(interval);
+  }, [stageIndex, categoryIndex, eventData]);
+  /* ===================================================== */
+  /* COMPUTED STATE (SAFE POSITION) */
+  /* ===================================================== */
+
+  if (error) return <p>{error}</p>;
+  if (!eventData) return null;
+
+  const activeStage = [...eventData.event.stages].sort(
+    (a, b) => a.sequence - b.sequence
+  )[stageIndex];
+
+  const currentCategories = (activeStage?.categories || []).sort(
+    (a, b) => a.sequence - b.sequence
+  );
+  const selectedCategory = currentCategories[categoryIndex] ?? null;
+  const normalizedCriteria = normalizeCriteria(selectedCategory);
+
+  /* ===================================================== */
+  /* SAVE JUDGE */
+  /* ===================================================== */
+
   const handleJudgeSave = async (data) => {
     if (!validateJudgeData(data)) return;
 
     try {
       const res = await updateJudge(invitationCode, data);
-      setJudgeInfo({ name: res.judge.name, suffix: res.judge.suffix ?? "" });
+      setJudgeInfo({
+        name: res.judge.name,
+        suffix: res.judge.suffix ?? "",
+      });
       setShowJudgeModal(false);
       showToast("success", "Judge info saved successfully");
     } catch (err) {
@@ -96,15 +196,17 @@ function JudgePage() {
     }
   };
 
+  /* ===================================================== */
+  /* HANDLE PROCEED */
+  /* ===================================================== */
+
   const handleProceed = async () => {
-    const selectedCategory =
-      eventData.event.stages[stageIndex].categories[categoryIndex];
-    const normalizedCriteria = normalizeCriteria(selectedCategory);
+    if (!selectedCategory) return;
 
     const allFilled = validateScores(
       eventData.event.candidates,
       normalizedCriteria,
-      scores,
+      scores
     );
 
     if (!allFilled) {
@@ -124,7 +226,6 @@ function JudgePage() {
 
     if (!result.isConfirmed) return;
 
-    // Prepare scores for submission
     const scoresToSubmit = [];
     const judgeId = eventData.judge.id;
 
@@ -134,70 +235,101 @@ function JudgePage() {
           candidate_id: candidate.id,
           judge_id: judgeId,
           criterion_id: criterion.id,
-          score: scores[candidate.id][criterion.id], // always number
+          score: scores[candidate.id]?.[criterion.id] ?? 0,
         });
       });
     });
 
     try {
       await submitScores(invitationCode, scoresToSubmit);
+
       showToast("success", "Scores submitted successfully");
+
+      // 🔥 Immediately force overlay to show
+      setShowWaitingOverlay(true);
+
+      // 🔥 Immediately fetch latest statuses so UI updates instantly
+      const statuses = await getCategoryJudgeStatuses(
+        invitationCode,
+        selectedCategory.id
+      );
+
+      const filtered = statuses.filter(
+        (j) => j.id !== eventData.judge.id
+      );
+
+      setJudgeStatuses(filtered);
     } catch (err) {
-      const msg =
-        err.response?.data?.message || err.message || "Failed to submit scores";
-      showToast("error", msg);
-      return;
+      showToast(
+        "error",
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to submit scores"
+      );
     }
+  };
 
-    // Move to next category/stage
-    const currentStageCategories = eventData.event.stages[
-      stageIndex
-    ].categories.sort((a, b) => a.sequence - b.sequence);
+  /* ===================================================== */
+  /* MOVE CATEGORY */
+  /* ===================================================== */
 
-    if (categoryIndex + 1 < currentStageCategories.length) {
-      // Move to next category in the same stage
+  const moveToNextCategory = () => {
+    const stages = eventData.event.stages.sort(
+      (a, b) => a.sequence - b.sequence
+    );
+
+    const categories =
+      stages[stageIndex]?.categories?.sort(
+        (a, b) => a.sequence - b.sequence
+      ) || [];
+
+    if (categoryIndex + 1 < categories.length) {
       setCategoryIndex(categoryIndex + 1);
       setScores({});
-    } else if (stageIndex + 1 < eventData.event.stages.length) {
-      // Move to first category of the next stage
+    } else if (stageIndex + 1 < stages.length) {
       setStageIndex(stageIndex + 1);
       setCategoryIndex(0);
       setScores({});
     } else {
-      // Finished all stages and categories
       setIsFinished(true);
     }
+
+    setShowWaitingOverlay(false);
   };
 
-  const normalizeCriteria = (category) => {
+  /* ===================================================== */
+  /* NORMALIZE */
+  /* ===================================================== */
+
+  function normalizeCriteria(category) {
     if (!category?.criteria?.length) return [];
+
     const total = category.criteria.reduce(
       (sum, c) => sum + Number(c.percentage || 0),
-      0,
+      0
     );
+
     return category.criteria.map((c) => ({
       id: c.id,
       name: c.label,
       weight: total > 0 ? (c.percentage / total) * 100 : 0,
       maxScore: category.maxScore || 100,
     }));
-  };
+  }
 
-  if (error) return <p>{error}</p>;
-  if (!eventData) return null;
-
-  const activeStage = [...eventData.event.stages].sort(
-    (a, b) => a.sequence - b.sequence,
-  )[stageIndex];
-  const currentCategories = (activeStage?.categories || []).sort(
-    (a, b) => a.sequence - b.sequence,
-  );
-  const selectedCategory = currentCategories[categoryIndex] ?? null;
-  const normalizedCriteria = normalizeCriteria(selectedCategory);
+  /* ===================================================== */
+  /* UI */
+  /* ===================================================== */
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
       <FullScreenLoader show={loading} />
+
+      <JudgeWaitingOverlay
+        isOpen={showWaitingOverlay}
+        judges={judgeStatuses}
+        categoryName={selectedCategory?.name ?? ""}
+      />
 
       <JudgeModal
         isOpen={showJudgeModal}
@@ -206,27 +338,25 @@ function JudgePage() {
         initialData={judgeInfo}
       />
 
-      {/* Header */}
       <div className="fixed top-0 left-0 w-full bg-white shadow-sm z-40">
         <div className="flex justify-between items-center px-6 py-3">
           <button
             onClick={() => navigate("/")}
-            className="px-5 py-2 rounded-full bg-[#FA824C] text-white hover:bg-[#FF9768]"
+            className="px-5 py-2 rounded-full bg-[#FA824C] text-white"
           >
             Exit
           </button>
 
-          <h1 className="text-xl font-semibold">{eventData.event.title}</h1>
+          <h1 className="text-xl font-semibold">
+            {eventData.event.title}
+          </h1>
 
-          {/* Profile Initial */}
-          <div className="relative">
-            <button
-              onClick={() => setShowJudgeModal(true)}
-              className="w-10 h-10 rounded-full bg-[#FA824C] text-white flex items-center justify-center font-semibold hover:bg-[#FF9768]"
-            >
-              {judgeInfo?.name?.[0] ?? "J"}
-            </button>
-          </div>
+          <button
+            onClick={() => setShowJudgeModal(true)}
+            className="w-10 h-10 rounded-full bg-[#FA824C] text-white"
+          >
+            {judgeInfo?.name?.[0] ?? "J"}
+          </button>
         </div>
       </div>
 
@@ -247,7 +377,7 @@ function JudgePage() {
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleProceed}
-                className="px-6 py-3 bg-[#FA824C] text-white rounded-xl hover:bg-[#FF9768]"
+                className="px-6 py-3 bg-[#FA824C] text-white rounded-xl"
               >
                 Proceed
               </button>
@@ -257,10 +387,10 @@ function JudgePage() {
 
         {isFinished && (
           <div className="text-center mt-60">
-            <h2 className="text-5xl md:text-6xl font-extrabold text-green-600 mb-4">
+            <h2 className="text-5xl font-extrabold text-green-600 mb-4">
               Judging Completed 🎉
             </h2>
-            <p className="text-xl md:text-2xl text-gray-600">
+            <p className="text-xl text-gray-600">
               Thank you for submitting your scores.
             </p>
           </div>
