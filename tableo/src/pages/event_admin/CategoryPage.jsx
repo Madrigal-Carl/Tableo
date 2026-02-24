@@ -716,7 +716,7 @@ function CategoryPage() {
           {activeTopTab === "Participants" && (
             <ViewOnlyTable
               title="Participants"
-              data={filteredCandidates}
+              data={rankedAndFilteredCandidates}
               nameLabel="Participant Name"
               fieldLabel="Sex"
               fieldKey="sex"
