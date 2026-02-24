@@ -11,17 +11,24 @@ export function validateScores(participants, criteria, scores) {
   return true; // all scores filled
 }
 
-// Optional: calculate total for a participant
-export function calculateTotal(participantId, criteria, scores) {
+export function calculateTotal(
+  participantId,
+  criteria,
+  scores,
+  categoryWeight = 1,
+) {
   if (!scores[participantId]) return "-";
 
   const filledScores = criteria.map((c) => scores[participantId][c.id]);
   if (filledScores.some((s) => s === undefined || s === null)) return "-";
 
-  return criteria
-    .reduce((sum, c) => {
-      const score = Number(scores[participantId][c.id] ?? 0);
-      return sum + (score / c.maxScore) * c.weight;
-    }, 0)
-    .toFixed(2);
+  // Compute raw category score (0–1)
+  const categoryRaw = criteria.reduce((sum, c) => {
+    const score = Number(scores[participantId][c.id] ?? 0);
+    const weight = Number(c.weight) / 100; // convert % to 0-1
+    return sum + (score / c.maxScore) * weight;
+  }, 0);
+
+  // Apply category weight (0–1) and scale to 100
+  return (categoryRaw * categoryWeight * 100).toFixed(2);
 }

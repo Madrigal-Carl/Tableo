@@ -238,6 +238,7 @@ function JudgePage() {
               criteria={normalizedCriteria}
               categoryName={selectedCategory.name}
               categoryMaxScore={selectedCategory.maxScore}
+              categoryPercentage={selectedCategory.percentage}
               scores={scores}
               setScores={setScores}
               categoryKey={`${stageIndex}-${categoryIndex}`}

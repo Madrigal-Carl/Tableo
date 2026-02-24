@@ -71,7 +71,7 @@ async function updateCandidate(candidateId, data) {
     }
 
     if (data.path) {
-      data.path = `uploads/candidates/${data.path}`;
+      data.path = `/uploads/candidates/${data.path}`;
     }
 
     const sexChanged = data.sex && data.sex !== candidate.sex;
