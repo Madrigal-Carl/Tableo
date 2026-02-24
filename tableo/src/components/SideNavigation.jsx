@@ -30,8 +30,8 @@ function SideNavigation() {
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition
         ${isActive
-            ? "bg-[#FA824C] text-white hover:bg-[#eb6e34]"
-            : "text-gray-700 hover:bg-[#FA824C] hover:text-white"
+            ? "bg-[#192BC2] text-white hover:bg-[#192BC2]/70"
+            : "text-gray-700 hover:bg-[#192BC2] hover:text-white"
           }`}
       >
         <Icon size={20} />
@@ -46,7 +46,7 @@ function SideNavigation() {
       text: "You will be logged out of your account.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#FA824C",
+      confirmButtonColor: "#192BC2",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Yes, log out",
       cancelButtonText: "Cancel",
