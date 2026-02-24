@@ -1,4 +1,5 @@
-const { Stage } = require("../database/models");
+const { Stage, Category, CategoryResult } = require("../database/models");
+const { Op } = require("sequelize");
 
 function create(data, transaction) {
   return Stage.create(data, { transaction });

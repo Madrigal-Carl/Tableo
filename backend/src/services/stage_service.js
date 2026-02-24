@@ -1,5 +1,7 @@
 const sequelize = require("../database/models").sequelize;
 const stageRepo = require("../repositories/stage_repository");
+const candidateRepo = require("../repositories/candidate_repository");
+const judgeRepo = require("../repositories/judge_repository");
 
 async function updateStage(stageId, data) {
   return sequelize.transaction(async (t) => {
