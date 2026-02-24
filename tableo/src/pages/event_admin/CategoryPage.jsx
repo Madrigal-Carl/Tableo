@@ -33,6 +33,7 @@ import {
   updateStage,
   getStageResults,
   advanceStageCandidates,
+  getActiveStage,
 } from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
 
@@ -67,52 +68,54 @@ function CategoryPage() {
 
   const [sexFilter, setSexFilter] = useState("ALL");
 
-  const getCategoryResults = (event, categoryId) => {
-    return (
-      event?.categories?.find((c) => c.id === categoryId)?.category_result || []
-    );
-  };
-
   const [advanceCounts, setAdvanceCounts] = useState({
     maleCount: null,
     femaleCount: null,
   });
 
-  const getRankForCandidate = (categoryResults, candidateId) => {
-    return (
-      categoryResults.find((r) => r.candidate_id === candidateId)?.rank ?? null
-    );
-  };
+  const [stageResults, setStageResults] = useState({
+    males: [],
+    females: [],
+  });
 
-  const rankedAndFilteredCandidates = React.useMemo(() => {
-    if (!event?.candidates) return [];
+  const participantsData = event?.candidates || [];
 
-    const categoryResults = getCategoryResults(event, selectedCategory?.id);
+  const displayedCandidates =
+    sexFilter === "MALE"
+      ? stageResults.males
+      : sexFilter === "FEMALE"
+        ? stageResults.females
+        : [...stageResults.males, ...stageResults.females];
 
-    return (
-      [...event.candidates]
-        // ✅ FILTER BY SEX
-        .filter((c) => {
-          if (sexFilter === "ALL") return true;
-          return c.sex?.toLowerCase() === sexFilter.toLowerCase();
-        })
-        // ✅ SORT BY RANKING
-        .sort((a, b) => {
-          const rankA = getRankForCandidate(categoryResults, a.id);
-          const rankB = getRankForCandidate(categoryResults, b.id);
+  useEffect(() => {
+    async function fetchResults() {
+      if (!activeStage) return;
 
-          // If both have rank → sort by rank
-          if (rankA != null && rankB != null) return rankA - rankB;
+      const stageId = getStageIdByName(activeStage);
+      if (!stageId) return;
 
-          // Ranked candidates always come first
-          if (rankA != null) return -1;
-          if (rankB != null) return 1;
+      try {
+        const res = await getStageResults(stageId);
+        setStageResults(res.data.data);
+      } catch (err) {
+        console.error(err);
+        setStageResults({ males: [], females: [] });
+      }
+    }
 
-          // Fallback: sequence
-          return (a.sequence ?? 999) - (b.sequence ?? 999);
-        })
-    );
-  }, [event, selectedCategory, sexFilter]);
+    fetchResults();
+  }, [activeStage, event]);
+
+  const rankedCandidates = React.useMemo(() => {
+    const combined = [...stageResults.males, ...stageResults.females];
+
+    return combined
+      .filter((c) => {
+        if (sexFilter === "ALL") return true;
+        return c.sex?.toLowerCase() === sexFilter.toLowerCase();
+      })
+      .sort((a, b) => a.rank - b.rank);
+  }, [stageResults, sexFilter]);
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -286,22 +289,46 @@ function CategoryPage() {
     async function fetchEvent() {
       try {
         setLoading(true);
+
         const res = await getEvent(eventId);
         const evt = res.data;
 
-        // Normalize judges so every judge has name, invitationCode, and suffix
         evt.judges = (evt.judges || []).map((j) => ({
           id: j.id,
           name: j.name,
-          invitationCode: j.invitationCode || "", // default if null
-          suffix: j.suffix || "", // default if null
+          invitationCode: j.invitationCode || "",
+          suffix: j.suffix || "",
           sequence: j.sequence || 0,
         }));
 
         setEvent(evt);
 
-        if (evt.stages?.length) {
-          setActiveStage(evt.stages[0].name);
+        // ⭐ Get active stage from backend (IMPORTANT)
+        try {
+          const activeRes = await getActiveStage(eventId);
+
+          const activeStageName = activeRes.data?.data?.name;
+
+          if (activeStageName) {
+            setActiveStage(activeStageName);
+          } else if (evt.stages?.length) {
+            // fallback safety
+            const sorted = evt.stages
+              .slice()
+              .sort((a, b) => a.sequence - b.sequence);
+
+            setActiveStage(sorted[0]?.name || "");
+          }
+        } catch (err) {
+          console.error("Active stage fetch failed:", err);
+
+          if (evt.stages?.length) {
+            const sorted = evt.stages
+              .slice()
+              .sort((a, b) => a.sequence - b.sequence);
+
+            setActiveStage(sorted[0]?.name || "");
+          }
         }
 
         await fetchCategories(evt.stages?.[0]?.name);
@@ -332,20 +359,6 @@ function CategoryPage() {
         (r) => r.candidate_id === candidateId && r.judge_id === judgeId,
       )?.average ?? null
     );
-  };
-
-  const getTotalForCandidate = (categoryResults, candidateId) => {
-    const scores = categoryResults.filter(
-      (r) => r.candidate_id === candidateId,
-    );
-
-    if (!scores.length) return null;
-
-    // if multiple judges later → average of judges
-    const total =
-      scores.reduce((sum, r) => sum + Number(r.average), 0) / scores.length;
-
-    return total;
   };
 
   const handleAddCategoryRow = () => {
@@ -664,25 +677,10 @@ function CategoryPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rankedAndFilteredCandidates.map((candidate) => {
-                      const categoryResults = getCategoryResults(
-                        event,
-                        selectedCategory?.id,
-                      );
-
-                      const total = getTotalForCandidate(
-                        categoryResults,
-                        candidate.id,
-                      );
-
-                      const rank = getRankForCandidate(
-                        categoryResults,
-                        candidate.id,
-                      );
-
+                    {displayedCandidates.map((candidate) => {
                       return (
                         <tr
-                          key={candidate.id}
+                          key={candidate.candidate_id}
                           className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
                         >
                           {/* 🔢 NO. */}
@@ -711,20 +709,19 @@ function CategoryPage() {
 
                           {/* Judges */}
                           {event?.judges?.map((judge) => {
-                            const avg = getAverageForJudge(
-                              categoryResults,
-                              candidate.id,
-                              judge.id,
-                            );
+                            const score =
+                              candidate.judge_scores?.find(
+                                (j) => j.judge_id === judge.id,
+                              )?.average ?? null;
 
                             return (
                               <td
                                 key={judge.id}
-                                className="px-6 py-3 text-center"
+                                className="px-4 py-3 text-center"
                               >
-                                {avg !== null ? (
+                                {score !== null ? (
                                   <div className="w-14 h-10 rounded-lg bg-orange-100 flex items-center justify-center font-semibold text-gray-700 mx-auto">
-                                    {avg}
+                                    {Number(score).toFixed(2)}
                                   </div>
                                 ) : (
                                   <div className="w-14 h-10 rounded-lg bg-gray-100 mx-auto" />
@@ -735,12 +732,14 @@ function CategoryPage() {
 
                           {/* TOTAL */}
                           <td className="px-6 py-3 text-center font-semibold text-gray-700">
-                            {total !== null ? total.toFixed(2) : ""}
+                            {candidate.final_average?.toFixed(2) !== null
+                              ? candidate.final_average.toFixed(2)
+                              : ""}
                           </td>
 
                           {/* RANK */}
                           <td className="px-6 py-3 text-center font-semibold text-[#FA824C]">
-                            {rank ?? ""}
+                            {candidate.rank ?? ""}
                           </td>
                         </tr>
                       );
@@ -812,7 +811,7 @@ function CategoryPage() {
           {activeTopTab === "Participants" && (
             <ViewOnlyTable
               title="Participants"
-              data={rankedAndFilteredCandidates}
+              data={participantsData}
               nameLabel="Participant Name"
               fieldLabel="Sex"
               fieldKey="sex"
@@ -967,9 +966,29 @@ function CategoryPage() {
 
               await advanceStageCandidates(stageId, payload);
 
+              // 🔥 Refetch full event
+              const res = await getEvent(eventId);
+              const updatedEvent = res.data;
+              setEvent(updatedEvent);
+
+              // 🔥 Determine next stage by sequence
+              const sortedStages = updatedEvent.stages
+                .slice()
+                .sort((a, b) => a.sequence - b.sequence);
+
+              const currentIndex = sortedStages.findIndex(
+                (s) => s.id === stageId,
+              );
+
+              const nextStage = sortedStages[currentIndex + 1];
+
+              if (nextStage) {
+                setActiveStage(nextStage.name);
+              }
+
               showToast("success", "Candidates advanced successfully");
 
-              // Reset everything
+              // Reset modal state
               setIsNextStageModalOpen(false);
               setAdvanceQueue([]);
               setCurrentAdvanceIndex(0);

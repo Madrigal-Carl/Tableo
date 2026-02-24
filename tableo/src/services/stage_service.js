@@ -16,3 +16,6 @@ export const getStageResults = (stageId) => {
 
 export const advanceStageCandidates = (stageId, payload) =>
   api.post(`/stages/${stageId}/advance`, payload);
+
+export const getActiveStage = (eventId) =>
+  api.get(`/stages/events/${eventId}/active-stage`);

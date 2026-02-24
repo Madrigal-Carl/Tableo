@@ -66,9 +66,25 @@ async function advanceStageCandidates(req, res, next) {
   }
 }
 
+async function getActiveStageController(req, res) {
+  try {
+    const eventId = req.params.eventId;
+
+    const stage = await stageService.getActiveStage(eventId);
+
+    res.json({
+      message: "Active stage fetched successfully",
+      data: stage,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
 module.exports = {
   updateStage,
   createOrUpdateStages,
   getStageResults,
   advanceStageCandidates,
+  getActiveStageController,
 };

@@ -37,4 +37,10 @@ router.post(
   stageController.advanceStageCandidates,
 );
 
+// Get active stage for an event
+router.get(
+  "/events/:eventId/active-stage",
+  stageController.getActiveStageController,
+);
+
 module.exports = router;
