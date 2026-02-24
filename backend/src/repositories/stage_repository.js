@@ -57,7 +57,7 @@ function findCategoryResultsByCategoryIds(categoryIds) {
         [Op.in]: categoryIds,
       },
     },
-    attributes: ["candidate_id", "judge_id", "average"],
+    attributes: ["candidate_id", "judge_id", "category_id", "average"],
     raw: true,
   });
 }
