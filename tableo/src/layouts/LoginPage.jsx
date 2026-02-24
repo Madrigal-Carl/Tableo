@@ -106,7 +106,7 @@ export default function LoginPage() {
           <div className="flex flex-col justify-center px-8 py-10 md:px-12 order-2">
             <h1 className="text-2xl font-semibold text-gray-800 mb-1">
               Welcome back to{" "}
-              <span className="text-[#FA824C] font-bold">Tabléo</span>
+              <span className="text-[#192BC2] font-bold">Tabléo</span>
             </h1>
             <p className="text-sm text-gray-500 mb-8">
               Sign in to continue
@@ -130,7 +130,7 @@ export default function LoginPage() {
                   onChange={handleChange}
                   placeholder="Enter your email"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-                  focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                  focus:border-[#192BC2] focus:outline-none focus:ring-2 focus:ring-[#192BC2]/30"
                 />
               </div>
 
@@ -147,13 +147,13 @@ export default function LoginPage() {
                     onChange={handleChange}
                     placeholder="Enter your password"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
-                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                    focus:border-[#192BC2] focus:outline-none focus:ring-2 focus:ring-[#192BC2]/30"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2
-                    flex items-center justify-center text-gray-400 hover:text-[#FA824C]"
+                    flex items-center justify-center text-gray-400 hover:text-[#192BC2]"
                   >
                     {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                   </button>
@@ -167,7 +167,7 @@ export default function LoginPage() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-[#FA824C]"
+                    className="h-4 w-4 rounded border-gray-300 text-[#192BC2]"
                   />
                   Remember me
                 </label>
@@ -175,7 +175,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowForgot(true)}
-                  className="text-xs font-medium text-gray-500 hover:text-[#FA5C5C]"
+                  className="text-xs font-medium text-gray-500 hover:text-[#192BC2]"
                 >
                   Forgot password?
                 </button>
@@ -184,7 +184,7 @@ export default function LoginPage() {
               {/* LOGIN BUTTON */}
               <button
                 type="submit"
-                className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
+                className="w-full rounded-full bg-[#192BC2] py-3 text-sm font-semibold text-white hover:bg-[#192BC2]/80"
               >
                 Login
               </button>
@@ -195,7 +195,7 @@ export default function LoginPage() {
               Don't have an account?{" "}
               <Link
                 to="/auth/register"
-                className="font-medium text-[#FA5C5C] hover:underline"
+                className="font-medium text-[#192BC2]/70 hover:underline"
               >
                 Register here
               </Link>
