@@ -228,7 +228,6 @@ function ViewOnlyTable({
                     <td
                       colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
                       className="px-4 py-4 text-center text-blue-600 font-semibold"
-                      onClick={onAdd}
                     >
                       <div className="flex items-center justify-center gap-2">
                         <Plus size={16} />
