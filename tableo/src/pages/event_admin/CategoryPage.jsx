@@ -28,10 +28,8 @@ import {
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
-import {
-  createOrUpdateStages,
-  updateStage,
-} from "../../services/stage_service";
+import { updateStage } from "../../services/stage_service";
+import { ArrowRight } from "lucide-react";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -734,6 +732,10 @@ function CategoryPage() {
                   </tbody>
                 </table>
               </div>
+              <button className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer">
+                Proceed
+                <ArrowRight size={24} />
+              </button>
             </>
           )}
 
