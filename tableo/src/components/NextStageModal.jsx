@@ -9,6 +9,10 @@ function NextStageModal({
 }) {
   const [advanceCount, setAdvanceCount] = useState("");
 
+  React.useEffect(() => {
+    setAdvanceCount("");
+  }, [roundTitle]);
+
   if (!isOpen) return null;
 
   return (

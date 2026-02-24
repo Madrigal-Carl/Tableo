@@ -29,7 +29,11 @@ import {
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
-import { updateStage, getStageResults } from "../../services/stage_service";
+import {
+  updateStage,
+  getStageResults,
+  advanceStageCandidates,
+} from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
 
 function CategoryPage() {
@@ -51,7 +55,8 @@ function CategoryPage() {
   const [selectedStageObj, setSelectedStageObj] = useState(null);
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
   const [nextStageContestants, setNextStageContestants] = useState([]);
-  const [femaleContestants, setFemaleContestants] = useState([]);
+  const [advanceQueue, setAdvanceQueue] = useState([]);
+  const [currentAdvanceIndex, setCurrentAdvanceIndex] = useState(0);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryList, setCategoryList] = useState([
     { name: "", weight: "", maxScore: "" },
@@ -67,6 +72,11 @@ function CategoryPage() {
       event?.categories?.find((c) => c.id === categoryId)?.category_result || []
     );
   };
+
+  const [advanceCounts, setAdvanceCounts] = useState({
+    maleCount: null,
+    femaleCount: null,
+  });
 
   const getRankForCandidate = (categoryResults, candidateId) => {
     return (
@@ -752,21 +762,39 @@ function CategoryPage() {
 
                       const res = await getStageResults(stageId);
 
-                      // Sort males and females by rank
                       const maleContestants = (res.data.data.males || [])
-                        .map((c) => ({ ...c, average: c.final_average }))
+                        .map((c) => ({
+                          ...c,
+                          average: c.final_average,
+                          sex: "Male",
+                        }))
                         .sort((a, b) => a.rank - b.rank);
 
                       const femaleContestants = (res.data.data.females || [])
-                        .map((c) => ({ ...c, average: c.final_average }))
+                        .map((c) => ({
+                          ...c,
+                          average: c.final_average,
+                          sex: "Female",
+                        }))
                         .sort((a, b) => a.rank - b.rank);
 
-                      // Step 1: show males first
-                      setNextStageContestants(maleContestants);
-                      setIsNextStageModalOpen(true);
+                      const queue = [];
 
-                      // Save females separately for step 2
-                      setFemaleContestants(femaleContestants);
+                      if (maleContestants.length)
+                        queue.push({
+                          sex: "Male",
+                          contestants: maleContestants,
+                        });
+
+                      if (femaleContestants.length)
+                        queue.push({
+                          sex: "Female",
+                          contestants: femaleContestants,
+                        });
+
+                      setAdvanceQueue(queue);
+                      setCurrentAdvanceIndex(0);
+                      setIsNextStageModalOpen(true);
                     } catch (err) {
                       showToast("error", err.message);
                     } finally {
@@ -881,22 +909,77 @@ function CategoryPage() {
 
         <NextStageModal
           isOpen={isNextStageModalOpen}
-          onClose={() => setIsNextStageModalOpen(false)}
-          onProceed={(advanceCount) => {
-            console.log("Number to advance:", advanceCount);
-
+          onClose={() => {
             setIsNextStageModalOpen(false);
+            setAdvanceCounts({ maleCount: null, femaleCount: null });
+          }}
+          contestants={advanceQueue[currentAdvanceIndex]?.contestants || []}
+          roundTitle={`${activeStage} - ${
+            advanceQueue[currentAdvanceIndex]?.sex || ""
+          }`}
+          onProceed={async (advanceCount) => {
+            const sex = advanceQueue[currentAdvanceIndex]?.sex;
 
-            if (femaleContestants.length) {
-              setNextStageContestants(femaleContestants);
-              setFemaleContestants([]); // clear after use
-              setIsNextStageModalOpen(true);
-            } else {
-              console.log("Advancing contestants done");
+            if (!advanceCount || Number(advanceCount) <= 0) {
+              showToast("error", "Please enter a valid number");
+              return;
+            }
+
+            // 🔹 Store count but DO NOT call backend yet
+            if (sex === "Male") {
+              setAdvanceCounts((prev) => ({
+                ...prev,
+                maleCount: Number(advanceCount),
+              }));
+            }
+
+            if (sex === "Female") {
+              setAdvanceCounts((prev) => ({
+                ...prev,
+                femaleCount: Number(advanceCount),
+              }));
+            }
+
+            const nextIndex = currentAdvanceIndex + 1;
+
+            // 🔹 If there's another modal (Female after Male)
+            if (nextIndex < advanceQueue.length) {
+              setCurrentAdvanceIndex(nextIndex);
+              return;
+            }
+
+            // 🔥 BOTH inputs are done → now call backend
+            try {
+              setLoading(true);
+
+              const stageId = getStageIdByName(activeStage);
+
+              const payload = {
+                maleCount:
+                  sex === "Male"
+                    ? Number(advanceCount)
+                    : advanceCounts.maleCount,
+                femaleCount:
+                  sex === "Female"
+                    ? Number(advanceCount)
+                    : advanceCounts.femaleCount,
+              };
+
+              await advanceStageCandidates(stageId, payload);
+
+              showToast("success", "Candidates advanced successfully");
+
+              // Reset everything
+              setIsNextStageModalOpen(false);
+              setAdvanceQueue([]);
+              setCurrentAdvanceIndex(0);
+              setAdvanceCounts({ maleCount: null, femaleCount: null });
+            } catch (err) {
+              showToast("error", err.response?.data?.message || err.message);
+            } finally {
+              setLoading(false);
             }
           }}
-          contestants={nextStageContestants}
-          roundTitle={activeStage}
         />
       </div>
     </>

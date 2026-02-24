@@ -179,7 +179,7 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
     const eventId = stage.event_id;
 
     // 2️⃣ Get stage results
-    const results = await stageRepo.getStageResults(stageId);
+    const results = await getStageResults(stageId);
     const males = results.males;
     const females = results.females;
 
@@ -198,8 +198,8 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
     const topFemales = females.slice(0, femaleCount);
 
     const stageCandidates = [...topMales, ...topFemales].map((c) => ({
-      stageId: stage.id,
-      candidateId: c.candidate_id,
+      stage_id: stage.id,
+      candidate_id: c.candidate_id,
     }));
 
     // 5️⃣ Create StageCandidate entries
