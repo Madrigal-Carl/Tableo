@@ -5,6 +5,7 @@ const {
   validateStage,
   validateStageCount,
   validateStageIdParam,
+  validateNextStageInput,
 } = require("../validators/stage_validator");
 const stageController = require("../controllers/stage_controller");
 
@@ -25,6 +26,15 @@ router.get(
   requireAuth,
   validateStageIdParam,
   stageController.getStageResults,
+);
+
+// Advance top candidates to next stage
+router.post(
+  "/:id/advance",
+  requireAuth,
+  validateStageIdParam,
+  validateNextStageInput,
+  stageController.advanceStageCandidates,
 );
 
 module.exports = router;

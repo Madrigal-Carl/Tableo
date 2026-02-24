@@ -1,6 +1,7 @@
 const sequelize = require("../database/models").sequelize;
 const stageRepo = require("../repositories/stage_repository");
 const candidateRepo = require("../repositories/candidate_repository");
+const stageCandidateRepo = require("../repositories/stage_candidate_repository");
 const judgeRepo = require("../repositories/judge_repository");
 
 async function updateStage(stageId, data) {
@@ -169,8 +170,48 @@ async function getStageResults(stageId) {
   };
 }
 
+async function advanceCandidates(stageId, maleCount, femaleCount) {
+  return sequelize.transaction(async (t) => {
+    // 1️⃣ Get stage and event
+    const stage = await stageRepo.findById(stageId, t);
+    if (!stage) throw new Error("Stage not found");
+
+    const eventId = stage.event_id;
+
+    // 2️⃣ Get stage results
+    const results = await stageRepo.getStageResults(stageId);
+    const males = results.males;
+    const females = results.females;
+
+    // 3️⃣ Check counts
+    if (maleCount > males.length)
+      throw new Error(
+        `Not enough male candidates to advance. Only ${males.length} available.`,
+      );
+    if (femaleCount > females.length)
+      throw new Error(
+        `Not enough female candidates to advance. Only ${females.length} available.`,
+      );
+
+    // 4️⃣ Take top candidates
+    const topMales = males.slice(0, maleCount);
+    const topFemales = females.slice(0, femaleCount);
+
+    const stageCandidates = [...topMales, ...topFemales].map((c) => ({
+      stageId: stage.id,
+      candidateId: c.candidate_id,
+    }));
+
+    // 5️⃣ Create StageCandidate entries
+    await stageCandidateRepo.bulkCreate(stageCandidates, t);
+
+    return stageCandidates;
+  });
+}
+
 module.exports = {
   updateStage,
   createOrUpdate,
   getStageResults,
+  advanceCandidates,
 };
