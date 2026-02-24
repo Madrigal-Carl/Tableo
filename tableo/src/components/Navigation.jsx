@@ -15,7 +15,7 @@ function Navigation() {
 
         <a href="/auth"
           onClick={() => setStarted(true)}
-          className="bg-[#FA824C] text-base text-white px-8 py-5 rounded-3xl hover:bg-[#FF9768] font-bold"
+          className="bg-[#192BC2] text-base text-white px-8 py-5 rounded-3xl hover:bg-[#354AFB] font-bold"
         >
           Get Started
         </a>

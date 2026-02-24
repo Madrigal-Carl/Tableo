@@ -31,7 +31,7 @@ function FirstPartLanding() {
       {/* FULL PAGE CARD */}
       <div className="relative w-[96%] h-[86vh] mt-14 bg-white rounded-2xl overflow-hidden">
         {/* TEAL CUT SHAPE (PART OF THE CARD) */}
-        <div className="absolute inset-y-0 right-0 w-[60%] bg-[#2F6B75] card-cut" />
+        <div className="absolute inset-y-0 right-0 w-[60%] bg-[#150578] card-cut" />
 
         {/* CONTENT WRAPPER */}
         <div className="relative z-10 flex h-full">
