@@ -621,8 +621,15 @@ function CategoryPage() {
                 <table className="min-w-full border-separate border-spacing-y-2">
                   <thead className="sticky top-0 bg-white z-10">
                     <tr>
+                      {/* 🔢 NO. COLUMN */}
+                      <th className="w-20 px-6 py-4 text-center font-semibold text-[#FA824C]">
+                        No.
+                      </th>
+
                       {/* Candidate Name */}
-                      <th className="w-64 px-6 py-4 text-left"></th>
+                      <th className="w-64 px-6 py-4 text-left font-semibold text-[#FA824C]">
+                        Candidate Name
+                      </th>
 
                       {/* Judges */}
                       {event?.judges?.map((judge) => (
@@ -634,11 +641,9 @@ function CategoryPage() {
                         </th>
                       ))}
 
-                      {/* 🔥 NEW COLUMNS */}
                       <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
                         Total
                       </th>
-
                       <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
                         Ranking
                       </th>
@@ -666,9 +671,28 @@ function CategoryPage() {
                           key={candidate.id}
                           className="bg-gray-50 hover:bg-gray-100 transition rounded-xl"
                         >
-                          {/* Candidate Name */}
-                          <td className="px-6 py-4 font-medium text-gray-700 rounded-l-xl">
-                            {candidate.name}
+                          {/* 🔢 NO. */}
+                          <td className="px-6 py-4 text-center font-semibold text-gray-700">
+                            {candidate.sequence ?? ""}
+                          </td>
+
+                          {/* Candidate Name with Image */}
+                          <td className="px-6 py-4 font-medium text-gray-700">
+                            <div className="flex items-center gap-3">
+                              {candidate.path ? (
+                                <img
+                                  src={`${import.meta.env.VITE_ASSET_URL}${candidate.path}`}
+                                  alt={candidate.name}
+                                  className="w-10 h-10 object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                                  N/A
+                                </div>
+                              )}
+
+                              <span>{candidate.name}</span>
+                            </div>
                           </td>
 
                           {/* Judges */}
