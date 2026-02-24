@@ -29,7 +29,7 @@ import {
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
-import { updateStage } from "../../services/stage_service";
+import { updateStage, getStageResults } from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
 
 function CategoryPage() {
@@ -51,7 +51,7 @@ function CategoryPage() {
   const [selectedStageObj, setSelectedStageObj] = useState(null);
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
   const [nextStageContestants, setNextStageContestants] = useState([]);
-
+  const [femaleContestants, setFemaleContestants] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryList, setCategoryList] = useState([
     { name: "", weight: "", maxScore: "" },
@@ -741,9 +741,37 @@ function CategoryPage() {
               {!canEditEvent && (
                 <button
                   className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
-                  onClick={() => {
-                    setNextStageContestants(rankedAndFilteredCandidates);
-                    setIsNextStageModalOpen(true);
+                  onClick={async () => {
+                    if (!activeStage) return;
+
+                    const stageId = getStageIdByName(activeStage);
+                    if (!stageId) return;
+
+                    try {
+                      setLoading(true);
+
+                      const res = await getStageResults(stageId);
+
+                      // Sort males and females by rank
+                      const maleContestants = (res.data.data.males || [])
+                        .map((c) => ({ ...c, average: c.final_average }))
+                        .sort((a, b) => a.rank - b.rank);
+
+                      const femaleContestants = (res.data.data.females || [])
+                        .map((c) => ({ ...c, average: c.final_average }))
+                        .sort((a, b) => a.rank - b.rank);
+
+                      // Step 1: show males first
+                      setNextStageContestants(maleContestants);
+                      setIsNextStageModalOpen(true);
+
+                      // Save females separately for step 2
+                      setFemaleContestants(femaleContestants);
+                    } catch (err) {
+                      showToast("error", err.message);
+                    } finally {
+                      setLoading(false);
+                    }
                   }}
                 >
                   Proceed
@@ -856,8 +884,16 @@ function CategoryPage() {
           onClose={() => setIsNextStageModalOpen(false)}
           onProceed={(advanceCount) => {
             console.log("Number to advance:", advanceCount);
+
             setIsNextStageModalOpen(false);
-            // TODO: Call your backend or navigate to next stage
+
+            if (femaleContestants.length) {
+              setNextStageContestants(femaleContestants);
+              setFemaleContestants([]); // clear after use
+              setIsNextStageModalOpen(true);
+            } else {
+              console.log("Advancing contestants done");
+            }
           }}
           contestants={nextStageContestants}
           roundTitle={activeStage}
