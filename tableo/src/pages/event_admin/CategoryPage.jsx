@@ -484,12 +484,15 @@ function CategoryPage() {
                       className="flex items-center gap-2 group"
                     >
                       <button
-                        onClick={() => setActiveStage(stageObj.name)}
+                        onClick={() => {
+                          if (!canEditEvent) return;
+                          setActiveStage(stageObj.name);
+                        }}
                         className={`pb-3 text-lg font-semibold transition ${
                           activeStage === stageObj.name
                             ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                             : "text-gray-400 hover:text-gray-600"
-                        }`}
+                        } ${!canEditEvent ? "cursor-not-allowed" : ""}`}
                       >
                         {stageObj.name}
                       </button>
@@ -735,17 +738,18 @@ function CategoryPage() {
                   </tbody>
                 </table>
               </div>
-              <button
-                className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
-                onClick={() => {
-                  // Pass the filtered and ranked candidates to the modal
-                  setNextStageContestants(rankedAndFilteredCandidates);
-                  setIsNextStageModalOpen(true);
-                }}
-              >
-                Proceed
-                <ArrowRight size={24} />
-              </button>
+              {!canEditEvent && (
+                <button
+                  className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    setNextStageContestants(rankedAndFilteredCandidates);
+                    setIsNextStageModalOpen(true);
+                  }}
+                >
+                  Proceed
+                  <ArrowRight size={24} />
+                </button>
+              )}
             </>
           )}
 
