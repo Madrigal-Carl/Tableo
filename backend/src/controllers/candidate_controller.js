@@ -9,7 +9,11 @@ async function updateCandidate(req, res, next) {
       data.path = req.file.filename;
     }
 
-    const updated = await candidateService.updateCandidate(candidateId, data);
+    const updated = await candidateService.updateCandidate(
+      candidateId,
+      data,
+      req.file,
+    );
     res.json({ message: "Candidate updated successfully", candidate: updated });
   } catch (err) {
     next(err);

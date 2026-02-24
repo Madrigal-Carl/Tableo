@@ -14,7 +14,6 @@ function NextStageModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="bg-white w-[400px] rounded-3xl shadow-2xl px-8 py-7">
-
         {/* Title */}
         <h2 className="text-2xl font-semibold text-center tracking-wide mb-6">
           {roundTitle}

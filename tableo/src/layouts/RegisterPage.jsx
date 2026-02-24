@@ -80,7 +80,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     placeholder="Enter your email"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm
-                    focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                    focus:border-[#192BC2] focus:outline-none focus:ring-2 focus:ring-[#192BC2]/30"
                   />
                 </div>
 
@@ -97,12 +97,12 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="Enter your password"
                       className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
-                      focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                      focus:border-[#192BC2] focus:outline-none focus:ring-2 focus:ring-[#192BC2]/30"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FA824C]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#192BC2]"
                     >
                       {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>
@@ -122,12 +122,12 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="Re-enter your password"
                       className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm
-                      focus:border-[#FA824C] focus:outline-none focus:ring-2 focus:ring-[#FA824C]/30"
+                      focus:border-[#192BC2] focus:outline-none focus:ring-2 focus:ring-[#192BC2]/30"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FA824C]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#192BC2]"
                     >
                       {showConfirm ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>
@@ -138,7 +138,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white hover:bg-[#e04a4a]"
+                  className="w-full rounded-full bg-[#192BC2] py-3 text-sm font-semibold text-white hover:bg-[#192BC2]/70"
                 >
                   {loading ? "Creating..." : "Create Account"}
                 </button>
@@ -148,7 +148,7 @@ export default function RegisterPage() {
                 Already have an account?{" "}
                 <a
                   href="/auth"
-                  className="font-medium text-[#FA5C5C] hover:underline"
+                  className="font-medium text-[#192BC2]/70 hover:underline"
                 >
                   Sign in
                 </a>

@@ -45,7 +45,7 @@ async function remapSequence(
   }
 }
 
-async function updateCandidate(candidateId, data) {
+async function updateCandidate(candidateId, data, file) {
   return sequelize.transaction(async (t) => {
     const eventId = await candidateRepo.findEventByCandidateId(candidateId, t);
 
@@ -65,13 +65,14 @@ async function updateCandidate(candidateId, data) {
     );
     if (!candidate) throw new Error("Candidate not found");
 
-    if (data.path && candidate.path) {
-      const oldPath = path.join("uploads", "candidates", candidate.path);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
-
-    if (data.path) {
-      data.path = `/uploads/candidates/${data.path}`;
+    if (file) {
+      if (candidate.path) {
+        const oldPath = path.join("uploads", "candidates", candidate.path);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      data.path = `/uploads/candidates/${file.filename}`;
+    } else {
+      data.path = candidate.path;
     }
 
     const sexChanged = data.sex && data.sex !== candidate.sex;
