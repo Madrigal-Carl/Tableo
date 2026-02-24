@@ -18,6 +18,12 @@ module.exports = (sequelize, DataTypes) => {
 
   Candidate.associate = function (models) {
     Candidate.belongsTo(models.Event, { foreignKey: "event_id", as: "event" });
+    Candidate.belongsToMany(models.Stage, {
+      through: models.StageCandidate,
+      foreignKey: "candidate_id",
+      otherKey: "stage_id",
+      as: "stages",
+    });
   };
 
   return Candidate;

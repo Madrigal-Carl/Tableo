@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ChevronLeft, PlusCircle, Pencil } from "lucide-react";
 import EditStageModal from "../../components/EditStageModal";
 import SideNavigation from "../../components/SideNavigation";
+import NextStageModal from "../../components/NextStageModal";
 import ViewOnlyTable from "../../components/ViewOnlyTable";
 import AddCategoryModal from "../../components/AddCategoryModal";
 import CriteriaModal from "../../components/CriteriaModal";
@@ -28,10 +29,8 @@ import {
 } from "../../services/candidate_service";
 import Swal from "sweetalert2";
 import { createOrUpdate as createOrUpdateJudges } from "../../services/judge_service";
-import {
-  createOrUpdateStages,
-  updateStage,
-} from "../../services/stage_service";
+import { updateStage } from "../../services/stage_service";
+import { ArrowRight } from "lucide-react";
 
 function CategoryPage() {
   const navigate = useNavigate();
@@ -50,6 +49,8 @@ function CategoryPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
   const [selectedStageObj, setSelectedStageObj] = useState(null);
+  const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
+  const [nextStageContestants, setNextStageContestants] = useState([]);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryList, setCategoryList] = useState([
@@ -483,12 +484,15 @@ function CategoryPage() {
                       className="flex items-center gap-2 group"
                     >
                       <button
-                        onClick={() => setActiveStage(stageObj.name)}
+                        onClick={() => {
+                          if (!canEditEvent) return;
+                          setActiveStage(stageObj.name);
+                        }}
                         className={`pb-3 text-lg font-semibold transition ${
                           activeStage === stageObj.name
                             ? "border-b-2 border-[#FA824C] text-[#FA824C]"
                             : "text-gray-400 hover:text-gray-600"
-                        }`}
+                        } ${!canEditEvent ? "cursor-not-allowed" : ""}`}
                       >
                         {stageObj.name}
                       </button>
@@ -734,6 +738,18 @@ function CategoryPage() {
                   </tbody>
                 </table>
               </div>
+              {!canEditEvent && (
+                <button
+                  className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    setNextStageContestants(rankedAndFilteredCandidates);
+                    setIsNextStageModalOpen(true);
+                  }}
+                >
+                  Proceed
+                  <ArrowRight size={24} />
+                </button>
+              )}
             </>
           )}
 
@@ -833,6 +849,18 @@ function CategoryPage() {
           currentStage={selectedStageObj}
           stages={event?.stages || []} // ✅ ADD THIS
           onSave={handleUpdateStage}
+        />
+
+        <NextStageModal
+          isOpen={isNextStageModalOpen}
+          onClose={() => setIsNextStageModalOpen(false)}
+          onProceed={(advanceCount) => {
+            console.log("Number to advance:", advanceCount);
+            setIsNextStageModalOpen(false);
+            // TODO: Call your backend or navigate to next stage
+          }}
+          contestants={nextStageContestants}
+          roundTitle={activeStage}
         />
       </div>
     </>
