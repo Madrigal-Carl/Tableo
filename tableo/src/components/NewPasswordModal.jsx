@@ -60,7 +60,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-sm
-                focus:outline-none focus:border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]/30"
+                focus:outline-none focus:border-[#192BC2] focus:ring-2 focus:ring-[#192BC2]/30"
               />
               <button
                 type="button"
@@ -81,7 +81,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-sm
-                focus:outline-none focus:border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]/30"
+                focus:outline-none focus:border-[#192BC2] focus:ring-2 focus:ring-[#192BC2]/30"
               />
               <button
                 type="button"
@@ -96,7 +96,7 @@ export default function NewPasswordModal({ open, onClose, onConfirm, loading }) 
           {/* Confirm Button */}
           <button
             onClick={handleSubmit}
-            className="w-full rounded-full bg-[#FA824C] py-3 text-sm font-semibold text-white transition hover:bg-[#e46d3a]"
+            className="w-full rounded-full bg-[#192BC2] py-3 text-sm font-semibold text-white transition hover:bg-[#192BC2]/70"
           >
             Confirm
           </button>

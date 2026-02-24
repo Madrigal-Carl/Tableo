@@ -181,7 +181,7 @@ export default function VerificationModal({
                 onKeyDown={(e) => handleKeyDown(e, i)}
                 onPaste={handlePaste}
                 className="h-11 w-11 rounded-lg border border-gray-300 bg-gray-100 text-center text-lg
-                focus:border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]/30 focus:outline-none"
+                focus:border-[#192BC2] focus:ring-2 focus:ring-[#192BC2]/30 focus:outline-none"
               />
             ))}
           </div>
@@ -193,7 +193,7 @@ export default function VerificationModal({
               disabled={cooldown > 0 || resending}
               className={`font-medium ${cooldown > 0
                 ? "text-gray-400 cursor-not-allowed"
-                : "text-[#FA824C] hover:underline"
+                : "text-[#192BC2] hover:underline"
                 }`}
             >
               {cooldown > 0
@@ -208,7 +208,7 @@ export default function VerificationModal({
           <button
             onClick={() => handleConfirm()}
             disabled={loading}
-            className="w-full rounded-full bg-[#FA824C] py-3 font-semibold text-white hover:bg-[#e04a4a]"
+            className="w-full rounded-full bg-[#192BC2] py-3 font-semibold text-white hover:bg-[#192BC2]/70"
           >
             {loading ? "Verifying..." : "Confirm"}
           </button>
