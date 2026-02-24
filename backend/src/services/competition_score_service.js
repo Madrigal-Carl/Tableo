@@ -147,11 +147,39 @@ async function getCategoryJudgeStatuses(categoryId) {
     };
   });
 }
+async function isCategoryFullyCompleted(categoryId) {
+  const category = await Category.findByPk(categoryId);
+  if (!category) throw new Error("Category not found");
 
+  const eventId = category.event_id;
+
+  // 1️⃣ Get all judges in event
+  const judges = await Judge.findAll({
+    where: { event_id: eventId },
+    attributes: ["id"],
+  });
+
+  if (!judges.length) return true;
+
+  // 2️⃣ Check each judge
+  for (const judge of judges) {
+    const completed = await hasCompletedCategory(
+      judge.id,
+      categoryId
+    );
+
+    if (!completed) {
+      return false; // ❌ If one judge incomplete → category not done
+    }
+  }
+
+  return true; // ✅ All judges completed
+}
 /* ===================================================== */
 
 module.exports = {
   submitScores,
   hasCompletedCategory,
   getCategoryJudgeStatuses,
+  isCategoryFullyCompleted // ✅ EXPORT THIS
 };

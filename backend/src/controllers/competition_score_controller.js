@@ -36,23 +36,25 @@ async function submitScores(req, res, next) {
   }
 }
 /* =====================================================
-   CHECK IF A SINGLE JUDGE COMPLETED CATEGORY
+   CHECK IF ALL JUDGES COMPLETED CATEGORY
 ===================================================== */
 async function checkCategoryCompletion(req, res, next) {
   try {
     const { categoryId } = req.params;
 
-    const judgeId = req.judge.id; // from judge auth middleware
+    // ✅ Get all judge statuses
+    const statuses =
+      await competitionScoreService.getCategoryJudgeStatuses(categoryId);
 
-    const isCompleted =
-      await competitionScoreService.hasCompletedCategory(
-        judgeId,
-        categoryId
-      );
+    // ✅ Category completed only if EVERY judge is done
+    const completed =
+      statuses.length > 0 &&
+      statuses.every((judge) => judge.status === "done");
 
     res.status(200).json({
-      completed: isCompleted,
+      completed,
     });
+
   } catch (err) {
     next(err);
   }
