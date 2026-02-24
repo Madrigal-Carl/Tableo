@@ -21,4 +21,11 @@ router.get(
   competitionScoreController.checkCategoryCompletion,
 );
 
+//Check if Judge has completed a category and get all judges status for a category (for waiting overlay)
+router.get(
+  "/category/:invitationCode/:categoryId/judge-status",
+  requireJudgeInvitation,
+  competitionScoreController.getJudgeStatuses,
+);
+
 module.exports = router;
