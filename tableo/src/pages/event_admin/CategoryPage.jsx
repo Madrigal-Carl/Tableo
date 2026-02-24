@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ChevronLeft, PlusCircle, Pencil } from "lucide-react";
 import EditStageModal from "../../components/EditStageModal";
 import SideNavigation from "../../components/SideNavigation";
+import NextStageModal from "../../components/NextStageModal";
 import ViewOnlyTable from "../../components/ViewOnlyTable";
 import AddCategoryModal from "../../components/AddCategoryModal";
 import CriteriaModal from "../../components/CriteriaModal";
@@ -48,6 +49,8 @@ function CategoryPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
   const [selectedStageObj, setSelectedStageObj] = useState(null);
+  const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
+  const [nextStageContestants, setNextStageContestants] = useState([]);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryList, setCategoryList] = useState([
@@ -732,7 +735,14 @@ function CategoryPage() {
                   </tbody>
                 </table>
               </div>
-              <button className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer">
+              <button
+                className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
+                onClick={() => {
+                  // Pass the filtered and ranked candidates to the modal
+                  setNextStageContestants(rankedAndFilteredCandidates);
+                  setIsNextStageModalOpen(true);
+                }}
+              >
                 Proceed
                 <ArrowRight size={24} />
               </button>
@@ -835,6 +845,18 @@ function CategoryPage() {
           currentStage={selectedStageObj}
           stages={event?.stages || []} // ✅ ADD THIS
           onSave={handleUpdateStage}
+        />
+
+        <NextStageModal
+          isOpen={isNextStageModalOpen}
+          onClose={() => setIsNextStageModalOpen(false)}
+          onProceed={(advanceCount) => {
+            console.log("Number to advance:", advanceCount);
+            setIsNextStageModalOpen(false);
+            // TODO: Call your backend or navigate to next stage
+          }}
+          contestants={nextStageContestants}
+          roundTitle={activeStage}
         />
       </div>
     </>

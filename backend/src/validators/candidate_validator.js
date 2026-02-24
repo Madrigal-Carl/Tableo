@@ -2,10 +2,7 @@ const Joi = require("joi");
 
 function validateCandidate(req, res, next) {
   const schema = Joi.object({
-    path: Joi.string().uri().optional().messages({
-      "string.base": "Image path must be a string",
-      "string.uri": "Image must be a valid URL",
-    }),
+    path: Joi.string().optional().allow(null, ""),
     name: Joi.string().min(2).max(50).required().messages({
       "string.empty": "Candidate name is required",
       "string.min": "Candidate name must be at least 2 characters",
@@ -16,7 +13,7 @@ function validateCandidate(req, res, next) {
       "any.only": 'Sex must be either "male" or "female"',
       "any.required": "Sex is required",
     }),
-  });
+  }).options({ stripUnknown: true });
 
   const { error } = schema.validate(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });
