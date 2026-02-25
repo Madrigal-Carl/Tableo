@@ -3,6 +3,7 @@ const stageRepo = require("../repositories/stage_repository");
 const stageCandidateRepo = require("../repositories/stage_candidate_repository");
 const judgeRepo = require("../repositories/judge_repository");
 const candidateRepo = require("../repositories/candidate_repository");
+const { isStageFullyCompleted } = require("./competition_score_service");
 
 async function updateStage(stageId, data) {
   return sequelize.transaction(async (t) => {
@@ -91,20 +92,6 @@ async function computeStageRanking(stageId, candidates) {
 
   const judgeMap = new Map(judges.map((j) => [j.id, j.name]));
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
-
-  /*
-    Structure:
-    {
-      candidate_id: {
-        judge_id: {
-          categories: [
-            { category_id, category_name, average }
-          ],
-          total: number
-        }
-      }
-    }
-  */
 
   const candidateJudgeMap = {};
 
@@ -272,6 +259,23 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
 
     const eventId = stage.event_id;
 
+    const stageWithCategories = await stageRepo.findStageWithCategories(
+      stageId,
+      t,
+    );
+
+    if (!stageWithCategories.categories.length) {
+      throw new Error("This stage has no categories.");
+    }
+
+    const stageCompleted = await isStageFullyCompleted(stageId);
+
+    if (!stageCompleted) {
+      throw new Error(
+        "Cannot advance. Not all judges have completed scoring all categories for this stage.",
+      );
+    }
+
     const candidates = await getCandidatesForStage(stageId);
 
     if (!candidates.length) {
@@ -306,6 +310,16 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
 
     if (!nextStage) {
       throw new Error("No next stage found.");
+    }
+
+    const existingNextStageCandidates = await stageCandidateRepo.findByStage(
+      nextStage.id,
+    );
+
+    if (existingNextStageCandidates.length) {
+      throw new Error(
+        "Candidates have already been advanced to the next stage.",
+      );
     }
 
     const stageCandidates = [...topMales, ...topFemales].map((c) => ({
