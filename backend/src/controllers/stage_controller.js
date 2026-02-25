@@ -46,8 +46,45 @@ async function getStageResults(req, res, next) {
   }
 }
 
+async function advanceStageCandidates(req, res, next) {
+  try {
+    const stageId = parseInt(req.params.id);
+    const { maleCount, femaleCount } = req.body;
+
+    const result = await stageService.advanceCandidates(
+      stageId,
+      maleCount,
+      femaleCount,
+    );
+
+    res.json({
+      message: "Candidates advanced to next stage successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getActiveStageController(req, res) {
+  try {
+    const eventId = req.params.eventId;
+
+    const stage = await stageService.getActiveStage(eventId);
+
+    res.json({
+      message: "Active stage fetched successfully",
+      data: stage,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
 module.exports = {
   updateStage,
   createOrUpdateStages,
   getStageResults,
+  advanceStageCandidates,
+  getActiveStageController,
 };

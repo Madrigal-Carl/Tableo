@@ -13,3 +13,9 @@ export const createOrUpdateStages = (eventId, count) => {
 export const getStageResults = (stageId) => {
   return api.get(`/stages/${stageId}/results`);
 };
+
+export const advanceStageCandidates = (stageId, payload) =>
+  api.post(`/stages/${stageId}/advance`, payload);
+
+export const getActiveStage = (eventId) =>
+  api.get(`/stages/events/${eventId}/active-stage`);

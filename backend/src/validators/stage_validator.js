@@ -59,8 +59,34 @@ function validateStageIdParam(req, res, next) {
   next();
 }
 
+function validateNextStageInput(req, res, next) {
+  const schema = Joi.object({
+    maleCount: Joi.number().integer().min(1).required().messages({
+      "number.base": "Male count must be a number",
+      "number.integer": "Male count must be an integer",
+      "number.min": "Male count must be at least 1",
+      "any.required": "Male count is required",
+    }),
+    femaleCount: Joi.number().integer().min(1).required().messages({
+      "number.base": "Female count must be a number",
+      "number.integer": "Female count must be an integer",
+      "number.min": "Female count must be at least 1",
+      "any.required": "Female count is required",
+    }),
+  });
+
+  const { error } = schema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  next();
+}
+
 module.exports = {
   validateStage,
   validateStageCount,
   validateStageIdParam,
+  validateNextStageInput,
 };

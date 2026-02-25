@@ -111,9 +111,15 @@ function hasEventEnded({ date, timeEnd }) {
   if (!timeEnd) return false;
 
   const now = new Date();
-  const end = new Date(`${date}T${timeEnd}`);
 
-  return now > end;
+  const baseDate = new Date(date);
+
+  const [hours, minutes, seconds] = timeEnd.split(":").map(Number);
+
+  const end = new Date(baseDate);
+  end.setHours(hours, minutes, seconds || 0, 0);
+
+  return now.getTime() > end.getTime();
 }
 
 async function getEventForJudge(req) {
