@@ -79,13 +79,6 @@ function CategoryPage() {
 
   const participantsData = event?.candidates || [];
 
-  const displayedCandidates =
-    sexFilter === "MALE"
-      ? stageResults.males
-      : sexFilter === "FEMALE"
-        ? stageResults.females
-        : [...stageResults.males, ...stageResults.females];
-
   useEffect(() => {
     async function fetchResults() {
       if (!activeStage) return;
@@ -115,6 +108,43 @@ function CategoryPage() {
       })
       .sort((a, b) => a.rank - b.rank);
   }, [stageResults, sexFilter]);
+
+  const categoryRankedCandidates = React.useMemo(() => {
+    if (!selectedCategory) return rankedCandidates;
+
+    return rankedCandidates
+      .map((candidate) => {
+        let categoryTotal = 0;
+        let judgeCount = 0;
+
+        candidate.judge_scores?.forEach((judge) => {
+          const cat = judge.categories?.find(
+            (c) => c.category_id === selectedCategory.id,
+          );
+
+          if (cat) {
+            categoryTotal += cat.average;
+            judgeCount++;
+          }
+        });
+
+        const categoryAverage = judgeCount > 0 ? categoryTotal / judgeCount : 0;
+
+        return {
+          ...candidate,
+          category_average: categoryAverage,
+        };
+      })
+      .sort((a, b) => b.category_average - a.category_average)
+      .map((c, index) => ({
+        ...c,
+        category_rank: index + 1,
+      }));
+  }, [rankedCandidates, selectedCategory]);
+
+  const displayedCandidates = selectedCategory
+    ? categoryRankedCandidates
+    : rankedCandidates;
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -350,14 +380,6 @@ function CategoryPage() {
     const updated = [...categoryList];
     updated[index][field] = value;
     setCategoryList(updated);
-  };
-
-  const getAverageForJudge = (categoryResults, candidateId, judgeId) => {
-    return (
-      categoryResults.find(
-        (r) => r.candidate_id === candidateId && r.judge_id === judgeId,
-      )?.average ?? null
-    );
   };
 
   const handleAddCategoryRow = () => {
@@ -708,10 +730,20 @@ function CategoryPage() {
 
                           {/* Judges */}
                           {event?.judges?.map((judge) => {
-                            const score =
-                              candidate.judge_scores?.find(
-                                (j) => j.judge_id === judge.id,
-                              )?.average ?? null;
+                            const judgeData = candidate.judge_scores?.find(
+                              (j) => j.judge_id === judge.id,
+                            );
+
+                            let score = null;
+
+                            if (selectedCategory && judgeData) {
+                              const category = judgeData.categories?.find(
+                                (c) => c.category_id === selectedCategory.id,
+                              );
+                              score = category?.average ?? null;
+                            } else {
+                              score = judgeData?.total_average ?? null;
+                            }
 
                             return (
                               <td
@@ -731,14 +763,16 @@ function CategoryPage() {
 
                           {/* TOTAL */}
                           <td className="px-6 py-3 text-center font-semibold text-gray-700">
-                            {candidate.final_average?.toFixed(2) !== null
-                              ? candidate.final_average.toFixed(2)
-                              : ""}
+                            {selectedCategory
+                              ? candidate.category_average?.toFixed(2)
+                              : candidate.final_average?.toFixed(2)}
                           </td>
 
                           {/* RANK */}
                           <td className="px-6 py-3 text-center font-semibold text-[#FA824C]">
-                            {candidate.rank ?? ""}
+                            {selectedCategory
+                              ? candidate.category_rank
+                              : candidate.rank}
                           </td>
                         </tr>
                       );

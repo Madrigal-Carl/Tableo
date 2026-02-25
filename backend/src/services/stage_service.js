@@ -71,7 +71,9 @@ async function computeStageRanking(stageId, candidates) {
   const stage = await stageRepo.findStageWithCategories(stageId);
   if (!stage) throw new Error("Stage not found");
 
-  const categoryIds = stage.categories.map((c) => c.id);
+  const categories = stage.categories;
+  const categoryIds = categories.map((c) => c.id);
+
   if (!categoryIds.length) {
     throw new Error("No categories found for this stage");
   }
@@ -84,30 +86,52 @@ async function computeStageRanking(stageId, candidates) {
     throw new Error("No judges found for this event");
   }
 
-  // ✅ Fetch precomputed category results
   const categoryResults =
     await stageRepo.findCategoryResultsByCategoryIds(categoryIds);
 
-  // candidate → judge → total category average
+  const judgeMap = new Map(judges.map((j) => [j.id, j.name]));
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+
+  /*
+    Structure:
+    {
+      candidate_id: {
+        judge_id: {
+          categories: [
+            { category_id, category_name, average }
+          ],
+          total: number
+        }
+      }
+    }
+  */
+
   const candidateJudgeMap = {};
 
   for (const result of categoryResults) {
-    const { candidate_id, judge_id, average } = result;
+    const { candidate_id, judge_id, category_id, average } = result;
 
     candidateJudgeMap[candidate_id] ??= {};
-    candidateJudgeMap[candidate_id][judge_id] ??= 0;
+    candidateJudgeMap[candidate_id][judge_id] ??= {
+      categories: [],
+      total: 0,
+    };
 
-    candidateJudgeMap[candidate_id][judge_id] += average;
+    candidateJudgeMap[candidate_id][judge_id].categories.push({
+      category_id,
+      category_name: categoryMap.get(category_id) || "",
+      average,
+    });
+
+    candidateJudgeMap[candidate_id][judge_id].total += average;
   }
-
-  const judgeMap = new Map(judges.map((j) => [j.id, j.name]));
 
   const computedResults = [];
 
   for (const candidate of candidates) {
-    const judgesMap = candidateJudgeMap[candidate.id] || {};
+    const judgesData = candidateJudgeMap[candidate.id] || {};
 
-    const judgeEntries = Object.entries(judgesMap);
+    const judgeEntries = Object.entries(judgesData);
 
     if (!judgeEntries.length) {
       computedResults.push({
@@ -119,19 +143,19 @@ async function computeStageRanking(stageId, candidates) {
         final_average: 0,
         judge_scores: [],
       });
-
       continue;
     }
 
-    const finalAverage =
-      Object.values(judgesMap).reduce((a, b) => a + b, 0) /
-      Object.values(judgesMap).length;
-
-    const judgeScores = judgeEntries.map(([judgeId, total]) => ({
+    const judgeScores = judgeEntries.map(([judgeId, data]) => ({
       judge_id: Number(judgeId),
       judge_name: judgeMap.get(Number(judgeId)) || "",
-      average: total,
+      total_average: data.total,
+      categories: data.categories,
     }));
+
+    const finalAverage =
+      judgeScores.reduce((sum, j) => sum + j.total_average, 0) /
+      judgeScores.length;
 
     computedResults.push({
       candidate_id: candidate.id,
@@ -144,7 +168,7 @@ async function computeStageRanking(stageId, candidates) {
     });
   }
 
-  // 🔥 Separate by sex
+  // Separate by sex
   const maleResults = computedResults
     .filter((c) => c.sex?.toLowerCase() === "male")
     .sort((a, b) => b.final_average - a.final_average);
