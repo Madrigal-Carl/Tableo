@@ -34,6 +34,7 @@ import {
   getStageResults,
   advanceStageCandidates,
   getActiveStage,
+  getStageOverallResult,
 } from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
 
@@ -750,23 +751,24 @@ function CategoryPage() {
                     try {
                       setLoading(true);
 
-                      const res = await getStageResults(stageId);
+                      const res = await getStageOverallResult(stageId); // 🔥 new API
+                      const data = res.data.data;
 
-                      const maleContestants = (res.data.data.males || []).map(
+                      const maleContestants = (data.males || []).map((c) => ({
+                        ...c,
+                        average: c.stage_total, // 🔹 use stage_total
+                        rank: c.rank,
+                        sex: "Male",
+                      }));
+
+                      const femaleContestants = (data.females || []).map(
                         (c) => ({
                           ...c,
-                          average: c.final_average,
-                          sex: "Male",
+                          average: c.stage_total, // 🔹 use stage_total
+                          rank: c.rank,
+                          sex: "Female",
                         }),
                       );
-
-                      const femaleContestants = (
-                        res.data.data.females || []
-                      ).map((c) => ({
-                        ...c,
-                        average: c.final_average,
-                        sex: "Female",
-                      }));
 
                       const queue = [];
 

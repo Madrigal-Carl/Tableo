@@ -165,6 +165,95 @@ async function computeStageRanking(stageId, candidates) {
   return categoryRankings;
 }
 
+async function computeStageOverallRanking(stageId, candidates) {
+  const stage = await stageRepo.findStageWithCategories(stageId);
+  if (!stage) throw new Error("Stage not found");
+
+  const categories = stage.categories;
+  const categoryIds = categories.map((c) => c.id);
+
+  if (!categoryIds.length) {
+    throw new Error("No categories found for this stage");
+  }
+
+  const categoryResults =
+    await stageRepo.findCategoryResultsByCategoryIds(categoryIds);
+
+  /*
+    Structure:
+    candidateMap[candidateId][categoryId] = {
+        sum,
+        judgeCount
+    }
+  */
+  const candidateMap = {};
+
+  for (const result of categoryResults) {
+    const { candidate_id, category_id, average } = result;
+
+    candidateMap[candidate_id] ??= {};
+    candidateMap[candidate_id][category_id] ??= {
+      sum: 0,
+      judgeCount: 0,
+    };
+
+    candidateMap[candidate_id][category_id].sum += average;
+    candidateMap[candidate_id][category_id].judgeCount += 1;
+  }
+
+  // Build overall totals
+  const overallCandidates = candidates.map((candidate) => {
+    const categoryData = candidateMap[candidate.id] ?? {};
+
+    let stageTotal = 0;
+
+    for (const category of categories) {
+      const data = categoryData[category.id];
+
+      if (data && data.judgeCount > 0) {
+        const categoryAverage = data.sum / data.judgeCount;
+        stageTotal += categoryAverage; // 🔥 sum category averages
+      }
+    }
+
+    return {
+      candidate_id: candidate.id,
+      name: candidate.name,
+      sex: candidate.sex,
+      path: candidate.path,
+      stage_total: stageTotal,
+    };
+  });
+
+  // Ranking helper
+  const rankByTotal = (list) => {
+    list.sort((a, b) => b.stage_total - a.stage_total);
+
+    let rank = 1;
+    for (let i = 0; i < list.length; i++) {
+      if (i > 0 && list[i].stage_total < list[i - 1].stage_total) {
+        rank = i + 1;
+      }
+      list[i].rank = rank;
+    }
+
+    return list;
+  };
+
+  const males = rankByTotal(
+    overallCandidates.filter((c) => c.sex?.toLowerCase() === "male"),
+  );
+
+  const females = rankByTotal(
+    overallCandidates.filter((c) => c.sex?.toLowerCase() === "female"),
+  );
+
+  return {
+    males,
+    females,
+  };
+}
+
 async function getActiveStage(eventId) {
   const stages = await stageRepo.findByEventIncludingSoftDeleted(eventId);
 
@@ -274,7 +363,7 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
       throw new Error("No candidates found for this stage");
     }
 
-    const results = await computeStageRanking(stageId, candidates);
+    const results = await computeStageOverallRanking(stageId, candidates);
 
     const males = results.males;
     const females = results.females;
@@ -334,6 +423,19 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
   });
 }
 
+async function getStageOverallResults(stageId) {
+  const stage = await stageRepo.findById(stageId);
+  if (!stage) throw new Error("Stage not found");
+
+  const candidates = await getCandidatesForStage(stageId);
+
+  if (!candidates.length) {
+    throw new Error("No candidates found for this stage");
+  }
+
+  return await computeStageOverallRanking(stageId, candidates);
+}
+
 module.exports = {
   updateStage,
   createOrUpdate,
@@ -341,4 +443,5 @@ module.exports = {
   advanceCandidates,
   getCandidatesForStage,
   getActiveStage,
+  getStageOverallResults,
 };
