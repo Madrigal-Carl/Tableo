@@ -1,4 +1,5 @@
 const { Candidate } = require("../database/models");
+const { Op } = require("sequelize");
 
 function create(data, transaction) {
   return Candidate.create(data, { transaction });
@@ -50,6 +51,16 @@ function findByEventAndSex(eventId, sex, transaction) {
   });
 }
 
+async function findByIds(ids) {
+  return Candidate.findAll({
+    where: {
+      id: {
+        [Op.in]: ids,
+      },
+    },
+  });
+}
+
 module.exports = {
   create,
   findByEventIncludingSoftDeleted,
@@ -58,4 +69,5 @@ module.exports = {
   countActiveByEvent,
   softDelete,
   findByEventAndSex,
+  findByIds,
 };

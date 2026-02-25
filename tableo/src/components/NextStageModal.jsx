@@ -9,6 +9,10 @@ function NextStageModal({
 }) {
   const [advanceCount, setAdvanceCount] = useState("");
 
+  React.useEffect(() => {
+    setAdvanceCount("");
+  }, [roundTitle]);
+
   if (!isOpen) return null;
 
   return (
@@ -23,7 +27,7 @@ function NextStageModal({
         <div className="grid grid-cols-3 text-xs text-gray-400 pb-3">
           <span>Rank</span>
           <span>Contestants</span>
-          <span className="text-right">Score</span>
+          <span className="text-right">Average</span>
         </div>
 
         {/* Contestant List */}
@@ -35,7 +39,9 @@ function NextStageModal({
             >
               <span className="text-gray-600">{index + 1}</span>
               <span className="text-gray-700">{c.name}</span>
-              <span className="text-right text-gray-700">{c.score}</span>
+              <span className="text-right text-gray-700">
+                {c.average.toFixed(2)}
+              </span>
             </div>
           ))}
         </div>

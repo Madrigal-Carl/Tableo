@@ -1,49 +1,92 @@
-const Joi = require('joi');
+const Joi = require("joi");
 
 function validateStage(req, res, next) {
-    const schema = Joi.object({
-        name: Joi.string().required().messages({
-            "string.empty": "Stage name is required",
-            "any.required": "Stage name is required",
-        }),
+  const schema = Joi.object({
+    name: Joi.string().required().messages({
+      "string.empty": "Stage name is required",
+      "any.required": "Stage name is required",
+    }),
 
-        // ✅ Allow sequence updates
-        sequence: Joi.number()
-            .integer()
-            .min(1)
-            .optional()
-            .messages({
-                "number.base": "Sequence must be a number",
-                "number.integer": "Sequence must be an integer",
-                "number.min": "Sequence must be at least 1",
-            }),
-    }).unknown(false); // ❗ Prevent unexpected fields
+    // ✅ Allow sequence updates
+    sequence: Joi.number().integer().min(1).optional().messages({
+      "number.base": "Sequence must be a number",
+      "number.integer": "Sequence must be an integer",
+      "number.min": "Sequence must be at least 1",
+    }),
+  }).unknown(false); // ❗ Prevent unexpected fields
 
-    const { error } = schema.validate(req.body);
+  const { error } = schema.validate(req.body);
 
-    if (error) {
-        return res.status(400).json({ message: error.details[0].message });
-    }
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
 
-    next();
+  next();
 }
 
 function validateStageCount(req, res, next) {
-    const schema = Joi.object({
-        count: Joi.number().integer().min(1).required().messages({
-            'number.base': 'Count must be a number',
-            'number.integer': 'Count must be an integer',
-            'number.min': 'Count must be at least 1',
-            'any.required': 'Count is required',
-        }),
-    });
+  const schema = Joi.object({
+    count: Joi.number().integer().min(1).required().messages({
+      "number.base": "Count must be a number",
+      "number.integer": "Count must be an integer",
+      "number.min": "Count must be at least 1",
+      "any.required": "Count is required",
+    }),
+  });
 
-    const { error } = schema.validate(req.body);
-    if (error) {
-        return res.status(400).json({ message: error.details[0].message });
-    }
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
 
-    next();
+  next();
 }
 
-module.exports = { validateStage, validateStageCount };
+function validateStageIdParam(req, res, next) {
+  const schema = Joi.object({
+    id: Joi.number().integer().required().messages({
+      "number.base": "Stage id must be a number",
+      "any.required": "Stage id is required",
+    }),
+  });
+
+  const { error } = schema.validate(req.params);
+
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  next();
+}
+
+function validateNextStageInput(req, res, next) {
+  const schema = Joi.object({
+    maleCount: Joi.number().integer().min(1).required().messages({
+      "number.base": "Male count must be a number",
+      "number.integer": "Male count must be an integer",
+      "number.min": "Male count must be at least 1",
+      "any.required": "Male count is required",
+    }),
+    femaleCount: Joi.number().integer().min(1).required().messages({
+      "number.base": "Female count must be a number",
+      "number.integer": "Female count must be an integer",
+      "number.min": "Female count must be at least 1",
+      "any.required": "Female count is required",
+    }),
+  });
+
+  const { error } = schema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  next();
+}
+
+module.exports = {
+  validateStage,
+  validateStageCount,
+  validateStageIdParam,
+  validateNextStageInput,
+};

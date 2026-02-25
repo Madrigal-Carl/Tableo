@@ -34,7 +34,11 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      max_candidates: {
+      max_male: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      max_female: {
         type: Sequelize.INTEGER,
         allowNull: true,
       },

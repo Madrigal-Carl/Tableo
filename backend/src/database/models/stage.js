@@ -12,7 +12,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      maxCandidates: {
+      maxMale: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      maxFemale: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
