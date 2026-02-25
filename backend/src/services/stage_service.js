@@ -68,6 +68,34 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
   }
 }
 
+function assignRankings(results) {
+  results.sort((a, b) => b.final_average - a.final_average);
+
+  let rank = 1;
+  let previousAverage = null;
+  let sameCount = 0;
+
+  for (const candidate of results) {
+    if (!candidate.final_average || candidate.final_average <= 0) {
+      candidate.rank = "";
+      continue;
+    }
+
+    if (
+      previousAverage !== null &&
+      candidate.final_average !== previousAverage
+    ) {
+      rank += sameCount;
+      sameCount = 1;
+    } else {
+      sameCount++;
+    }
+
+    candidate.rank = rank;
+    previousAverage = candidate.final_average;
+  }
+}
+
 async function computeStageRanking(stageId, candidates) {
   const stage = await stageRepo.findStageWithCategories(stageId);
   if (!stage) throw new Error("Stage not found");
@@ -164,8 +192,8 @@ async function computeStageRanking(stageId, candidates) {
     .filter((c) => c.sex?.toLowerCase() === "female")
     .sort((a, b) => b.final_average - a.final_average);
 
-  maleResults.forEach((item, index) => (item.rank = index + 1));
-  femaleResults.forEach((item, index) => (item.rank = index + 1));
+  assignRankings(maleResults);
+  assignRankings(femaleResults);
 
   return {
     males: maleResults,
