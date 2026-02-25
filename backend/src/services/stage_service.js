@@ -139,6 +139,10 @@ async function computeStageRanking(stageId, candidates) {
 
       let rank = 1;
       for (let i = 0; i < list.length; i++) {
+        if (list[i].total_average === 0) {
+          list[i].rank = "";
+          continue;
+        }
         if (i > 0 && list[i].total_average < list[i - 1].total_average) {
           rank = i + 1;
         }
@@ -231,6 +235,10 @@ async function computeStageOverallRanking(stageId, candidates) {
 
     let rank = 1;
     for (let i = 0; i < list.length; i++) {
+      if (list[i].stage_total === 0) {
+        list[i].rank = "";
+        continue;
+      }
       if (i > 0 && list[i].stage_total < list[i - 1].stage_total) {
         rank = i + 1;
       }
