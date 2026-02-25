@@ -36,29 +36,29 @@ function EditStageModal({
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl w-[400px] p-6 shadow-xl">
-        <h2 className="text-xl font-semibold mb-4 text-[#FA824C]">
+        <h2 className="text-xl font-semibold mb-4 text-[#192BC2]">
           Edit Stage
         </h2>
 
         {/* Stage Name */}
-        <label className="block text-sm mb-1 font-medium">
+        <label className="block text-sm mb-1 font-medium text-gray-500">
           Stage Name
         </label>
         <input
           type="text"
           value={stageName}
           onChange={(e) => setStageName(e.target.value)}
-          className="w-full border rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+          className="w-full border border-gray-500 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#192BC2]"
         />
 
         {/* Sequence Dropdown */}
-        <label className="block text-sm mb-1 font-medium">
+        <label className="block text-sm mb-1 font-medium text-gray-500">
           Sequence
         </label>
         <select
           value={sequence}
           onChange={(e) => setSequence(e.target.value)}
-          className="w-full border rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+          className="w-full border border-gray-500 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-[#192BC2]"
         >
           {Array.from({ length: totalStages }, (_, i) => i + 1).map((num) => (
             <option key={num} value={num}>
@@ -77,7 +77,7 @@ function EditStageModal({
 
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded-lg bg-[#FA824C] text-white hover:bg-orange-600"
+            className="px-4 py-2 rounded-lg bg-[#192BC2] text-white hover:bg-[#192BC2]/70 transition"
           >
             Save
           </button>

@@ -100,10 +100,10 @@ function ArchivePage() {
               placeholder="Search archived events..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="border border-gray-300 rounded-full pl-9 pr-3 py-2 text-sm w-[220px] focus:outline-none focus:ring-1 focus:ring-orange-400"
+              className="border border-gray-300 rounded-full pl-9 pr-3 py-2 text-sm w-[220px] focus:outline-none focus:ring-1 focus:ring-[#192BC2]/70"
             />
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#192BC2]/70"
               width="16"
               height="16"
               fill="none"

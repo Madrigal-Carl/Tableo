@@ -304,7 +304,7 @@ function HomePage() {
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Sort:</span>
             <select
-              className="border border-gray-300 rounded-full px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-orange-400 hover:border-orange-400 transition"
+              className="border border-gray-300 rounded-full px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#192BC2]/70 hover:border-[#192BC2]/60 transition"
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
             >
@@ -318,7 +318,7 @@ function HomePage() {
           {/* A–Z Sorting Button */}
           <button
             onClick={toggleSort}
-            className="border border-gray-300 rounded-full px-3 py-2 text-sm bg-white hover:bg-gray-100 transition"
+            className="border border-gray-300 rounded-full px-3 py-2 text-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-[#192BC2]/70 transition"
           >
             {sortAZ ? "A–Z" : "Z–A"}
           </button>
@@ -330,10 +330,10 @@ function HomePage() {
               placeholder="Search events..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="border border-gray-300 rounded-full pl-9 pr-3 py-2 text-sm w-[200px] focus:outline-none focus:ring-1 focus:ring-orange-400"
+              className="border border-gray-300 rounded-full pl-9 pr-3 py-2 text-sm w-[200px] focus:outline-none focus:ring-1 focus:ring-[#192BC2]/60"
             />
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#192BC2]/60"
               width="16"
               height="16"
               fill="none"
@@ -347,7 +347,7 @@ function HomePage() {
           {/* Add Event Button */}
           <div>
             <button
-              className="w-32 flex items-center justify-center gap-3 bg-[#FA824C] text-white py-3 rounded-2xl font-bold hover:bg-[#FF9768]"
+              className="w-32 flex items-center justify-center gap-3 bg-[#192BC2] text-white py-3 rounded-2xl font-bold hover:bg-[#192BC2]/70"
               onClick={openCreateModal}
             >
               <CalendarPlus size={18} />
