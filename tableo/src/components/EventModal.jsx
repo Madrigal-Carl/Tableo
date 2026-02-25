@@ -35,7 +35,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                             type="text"
                             value={eventData.title || ""}
                             onChange={e => setEventData({ ...eventData, title: e.target.value })}
-                            className="w-full rounded-full border border-orange-300 px-4 py-2"
+                            className="w-full rounded-full border border-[#192BC2]/70 px-4 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                         />
                     </div>
 
@@ -48,7 +48,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                             onChange={(e) =>
                                 setEventData({ ...eventData, location: e.target.value })
                             }
-                            className="w-full rounded-full border border-orange-300 px-4 py-2"
+                            className="w-full rounded-full border border-[#192BC2]/70 px-4 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                             placeholder="Event location"
                         />
                     </div>
@@ -60,7 +60,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                             type="date"
                             value={eventData.date || ""}
                             onChange={e => setEventData({ ...eventData, date: e.target.value })}
-                            className="w-full rounded-full border border-orange-300 px-3 py-2"
+                            className="w-full rounded-full border border-[#192BC2]/70 px-3 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                         />
                     </div>
 
@@ -72,14 +72,14 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                                 type="time"
                                 value={eventData.timeStart || ""}
                                 onChange={e => setEventData({ ...eventData, timeStart: e.target.value })}
-                                className="w-[140px] rounded-full border border-orange-300 px-3 py-2"
+                                className="w-[140px] rounded-full border border-[#192BC2]/70 px-3 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                             />
                             <span className="text-sm text-gray-500">to</span>
                             <input
                                 type="time"
                                 value={eventData.timeEnd || ""}
                                 onChange={e => setEventData({ ...eventData, timeEnd: e.target.value })}
-                                className="w-[140px] rounded-full border border-orange-300 px-3 py-2"
+                                className="w-[140px] rounded-full border border-[#192BC2]/70 px-3 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                             />
                         </div>
                     </div>
@@ -93,7 +93,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                                 min="1"
                                 value={eventData.stages ?? 1}
                                 onChange={e => setEventData({ ...eventData, stages: Math.max(1, Number(e.target.value)) })}
-                                className="w-full rounded-full border border-orange-300 px-4 py-2"
+                                className="w-full rounded-full border border-[#192BC2]/70 px-4 py-2 active:ring-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                             />
                         </div>
                         <div className="flex flex-col">
@@ -103,7 +103,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                                 min="1"
                                 value={eventData.judges ?? 1}
                                 onChange={e => setEventData({ ...eventData, judges: Math.max(1, Number(e.target.value)) })}
-                                className="w-full rounded-full border border-orange-300 px-4 py-2"
+                                className="w-full rounded-full border border-[#192BC2]/70 px-4 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                             />
                         </div>
                         <div className="flex flex-col">
@@ -113,7 +113,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                                 min="1"
                                 value={eventData.candidates ?? 1}
                                 onChange={e => setEventData({ ...eventData, candidates: Math.max(1, Number(e.target.value)) })}
-                                className="w-full rounded-full border border-orange-300 px-4 py-2"
+                                className="w-full rounded-full border border-[#192BC2]/70 px-4 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none"
                             />
                         </div>
                     </div>
@@ -131,7 +131,7 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                         />
 
                         {preview && (
-                            <div className="mt-3 w-full h-40 rounded-xl overflow-hidden border border-orange-200">
+                            <div className="mt-3 w-full h-40 rounded-xl overflow-hidden border border-[#192BC2]/70">
                                 <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                             </div>
                         )}
@@ -144,16 +144,16 @@ function EventModal({ isOpen, mode = "create", eventData, setEventData, onClose,
                             rows="3"
                             value={eventData.description || ""}
                             onChange={e => setEventData({ ...eventData, description: e.target.value })}
-                            className="w-full rounded-2xl border border-orange-300 px-4 py-2"
+                            className="w-full rounded-2xl border border-[#192BC2]/70 px-4 py-2 active:ring-[#192BC2] focus:ring-2 focus:ring-[#192BC2] outline-none resize-none"
                         />
                     </div>
 
                     {/* ACTIONS */}
                     <div className="flex justify-end gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition">
+                        <button type="button" onClick={onClose} className="px-6 py-2 rounded-full border border-[#192BC2]/70 text-[#192BC2] hover:bg-[#192BC2]/10 transition">
                             Cancel
                         </button>
-                        <button type="button" onClick={onSubmit} className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition">
+                        <button type="button" onClick={onSubmit} className="px-6 py-2 rounded-full bg-[#192BC2] text-white hover:bg-[#192BC2]/80 transition">
                             {mode === "edit" ? "Update" : "Confirm"}
                         </button>
                     </div>
