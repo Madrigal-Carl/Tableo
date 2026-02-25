@@ -257,7 +257,6 @@ async function computeStageOverallRanking(stageId, candidates) {
     };
   });
 
-  // Ranking helper
   const rankByTotal = (list) => {
     list.sort((a, b) => b.stage_total - a.stage_total);
 
