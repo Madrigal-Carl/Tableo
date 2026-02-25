@@ -769,18 +769,20 @@ function CategoryPage() {
                           </td>
 
                           {/* RANK */}
-                          <td className="px-6 py-3 text-center font-semibold text-[#192BC2]">
-                            {rank ?? ""}
+                          <td className="px-6 py-3 text-center font-semibold text-[#FA824C]">
+                            {selectedCategory
+                              ? candidate.category_rank
+                              : candidate.rank}
                           </td>
                         </tr>
                       );
                     })}
-                  </tbody>
-                </table>
-              </div>
-              {!canEditEvent && (
+                    </tbody>
+                  </table>
+                </div>
+                {!canEditEvent && (
                 <button
-                  className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
+                  className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
                   onClick={async () => {
                     if (!activeStage) return;
 
