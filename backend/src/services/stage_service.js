@@ -323,8 +323,8 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
     }
 
     const stageCandidates = [...topMales, ...topFemales].map((c) => ({
-      stageId: nextStage.id,
-      candidateId: c.candidate_id ?? c.candidateId,
+      stage_id: nextStage.id,
+      candidate_id: c.candidate_id ?? c.candidateId,
     }));
 
     await stageRepo.update(
