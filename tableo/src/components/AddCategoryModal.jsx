@@ -64,7 +64,7 @@ function AddCategoryModal({
                                 value={category.name}
                                 onChange={(e) => handleCategoryChange(index, "name", e.target.value)}
                                 placeholder="Category name"
-                                className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                className="w-full rounded-full border border-[#192BC2]/90 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#192BC2]/70"
                             />
                         </div>
                         <div className="flex flex-col">
@@ -74,7 +74,7 @@ function AddCategoryModal({
                                 value={category.weight}
                                 onChange={(e) => handleCategoryChange(index, "weight", e.target.value)}
                                 placeholder="%"
-                                className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                className="w-full rounded-full border border-[#192BC2]/90 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#192BC2]/70"
                             />
                         </div>
                         <div className="flex flex-col">
@@ -84,13 +84,13 @@ function AddCategoryModal({
                                 value={category.maxScore}
                                 onChange={(e) => handleCategoryChange(index, "maxScore", e.target.value)}
                                 placeholder="Score"
-                                className="w-full rounded-full border border-orange-300 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                className="w-full rounded-full border border-[#192BC2]/90 px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#192BC2]/70"
                             />
                         </div>
                         <button
                             type="button"
                             onClick={() => handleRemoveCategoryRow(index)}
-                            className="mb-1 px-2 py-1 rounded-full text-red-500 hover:bg-red-50 transition"
+                            className="mb-1 px-2 py-1 rounded-full text-[#192BC2] hover:bg-[#192BC2]/50 transition"
                             title="Remove"
                         >
                             ✕
@@ -101,7 +101,7 @@ function AddCategoryModal({
                 <button
                     type="button"
                     onClick={handleAddCategoryRow}
-                    className="w-full rounded-full bg-[#FA824C] text-white py-2 mb-6 hover:bg-orange-600 transition"
+                    className="w-full rounded-full bg-[#192BC2] text-white py-2 mb-6 hover:bg-[#192BC2]/70 transition"
                 >
                     + Add Category
                 </button>
@@ -110,7 +110,7 @@ function AddCategoryModal({
                     <button
                         type="button"
                         onClick={() => setIsCategoryModalOpen(false)}
-                        className="px-6 py-2 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-50 transition"
+                        className="px-6 py-2 rounded-full border border-[#192BC2] text-[#192BC2] hover:bg-[#192BC2]/5 transition"
                     >
                         Cancel
                     </button>
@@ -118,7 +118,7 @@ function AddCategoryModal({
                     <button
                         type="button"
                         onClick={handleConfirmCategories}
-                        className="px-6 py-2 rounded-full bg-[#FA824C] text-white hover:bg-orange-600 transition"
+                        className="px-6 py-2 rounded-full bg-[#192BC2] text-white hover:bg-[#192BC2]/70 transition"
                     >
                         Confirm
                     </button>

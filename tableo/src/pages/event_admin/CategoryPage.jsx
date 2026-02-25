@@ -486,14 +486,14 @@ function CategoryPage() {
                   onClick={() => navigate("/events")}
                   className="cursor-pointer hover:text-gray-900"
                 />
-                <h1 className="text-4xl font-semibold text-[#FA824C]">
+                <h1 className="text-4xl font-semibold text-[#192BC2]">
                   {event?.title}
                 </h1>
               </div>
               <p className="text-sm text-gray-500 mt-2">{event?.description}</p>
             </div>
 
-            <div className="relative flex bg-[#FA824C] p-1 rounded-md w-fit">
+            <div className="relative flex bg-[#192BC2] p-1 rounded-md w-fit">
               <div
                 className="absolute top-1 left-1 h-10 bg-white rounded-sm transition-transform"
                 style={{
@@ -534,7 +534,7 @@ function CategoryPage() {
                         }}
                         className={`pb-3 text-lg font-semibold transition ${
                           activeStage === stageObj.name
-                            ? "border-b-2 border-[#FA824C] text-[#FA824C]"
+                            ? "border-b-2 border-[#192BC2] text-[#192BC2]"
                             : "text-gray-400 hover:text-gray-600"
                         } ${!canEditEvent ? "cursor-not-allowed" : ""}`}
                       >
@@ -544,7 +544,7 @@ function CategoryPage() {
                       {canEditEvent && (
                         <Pencil
                           size={16}
-                          className="cursor-pointer text-gray-400 hover:text-[#FA824C] transition"
+                          className="cursor-pointer text-gray-400 hover:text-[#192BC2] transition"
                           onClick={() => {
                             setSelectedStageObj(stageObj);
                             setIsEditStageModalOpen(true);
@@ -567,7 +567,7 @@ function CategoryPage() {
                     </label>
                     <select
                       id="categoryFilter"
-                      className="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      className="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#192BC2]/70"
                       value={selectedCategory?.id || ""}
                       onChange={(e) => {
                         const selectedId = parseInt(e.target.value);
@@ -627,8 +627,8 @@ function CategoryPage() {
                       }
                     }}
                     disabled={!canEditEvent}
-                    className={`bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium 
-    ${canEditEvent ? "hover:bg-orange-600" : "opacity-50 cursor-not-allowed"}`}
+                    className={`bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium 
+                     ${canEditEvent ? "hover:bg-[#192BC2]/70" : "opacity-50 cursor-not-allowed"}`}
                   >
                     Criteria
                   </button>
@@ -641,7 +641,7 @@ function CategoryPage() {
                   <select
                     value={sexFilter}
                     onChange={(e) => setSexFilter(e.target.value)}
-                    className="px-4 py-2 rounded-md focus:ring-2 focus:ring-orange-400"
+                    className="px-4 py-2 rounded-md focus:ring-2 focus:ring-[#192BC2]/70"
                   >
                     <option value="ALL">All</option>
                     <option value="MALE">Male</option>
@@ -657,8 +657,8 @@ function CategoryPage() {
                     setIsCategoryModalOpen(true);
                   }}
                   disabled={!canEditEvent}
-                  className={`bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium 
-    ${canEditEvent ? "hover:bg-orange-600" : "opacity-50 cursor-not-allowed"}`}
+                  className={`bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium 
+    ${canEditEvent ? "hover:bg-[#192BC2]/70" : "opacity-50 cursor-not-allowed"}`}
                 >
                   Category
                 </button>
@@ -670,12 +670,12 @@ function CategoryPage() {
                   <thead className="sticky top-0 bg-white z-10">
                     <tr>
                       {/* 🔢 NO. COLUMN */}
-                      <th className="w-20 px-6 py-4 text-center font-semibold text-[#FA824C]">
+                      <th className="w-20 px-6 py-4 text-center font-semibold text-[#192BC2]">
                         No.
                       </th>
 
                       {/* Candidate Name */}
-                      <th className="w-64 px-6 py-4 text-left font-semibold text-[#FA824C]">
+                      <th className="w-64 px-6 py-4 text-left font-semibold text-[#192BC2]">
                         Candidate Name
                       </th>
 
@@ -689,10 +689,10 @@ function CategoryPage() {
                         </th>
                       ))}
 
-                      <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
+                      <th className="px-6 py-4 text-center font-semibold text-[#192BC2]">
                         Total
                       </th>
-                      <th className="px-6 py-4 text-center font-semibold text-[#FA824C]">
+                      <th className="px-6 py-4 text-center font-semibold text-[#192BC2]">
                         Ranking
                       </th>
                     </tr>
@@ -777,12 +777,12 @@ function CategoryPage() {
                         </tr>
                       );
                     })}
-                  </tbody>
-                </table>
-              </div>
-              {!canEditEvent && (
+                    </tbody>
+                  </table>
+                </div>
+                {!canEditEvent && (
                 <button
-                  className="bg-[#FA824C] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-orange-600 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
+                  className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
                   onClick={async () => {
                     if (!activeStage) return;
 
