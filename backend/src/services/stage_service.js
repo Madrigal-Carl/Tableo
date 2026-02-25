@@ -68,34 +68,6 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
   }
 }
 
-function assignRankings(results) {
-  results.sort((a, b) => b.final_average - a.final_average);
-
-  let rank = 1;
-  let previousAverage = null;
-  let sameCount = 0;
-
-  for (const candidate of results) {
-    if (!candidate.final_average || candidate.final_average <= 0) {
-      candidate.rank = "";
-      continue;
-    }
-
-    if (
-      previousAverage !== null &&
-      candidate.final_average !== previousAverage
-    ) {
-      rank += sameCount;
-      sameCount = 1;
-    } else {
-      sameCount++;
-    }
-
-    candidate.rank = rank;
-    previousAverage = candidate.final_average;
-  }
-}
-
 async function computeStageRanking(stageId, candidates) {
   const stage = await stageRepo.findStageWithCategories(stageId);
   if (!stage) throw new Error("Stage not found");
@@ -107,98 +79,90 @@ async function computeStageRanking(stageId, candidates) {
     throw new Error("No categories found for this stage");
   }
 
+  // Get judges (for judge_name)
   const judges = await judgeRepo.findByEventIncludingSoftDeleted(
     stage.event_id,
   );
-
-  if (!judges.length) {
-    throw new Error("No judges found for this event");
-  }
+  const judgeMap = new Map(judges.map((j) => [j.id, j.name]));
 
   const categoryResults =
     await stageRepo.findCategoryResultsByCategoryIds(categoryIds);
 
-  const judgeMap = new Map(judges.map((j) => [j.id, j.name]));
-  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
-
-  const candidateJudgeMap = {};
+  const candidateCategoryMap = {};
 
   for (const result of categoryResults) {
-    const { candidate_id, judge_id, category_id, average } = result;
+    const { candidate_id, category_id, judge_id, average } = result;
 
-    candidateJudgeMap[candidate_id] ??= {};
-    candidateJudgeMap[candidate_id][judge_id] ??= {
-      categories: [],
-      total: 0,
+    candidateCategoryMap[candidate_id] ??= {};
+    candidateCategoryMap[candidate_id][category_id] ??= {
+      sum: 0,
+      judgeCount: 0,
+      judges: [],
     };
 
-    candidateJudgeMap[candidate_id][judge_id].categories.push({
-      category_id,
-      category_name: categoryMap.get(category_id) || "",
-      average,
-    });
+    candidateCategoryMap[candidate_id][category_id].sum += average;
+    candidateCategoryMap[candidate_id][category_id].judgeCount += 1;
 
-    candidateJudgeMap[candidate_id][judge_id].total += average;
+    candidateCategoryMap[candidate_id][category_id].judges.push({
+      judge_id,
+      score: average,
+    });
   }
 
-  const computedResults = [];
+  const categoryRankings = {};
 
-  for (const candidate of candidates) {
-    const judgesData = candidateJudgeMap[candidate.id] || {};
+  for (const category of categories) {
+    const categoryId = category.id;
 
-    const judgeEntries = Object.entries(judgesData);
+    const categoryCandidates = candidates.map((candidate) => {
+      const data = candidateCategoryMap[candidate.id]?.[categoryId] ?? {
+        sum: 0,
+        judgeCount: 0,
+        judges: [],
+      };
 
-    if (!judgeEntries.length) {
-      computedResults.push({
+      const finalAverage = data.judgeCount > 0 ? data.sum / data.judgeCount : 0;
+
+      return {
         candidate_id: candidate.id,
-        sequence: candidate.sequence ?? null,
-        path: candidate.path,
         name: candidate.name,
         sex: candidate.sex,
-        final_average: 0,
-        judge_scores: [],
-      });
-      continue;
-    }
-
-    const judgeScores = judgeEntries.map(([judgeId, data]) => ({
-      judge_id: Number(judgeId),
-      judge_name: judgeMap.get(Number(judgeId)) || "",
-      total_average: data.total,
-      categories: data.categories,
-    }));
-
-    const finalAverage =
-      judgeScores.reduce((sum, j) => sum + j.total_average, 0) /
-      judgeScores.length;
-
-    computedResults.push({
-      candidate_id: candidate.id,
-      sequence: candidate.sequence ?? null,
-      path: candidate.path,
-      name: candidate.name,
-      sex: candidate.sex,
-      final_average: finalAverage,
-      judge_scores: judgeScores,
+        path: candidate.path,
+        total_average: finalAverage,
+        judge_scores: data.judges,
+      };
     });
+
+    // Ranking function (based on averaged total_average)
+    const rankByTotal = (list) => {
+      list.sort((a, b) => b.total_average - a.total_average);
+
+      let rank = 1;
+      for (let i = 0; i < list.length; i++) {
+        if (i > 0 && list[i].total_average < list[i - 1].total_average) {
+          rank = i + 1;
+        }
+        list[i].rank = rank;
+      }
+
+      return list;
+    };
+
+    const males = rankByTotal(
+      categoryCandidates.filter((c) => c.sex?.toLowerCase() === "male"),
+    );
+
+    const females = rankByTotal(
+      categoryCandidates.filter((c) => c.sex?.toLowerCase() === "female"),
+    );
+
+    categoryRankings[category.name] = {
+      males,
+      females,
+    };
   }
 
-  // Separate by sex
-  const maleResults = computedResults
-    .filter((c) => c.sex?.toLowerCase() === "male")
-    .sort((a, b) => b.final_average - a.final_average);
-
-  const femaleResults = computedResults
-    .filter((c) => c.sex?.toLowerCase() === "female")
-    .sort((a, b) => b.final_average - a.final_average);
-
-  assignRankings(maleResults);
-  assignRankings(femaleResults);
-
-  return {
-    males: maleResults,
-    females: femaleResults,
-  };
+  return categoryRankings;
 }
 
 async function getActiveStage(eventId) {
