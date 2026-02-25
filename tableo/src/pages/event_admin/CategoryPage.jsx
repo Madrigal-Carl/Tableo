@@ -34,6 +34,7 @@ import {
   getStageResults,
   advanceStageCandidates,
   getActiveStage,
+  getStageOverallResult,
 } from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
 
@@ -72,10 +73,7 @@ function CategoryPage() {
     femaleCount: null,
   });
 
-  const [stageResults, setStageResults] = useState({
-    males: [],
-    females: [],
-  });
+  const [stageResults, setStageResults] = useState({});
 
   const participantsData = event?.candidates || [];
 
@@ -88,10 +86,10 @@ function CategoryPage() {
 
       try {
         const res = await getStageResults(stageId);
-        setStageResults(res.data.data);
+        setStageResults(res.data.data || {});
       } catch (err) {
         console.error(err);
-        setStageResults({ males: [], females: [] });
+        setStageResults({});
       }
     }
 
@@ -99,7 +97,17 @@ function CategoryPage() {
   }, [activeStage, event]);
 
   const rankedCandidates = React.useMemo(() => {
-    let combined = [...stageResults.males, ...stageResults.females];
+    if (!selectedCategory || !stageResults) return [];
+
+    const categoryName = selectedCategory.name;
+
+    const categoryData = stageResults[categoryName];
+    if (!categoryData) return [];
+
+    let combined = [
+      ...(categoryData.males || []),
+      ...(categoryData.females || []),
+    ];
 
     if (sexFilter !== "ALL") {
       combined = combined.filter(
@@ -107,8 +115,8 @@ function CategoryPage() {
       );
     }
 
-    return combined; // Backend already provides rank
-  }, [stageResults, sexFilter]);
+    return combined;
+  }, [stageResults, selectedCategory, sexFilter]);
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -698,16 +706,7 @@ function CategoryPage() {
                               (j) => j.judge_id === judge.id,
                             );
 
-                            let score = null;
-
-                            if (selectedCategory && judgeData) {
-                              const category = judgeData.categories?.find(
-                                (c) => c.category_id === selectedCategory.id,
-                              );
-                              score = category?.average ?? null;
-                            } else {
-                              score = judgeData?.total_average ?? null;
-                            }
+                            const score = judgeData?.score ?? null;
 
                             return (
                               <td
@@ -727,7 +726,7 @@ function CategoryPage() {
 
                           {/* TOTAL */}
                           <td className="px-6 py-3 text-center font-semibold text-gray-700">
-                            {candidate.final_average?.toFixed(2)}
+                            {candidate.total_average?.toFixed(2)}
                           </td>
 
                           {/* RANK */}
@@ -737,10 +736,10 @@ function CategoryPage() {
                         </tr>
                       );
                     })}
-                    </tbody>
-                  </table>
-                </div>
-                {!canEditEvent && (
+                  </tbody>
+                </table>
+              </div>
+              {!canEditEvent && (
                 <button
                   className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
                   onClick={async () => {
@@ -752,23 +751,24 @@ function CategoryPage() {
                     try {
                       setLoading(true);
 
-                      const res = await getStageResults(stageId);
+                      const res = await getStageOverallResult(stageId); // 🔥 new API
+                      const data = res.data.data;
 
-                      const maleContestants = (res.data.data.males || []).map(
+                      const maleContestants = (data.males || []).map((c) => ({
+                        ...c,
+                        average: c.stage_total, // 🔹 use stage_total
+                        rank: c.rank,
+                        sex: "Male",
+                      }));
+
+                      const femaleContestants = (data.females || []).map(
                         (c) => ({
                           ...c,
-                          average: c.final_average,
-                          sex: "Male",
+                          average: c.stage_total, // 🔹 use stage_total
+                          rank: c.rank,
+                          sex: "Female",
                         }),
                       );
-
-                      const femaleContestants = (
-                        res.data.data.females || []
-                      ).map((c) => ({
-                        ...c,
-                        average: c.final_average,
-                        sex: "Female",
-                      }));
 
                       const queue = [];
 
