@@ -189,14 +189,14 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
         <div className="flex justify-between mt-6">
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-full border border-orange-400 text-orange-500"
+            className="px-6 py-2 rounded-full border border-[#192BC2]/70 text-[#192BC2]/80 hover:border-[#192BC2] hover:text-[#192BC2] transition"
           >
             Cancel
           </button>
 
           <button
             onClick={handleSave}
-            className="px-6 py-2 rounded-full bg-[#FA824C] text-white"
+            className="px-6 py-2 rounded-full bg-[#192BC2] text-white"
           >
             Save
           </button>

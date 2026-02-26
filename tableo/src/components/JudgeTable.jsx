@@ -37,7 +37,7 @@ function JudgeTable({
   return (
     <div className="bg-white rounded-3xl shadow-lg p-6 relative">
       {categoryName && (
-        <h1 className="text-3xl font-bold text-[#FA824C] mb-2 px-2">
+        <h1 className="text-3xl font-bold text-[#192BC2] mb-2 px-2">
           {categoryName}
         </h1>
       )}
@@ -118,7 +118,7 @@ function JudgeTable({
                     handleScoreChange(p.id, c.id, e.target.value, c.maxScore)
                   }
                   onWheel={(e) => e.target.blur()}
-                  className="w-full max-w-[60px] h-10 text-center rounded-lg bg-gray-50 border border-[#FA824C] focus:ring-2 focus:ring-[#FA824C]"
+                  className="w-full max-w-[60px] h-10 text-center rounded-lg bg-gray-50 border border-[#192BC2] focus:ring-2 focus:ring-[#192BC2]"
                   required
                 />
               </div>
@@ -130,7 +130,7 @@ function JudgeTable({
                 p.id,
                 criteria,
                 scores,
-                categoryPercentage / 100, // pass weight as 0–1
+                categoryPercentage / 100,
               )}
               %
             </div>
