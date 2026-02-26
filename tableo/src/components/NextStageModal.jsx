@@ -65,14 +65,14 @@ function NextStageModal({
         <div className="flex justify-between mt-7">
           <button
             onClick={onClose}
-            className="bg-orange-200 text-orange-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-orange-300 transition"
+            className="bg-orange-200 text-orange-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#192BC2] transition"
           >
             Cancel
           </button>
 
           <button
             onClick={() => onProceed(advanceCount)}
-            className="bg-[#FA824C] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition"
+            className="bg-[#192BC2] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#192BC2]/80 transition"
           >
             Proceed
           </button>

@@ -67,7 +67,7 @@ function JudgeModal({ isOpen, onClose, onSave, initialData = null }) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#192BC2]"
               placeholder="Enter your full name"
             />
           </div>
@@ -80,7 +80,7 @@ function JudgeModal({ isOpen, onClose, onSave, initialData = null }) {
             <select
               value={suffix}
               onChange={(e) => setSuffix(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FA824C]"
+              className="w-full rounded-lg border border-gray-300 px-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#192BC2]"
             >
               {SUFFIX_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -94,7 +94,7 @@ function JudgeModal({ isOpen, onClose, onSave, initialData = null }) {
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full rounded-md bg-[#FA824C] py-2.5 text-sm font-semibold text-white hover:bg-[#FF9768] transition"
+              className="w-full rounded-md bg-[#192BC2] py-2.5 text-sm font-semibold text-white hover:bg-[#192BC2]/80 transition"
             >
               Save
             </button>

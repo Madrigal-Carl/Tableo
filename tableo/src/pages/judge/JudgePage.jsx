@@ -219,7 +219,7 @@ function JudgePage() {
       text: "You cannot go back after proceeding.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#FA824C",
+      confirmButtonColor: "#192BC2",
       cancelButtonColor: "#d1d5db",
       confirmButtonText: "Yes, Proceed",
     });
@@ -342,7 +342,7 @@ function JudgePage() {
         <div className="flex justify-between items-center px-6 py-3">
           <button
             onClick={() => navigate("/")}
-            className="px-5 py-2 rounded-full bg-[#FA824C] text-white"
+            className="px-5 py-2 rounded-full bg-[#192BC2] text-white"
           >
             Exit
           </button>
@@ -353,7 +353,7 @@ function JudgePage() {
 
           <button
             onClick={() => setShowJudgeModal(true)}
-            className="w-10 h-10 rounded-full bg-[#FA824C] text-white"
+            className="w-10 h-10 rounded-full bg-[#192BC2] text-white"
           >
             {judgeInfo?.name?.[0] ?? "J"}
           </button>
@@ -377,7 +377,7 @@ function JudgePage() {
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleProceed}
-                className="px-6 py-3 bg-[#FA824C] text-white rounded-xl"
+                className="px-6 py-3 bg-[#192BC2] text-white rounded-xl"
               >
                 Proceed
               </button>
