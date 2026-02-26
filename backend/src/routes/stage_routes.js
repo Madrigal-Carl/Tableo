@@ -50,5 +50,9 @@ router.get(
   validateStageIdParam,
   stageController.getStageOverallResults,
 );
-
+// ✅ Get candidates qualified for this stage
+router.get(
+  "/events/:eventId/stages/:stageId/candidates",
+  stageController.getStageCandidates,
+);
 module.exports = router;

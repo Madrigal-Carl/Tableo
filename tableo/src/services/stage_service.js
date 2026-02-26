@@ -22,3 +22,9 @@ export const getActiveStage = (eventId) =>
 
 export const getStageOverallResult = (stageId) =>
   api.get(`/stages/${stageId}/overall-results`);
+
+export const getStageCandidates = (eventId, stageId) => {
+  return api.get(
+    `/stages/events/${eventId}/stages/${stageId}/candidates`
+  );
+};
