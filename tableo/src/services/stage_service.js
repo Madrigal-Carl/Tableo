@@ -19,3 +19,6 @@ export const advanceStageCandidates = (stageId, payload) =>
 
 export const getActiveStage = (eventId) =>
   api.get(`/stages/events/${eventId}/active-stage`);
+
+export const getStageOverallResult = (stageId) =>
+  api.get(`/stages/${stageId}/overall-results`);

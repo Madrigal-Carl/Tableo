@@ -81,10 +81,26 @@ async function getActiveStageController(req, res) {
   }
 }
 
+async function getStageOverallResults(req, res, next) {
+  try {
+    const stageId = parseInt(req.params.id);
+
+    const result = await stageService.getStageOverallResults(stageId);
+
+    res.json({
+      message: "Stage overall results fetched successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   updateStage,
   createOrUpdateStages,
   getStageResults,
   advanceStageCandidates,
   getActiveStageController,
+  getStageOverallResults,
 };

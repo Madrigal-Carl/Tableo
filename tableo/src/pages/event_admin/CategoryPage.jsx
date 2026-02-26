@@ -34,6 +34,7 @@ import {
   getStageResults,
   advanceStageCandidates,
   getActiveStage,
+  getStageOverallResult,
 } from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
 
@@ -72,10 +73,7 @@ function CategoryPage() {
     femaleCount: null,
   });
 
-  const [stageResults, setStageResults] = useState({
-    males: [],
-    females: [],
-  });
+  const [stageResults, setStageResults] = useState({});
 
   const participantsData = event?.candidates || [];
 
@@ -88,10 +86,10 @@ function CategoryPage() {
 
       try {
         const res = await getStageResults(stageId);
-        setStageResults(res.data.data);
+        setStageResults(res.data.data || {});
       } catch (err) {
         console.error(err);
-        setStageResults({ males: [], females: [] });
+        setStageResults({});
       }
     }
 
@@ -99,52 +97,26 @@ function CategoryPage() {
   }, [activeStage, event]);
 
   const rankedCandidates = React.useMemo(() => {
-    const combined = [...stageResults.males, ...stageResults.females];
+    if (!selectedCategory || !stageResults) return [];
 
-    return combined
-      .filter((c) => {
-        if (sexFilter === "ALL") return true;
-        return c.sex?.toLowerCase() === sexFilter.toLowerCase();
-      })
-      .sort((a, b) => a.rank - b.rank);
-  }, [stageResults, sexFilter]);
+    const categoryName = selectedCategory.name;
 
-  const categoryRankedCandidates = React.useMemo(() => {
-    if (!selectedCategory) return rankedCandidates;
+    const categoryData = stageResults[categoryName];
+    if (!categoryData) return [];
 
-    return rankedCandidates
-      .map((candidate) => {
-        let categoryTotal = 0;
-        let judgeCount = 0;
+    let combined = [
+      ...(categoryData.males || []),
+      ...(categoryData.females || []),
+    ];
 
-        candidate.judge_scores?.forEach((judge) => {
-          const cat = judge.categories?.find(
-            (c) => c.category_id === selectedCategory.id,
-          );
+    if (sexFilter !== "ALL") {
+      combined = combined.filter(
+        (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+      );
+    }
 
-          if (cat) {
-            categoryTotal += cat.average;
-            judgeCount++;
-          }
-        });
-
-        const categoryAverage = judgeCount > 0 ? categoryTotal / judgeCount : 0;
-
-        return {
-          ...candidate,
-          category_average: categoryAverage,
-        };
-      })
-      .sort((a, b) => b.category_average - a.category_average)
-      .map((c, index) => ({
-        ...c,
-        category_rank: index + 1,
-      }));
-  }, [rankedCandidates, selectedCategory]);
-
-  const displayedCandidates = selectedCategory
-    ? categoryRankedCandidates
-    : rankedCandidates;
+    return combined;
+  }, [stageResults, selectedCategory, sexFilter]);
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -698,7 +670,7 @@ function CategoryPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayedCandidates.map((candidate) => {
+                    {rankedCandidates.map((candidate) => {
                       return (
                         <tr
                           key={candidate.candidate_id}
@@ -734,16 +706,7 @@ function CategoryPage() {
                               (j) => j.judge_id === judge.id,
                             );
 
-                            let score = null;
-
-                            if (selectedCategory && judgeData) {
-                              const category = judgeData.categories?.find(
-                                (c) => c.category_id === selectedCategory.id,
-                              );
-                              score = category?.average ?? null;
-                            } else {
-                              score = judgeData?.total_average ?? null;
-                            }
+                            const score = judgeData?.score ?? null;
 
                             return (
                               <td
@@ -763,24 +726,20 @@ function CategoryPage() {
 
                           {/* TOTAL */}
                           <td className="px-6 py-3 text-center font-semibold text-gray-700">
-                            {selectedCategory
-                              ? candidate.category_average?.toFixed(2)
-                              : candidate.final_average?.toFixed(2)}
+                            {candidate.total_average?.toFixed(2)}
                           </td>
 
                           {/* RANK */}
                           <td className="px-6 py-3 text-center font-semibold text-[#FA824C]">
-                            {selectedCategory
-                              ? candidate.category_rank
-                              : candidate.rank}
+                            {candidate.rank ?? ""}
                           </td>
                         </tr>
                       );
                     })}
-                    </tbody>
-                  </table>
-                </div>
-                {!canEditEvent && (
+                  </tbody>
+                </table>
+              </div>
+              {!canEditEvent && (
                 <button
                   className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
                   onClick={async () => {
@@ -792,23 +751,24 @@ function CategoryPage() {
                     try {
                       setLoading(true);
 
-                      const res = await getStageResults(stageId);
+                      const res = await getStageOverallResult(stageId); // 🔥 new API
+                      const data = res.data.data;
 
-                      const maleContestants = (res.data.data.males || [])
-                        .map((c) => ({
-                          ...c,
-                          average: c.final_average,
-                          sex: "Male",
-                        }))
-                        .sort((a, b) => a.rank - b.rank);
+                      const maleContestants = (data.males || []).map((c) => ({
+                        ...c,
+                        average: c.stage_total, // 🔹 use stage_total
+                        rank: c.rank,
+                        sex: "Male",
+                      }));
 
-                      const femaleContestants = (res.data.data.females || [])
-                        .map((c) => ({
+                      const femaleContestants = (data.females || []).map(
+                        (c) => ({
                           ...c,
-                          average: c.final_average,
+                          average: c.stage_total, // 🔹 use stage_total
+                          rank: c.rank,
                           sex: "Female",
-                        }))
-                        .sort((a, b) => a.rank - b.rank);
+                        }),
+                      );
 
                       const queue = [];
 

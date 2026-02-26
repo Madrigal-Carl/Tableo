@@ -43,4 +43,12 @@ router.get(
   stageController.getActiveStageController,
 );
 
+// Get overall stage ranking (sum of category averages)
+router.get(
+  "/:id/overall-results",
+  requireAuth,
+  validateStageIdParam,
+  stageController.getStageOverallResults,
+);
+
 module.exports = router;

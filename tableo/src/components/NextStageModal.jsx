@@ -37,7 +37,7 @@ function NextStageModal({
               key={index}
               className="grid grid-cols-3 items-center text-sm py-3 border-t border-gray-100"
             >
-              <span className="text-gray-600">{index + 1}</span>
+              <span className="text-gray-600">{c.rank ?? index + 1}</span>
               <span className="text-gray-700">{c.name}</span>
               <span className="text-right text-gray-700">
                 {c.average.toFixed(2)}
