@@ -144,6 +144,7 @@ async function getCategoryJudgeStatuses(categoryId) {
     };
   });
 }
+
 async function isCategoryFullyCompleted(categoryId) {
   const category = await Category.findByPk(categoryId);
   if (!category) throw new Error("Category not found");

@@ -19,3 +19,8 @@ export const createOrUpdate = async (eventId, count) => {
   const res = await api.post(`/judge/event/${eventId}`, { count });
   return res.data;
 };
+
+export const checkReadyForNextStage = async (invitationCode, stageId) => {
+  const res = await api.get(`/judge/${invitationCode}/${stageId}/ready`);
+  return res.data;
+};

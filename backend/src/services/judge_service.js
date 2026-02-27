@@ -2,6 +2,7 @@ const sequelize = require("../database/models").sequelize;
 const { isEventEditable } = require("../utils/event_time_guard");
 const judgeRepo = require("../repositories/judge_repository");
 const categoryRepo = require("../repositories/category_repository");
+const stageRepo = require("../repositories/stage_repository");
 const crypto = require("crypto");
 
 function generateInvitationCode(length = 6) {
@@ -214,4 +215,37 @@ async function deleteJudge(judgeId) {
   });
 }
 
-module.exports = { updateJudge, createOrUpdate, getEventForJudge, deleteJudge };
+async function checkReadyForNextStage(stageId) {
+  const stage = await stageRepo.findById(stageId);
+
+  if (!stage) {
+    const err = new Error("Stage not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const nextStage = await stageRepo.findByEventAndSequence(
+    stage.event_id,
+    stage.sequence + 1,
+  );
+
+  if (!nextStage) {
+    return false;
+  }
+
+  const hasMaxMale =
+    nextStage.maxMale !== null && nextStage.maxMale !== undefined;
+
+  const hasMaxFemale =
+    nextStage.maxFemale !== null && nextStage.maxFemale !== undefined;
+
+  return hasMaxMale && hasMaxFemale;
+}
+
+module.exports = {
+  updateJudge,
+  createOrUpdate,
+  getEventForJudge,
+  deleteJudge,
+  checkReadyForNextStage,
+};

@@ -4,8 +4,12 @@ import JudgeTable from "../../components/JudgeTable";
 import JudgeModal from "../../components/JudgeModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
 import Swal from "sweetalert2";
-
-import { getEventForJudge, updateJudge } from "../../services/judge_service";
+import AdminDecisionOverlay from "../../components/AdminDecisionOverlay";
+import {
+  getEventForJudge,
+  updateJudge,
+  checkReadyForNextStage,
+} from "../../services/judge_service";
 import {
   submitScores,
   checkCategoryCompleted,
@@ -33,7 +37,7 @@ function JudgePage() {
 
   const [scores, setScores] = useState({});
   const [showWaitingOverlay, setShowWaitingOverlay] = useState(false);
-
+  const [showAdminOverlay, setShowAdminOverlay] = useState(false);
   // ✅ NEW STATE FOR LIVE JUDGE STATUSES
   const [judgeStatuses, setJudgeStatuses] = useState([]);
 
@@ -71,13 +75,13 @@ function JudgePage() {
 
   const autoSelectCategory = async (data) => {
     const sortedStages = [...data.event.stages].sort(
-      (a, b) => a.sequence - b.sequence
+      (a, b) => a.sequence - b.sequence,
     );
 
     for (let s = 0; s < sortedStages.length; s++) {
       const stage = sortedStages[s];
       const categories = (stage.categories || []).sort(
-        (a, b) => a.sequence - b.sequence
+        (a, b) => a.sequence - b.sequence,
       );
 
       for (let c = 0; c < categories.length; c++) {
@@ -105,11 +109,11 @@ function JudgePage() {
     const fetchStatuses = async () => {
       try {
         const currentStage = [...eventData.event.stages].sort(
-          (a, b) => a.sequence - b.sequence
+          (a, b) => a.sequence - b.sequence,
         )[stageIndex];
 
         const currentCategories = (currentStage?.categories || []).sort(
-          (a, b) => a.sequence - b.sequence
+          (a, b) => a.sequence - b.sequence,
         );
 
         const currentCategory = currentCategories[categoryIndex];
@@ -117,27 +121,22 @@ function JudgePage() {
 
         const statuses = await getCategoryJudgeStatuses(
           invitationCode,
-          currentCategory.id
+          currentCategory.id,
         );
 
         // Remove logged in judge from display list
-        const filtered = statuses.filter(
-          (j) => j.id !== eventData.judge.id
-        );
+        const filtered = statuses.filter((j) => j.id !== eventData.judge.id);
 
         setJudgeStatuses(filtered);
 
         // ✅ Check if THIS judge already finished
-        const myStatus = statuses.find(
-          (j) => j.id === eventData.judge.id
-        );
+        const myStatus = statuses.find((j) => j.id === eventData.judge.id);
 
         const iHaveScored = myStatus?.status === "done";
 
         // ✅ Check if ALL judges finished
         const allCompleted =
-          statuses.length > 0 &&
-          statuses.every((j) => j.status === "done");
+          statuses.length > 0 && statuses.every((j) => j.status === "done");
 
         // 🔥 FORCE overlay open if I already scored
         if (iHaveScored) {
@@ -147,7 +146,7 @@ function JudgePage() {
         // 🔥 If everyone done → move forward
         if (allCompleted) {
           setShowWaitingOverlay(false);
-          moveToNextCategory();
+          await moveToNextCategory();
         }
       } catch (err) {
         console.error("Polling error:", err);
@@ -167,11 +166,11 @@ function JudgePage() {
   if (!eventData) return null;
 
   const activeStage = [...eventData.event.stages].sort(
-    (a, b) => a.sequence - b.sequence
+    (a, b) => a.sequence - b.sequence,
   )[stageIndex];
 
   const currentCategories = (activeStage?.categories || []).sort(
-    (a, b) => a.sequence - b.sequence
+    (a, b) => a.sequence - b.sequence,
   );
   const selectedCategory = currentCategories[categoryIndex] ?? null;
   const normalizedCriteria = normalizeCriteria(selectedCategory);
@@ -206,7 +205,7 @@ function JudgePage() {
     const allFilled = validateScores(
       eventData.event.candidates,
       normalizedCriteria,
-      scores
+      scores,
     );
 
     if (!allFilled) {
@@ -251,20 +250,16 @@ function JudgePage() {
       // 🔥 Immediately fetch latest statuses so UI updates instantly
       const statuses = await getCategoryJudgeStatuses(
         invitationCode,
-        selectedCategory.id
+        selectedCategory.id,
       );
 
-      const filtered = statuses.filter(
-        (j) => j.id !== eventData.judge.id
-      );
+      const filtered = statuses.filter((j) => j.id !== eventData.judge.id);
 
       setJudgeStatuses(filtered);
     } catch (err) {
       showToast(
         "error",
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to submit scores"
+        err.response?.data?.message || err.message || "Failed to submit scores",
       );
     }
   };
@@ -273,27 +268,55 @@ function JudgePage() {
   /* MOVE CATEGORY */
   /* ===================================================== */
 
-  const moveToNextCategory = () => {
-    const stages = eventData.event.stages.sort(
-      (a, b) => a.sequence - b.sequence
+  const moveToNextCategory = async () => {
+    const stages = [...eventData.event.stages].sort(
+      (a, b) => a.sequence - b.sequence,
     );
 
     const categories =
-      stages[stageIndex]?.categories?.sort(
-        (a, b) => a.sequence - b.sequence
-      ) || [];
+      stages[stageIndex]?.categories?.sort((a, b) => a.sequence - b.sequence) ||
+      [];
 
+    // ✅ If still categories inside current stage → normal flow
     if (categoryIndex + 1 < categories.length) {
       setCategoryIndex(categoryIndex + 1);
       setScores({});
-    } else if (stageIndex + 1 < stages.length) {
-      setStageIndex(stageIndex + 1);
-      setCategoryIndex(0);
-      setScores({});
-    } else {
-      setIsFinished(true);
+      setShowWaitingOverlay(false);
+      return;
     }
 
+    // 🔥 We are about to move to next stage
+    if (stageIndex + 1 < stages.length) {
+      const currentStage = stages[stageIndex];
+
+      try {
+        const { ready } = await checkReadyForNextStage(
+          invitationCode,
+          currentStage.id,
+        );
+
+        if (!ready) {
+          setShowWaitingOverlay(false); // close judge overlay
+          setShowAdminOverlay(true); // open admin decision overlay
+          return;
+        }
+
+        // ✅ Ready → move to next stage
+        setShowAdminOverlay(false);
+        setStageIndex(stageIndex + 1);
+        setCategoryIndex(0);
+        setScores({});
+        setShowWaitingOverlay(false);
+      } catch (err) {
+        console.error("Stage readiness check failed:", err);
+        setShowWaitingOverlay(true);
+      }
+
+      return;
+    }
+
+    // ✅ No more stages
+    setIsFinished(true);
     setShowWaitingOverlay(false);
   };
 
@@ -306,7 +329,7 @@ function JudgePage() {
 
     const total = category.criteria.reduce(
       (sum, c) => sum + Number(c.percentage || 0),
-      0
+      0,
     );
 
     return category.criteria.map((c) => ({
@@ -331,6 +354,8 @@ function JudgePage() {
         categoryName={selectedCategory?.name ?? ""}
       />
 
+      <AdminDecisionOverlay isOpen={showAdminOverlay} />
+
       <JudgeModal
         isOpen={showJudgeModal}
         onClose={() => setShowJudgeModal(false)}
@@ -347,9 +372,7 @@ function JudgePage() {
             Exit
           </button>
 
-          <h1 className="text-xl font-semibold">
-            {eventData.event.title}
-          </h1>
+          <h1 className="text-xl font-semibold">{eventData.event.title}</h1>
 
           <button
             onClick={() => setShowJudgeModal(true)}

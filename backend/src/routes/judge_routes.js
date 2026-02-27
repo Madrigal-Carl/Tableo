@@ -4,6 +4,7 @@ const {
   validateJudge,
   validateJudgeCount,
   validateInvitationCode,
+  validateStageId,
 } = require("../validators/judge_validator");
 const judgeController = require("../controllers/judge_controller");
 const requireJudgeInvitation = require("../middlewares/judge");
@@ -35,9 +36,14 @@ router.get(
 );
 
 // Soft delete a judge
-router.delete(
-  "/:judgeId",
-  requireAuth,
-  judgeController.deleteJudge
+router.delete("/:judgeId", requireAuth, judgeController.deleteJudge);
+
+// Check if ready to proceed to next stage
+router.get(
+  "/:invitationCode/:stageId/ready",
+  requireJudgeInvitation,
+  validateStageId,
+  judgeController.checkReadyForNextStage,
 );
+
 module.exports = router;
