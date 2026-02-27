@@ -153,6 +153,7 @@ async function computeStageRanking(stageId, candidates) {
 
       return {
         candidate_id: candidate.id,
+        sequence: candidate.sequence,
         name: candidate.name,
         sex: candidate.sex,
         path: candidate.path,
