@@ -34,7 +34,7 @@ function JudgePage() {
 
   const [showJudgeModal, setShowJudgeModal] = useState(true);
   const [judgeInfo, setJudgeInfo] = useState(null);
-
+  const [blockedStageId, setBlockedStageId] = useState(null);
   const [scores, setScores] = useState({});
   const [showWaitingOverlay, setShowWaitingOverlay] = useState(false);
   const [showAdminOverlay, setShowAdminOverlay] = useState(false);
@@ -139,7 +139,7 @@ function JudgePage() {
           statuses.length > 0 && statuses.every((j) => j.status === "done");
 
         // 🔥 FORCE overlay open if I already scored
-        if (iHaveScored) {
+        if (iHaveScored && !showAdminOverlay) {
           setShowWaitingOverlay(true);
         }
 
@@ -158,6 +158,35 @@ function JudgePage() {
 
     return () => clearInterval(interval);
   }, [stageIndex, categoryIndex, eventData]);
+
+  /* ===================================================== */
+  /* POLLING FOR ADMIN DECISION */
+  /* ===================================================== */
+
+  useEffect(() => {
+    if (!showAdminOverlay || !blockedStageId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { ready } = await checkReadyForNextStage(
+          invitationCode,
+          blockedStageId,
+        );
+
+        if (ready) {
+          setShowAdminOverlay(false);
+          setBlockedStageId(null);
+          setStageIndex((prev) => prev + 1);
+          setCategoryIndex(0);
+          setScores({});
+          setShowWaitingOverlay(false);
+        }
+      } catch (err) {}
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [showAdminOverlay, blockedStageId, invitationCode]);
+
   /* ===================================================== */
   /* COMPUTED STATE (SAFE POSITION) */
   /* ===================================================== */
@@ -296,8 +325,9 @@ function JudgePage() {
         );
 
         if (!ready) {
-          setShowWaitingOverlay(false); // close judge overlay
-          setShowAdminOverlay(true); // open admin decision overlay
+          setShowWaitingOverlay(false);
+          setBlockedStageId(currentStage.id);
+          setShowAdminOverlay(true);
           return;
         }
 
