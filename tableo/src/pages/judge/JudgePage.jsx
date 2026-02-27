@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JudgeTable from "../../components/JudgeTable";
 import JudgeModal from "../../components/JudgeModal";
@@ -31,7 +31,7 @@ function JudgePage() {
   const [stageIndex, setStageIndex] = useState(0);
   const [categoryIndex, setCategoryIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-
+  const prevAdminOverlayRef = useRef(false);
   const [showJudgeModal, setShowJudgeModal] = useState(true);
   const [judgeInfo, setJudgeInfo] = useState(null);
   const [blockedStageId, setBlockedStageId] = useState(null);
@@ -68,6 +68,14 @@ function JudgePage() {
 
     fetchData();
   }, [invitationCode, navigate]);
+
+  useEffect(() => {
+    if (prevAdminOverlayRef.current && !showAdminOverlay) {
+      window.location.reload();
+    }
+
+    prevAdminOverlayRef.current = showAdminOverlay;
+  }, [showAdminOverlay]);
 
   /* ===================================================== */
   /* AUTO SELECT CATEGORY */
