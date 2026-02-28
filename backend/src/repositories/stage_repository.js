@@ -94,6 +94,20 @@ async function findPassedCandidates(stageId, transaction = null) {
   return stage.candidates.map((c) => c.get({ plain: true }));
 }
 
+async function findStageByCategory(categoryId) {
+  return await Stage.findOne({
+    include: [
+      {
+        model: Category,
+        as: "categories",
+        where: { id: categoryId },
+        through: { attributes: [] },
+        attributes: [],
+      },
+    ],
+  });
+}
+
 module.exports = {
   create,
   findByEvent,
@@ -105,4 +119,5 @@ module.exports = {
   findCategoryResultsByCategoryIds,
   findStageWithCategories,
   findPassedCandidates,
+  findStageByCategory,
 };

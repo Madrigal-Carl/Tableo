@@ -42,7 +42,6 @@ function JudgePage() {
   // ✅ NEW STATE FOR LIVE JUDGE STATUSES
   const [judgeStatuses, setJudgeStatuses] = useState([]);
   const [passedCandidates, setPassedCandidates] = useState([]);
-  const [justSubmitted, setJustSubmitted] = useState(false);
 
   /* ===================================================== */
   /* FETCH DATA */
@@ -175,8 +174,14 @@ function JudgePage() {
          * - I just submitted
          * - Backend confirms I am done
          */
-        if (justSubmitted && iHaveScored && !showAdminOverlay) {
+        // If I am done but others are not → show waiting
+        if (iHaveScored && !allCompleted && !showAdminOverlay) {
           setShowWaitingOverlay(true);
+        }
+
+        // If I am not done → hide waiting
+        if (!iHaveScored) {
+          setShowWaitingOverlay(false);
         }
 
         /**
@@ -196,7 +201,7 @@ function JudgePage() {
     const interval = setInterval(fetchStatuses, 3000);
 
     return () => clearInterval(interval);
-  }, [stageIndex, categoryIndex, eventData, justSubmitted, showAdminOverlay]);
+  }, [stageIndex, categoryIndex, eventData, showAdminOverlay]);
 
   /* ===================================================== */
   /* POLLING FOR ADMIN DECISION */
@@ -309,8 +314,6 @@ function JudgePage() {
 
     try {
       await submitScores(invitationCode, scoresToSubmit);
-
-      setJustSubmitted(true); // 🔥 mark submission event
       setShowWaitingOverlay(true);
 
       showToast("success", "Scores submitted successfully");
@@ -349,7 +352,6 @@ function JudgePage() {
       setCategoryIndex(categoryIndex + 1);
       setScores({});
       setShowWaitingOverlay(false);
-      setJustSubmitted(false);
       return;
     }
 

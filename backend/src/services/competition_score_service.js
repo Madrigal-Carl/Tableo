@@ -36,24 +36,58 @@ async function hasCompletedCategory(judgeId, categoryId) {
   const category = await Category.findByPk(categoryId);
   if (!category) throw new Error("Category not found");
 
-  const candidates = await Candidate.findAll({
-    where: { event_id: category.event_id },
-    attributes: ["id"],
-  });
+  // 🔥 Get stage of this category
+  const stage =
+    await require("../repositories/stage_repository").findStageByCategory(
+      categoryId,
+    );
+
+  if (!stage) throw new Error("Stage not found for this category");
+
+  // 🔥 Get candidates of this stage ONLY
+  let candidates = [];
+
+  const isAdvancedStage = stage.maxMale !== null && stage.maxFemale !== null;
+
+  if (isAdvancedStage) {
+    const stageCandidates =
+      await require("../repositories/stage_candidate_repository").findByStage(
+        stage.id,
+      );
+
+    const candidateIds = stageCandidates.map((sc) => sc.candidate_id);
+
+    candidates = candidateIds.length
+      ? await Candidate.findAll({
+          where: { id: { [Op.in]: candidateIds } },
+          attributes: ["id"],
+        })
+      : [];
+  } else {
+    // First stage → all event candidates
+    candidates = await Candidate.findAll({
+      where: { event_id: stage.event_id },
+      attributes: ["id"],
+    });
+  }
 
   const criteria = await Criterion.findAll({
     where: { category_id: categoryId },
     attributes: ["id"],
   });
 
-  const totalRequired = candidates.length * criteria.length;
+  const candidateIds = candidates.map((c) => c.id);
+  const criterionIds = criteria.map((c) => c.id);
+
+  const totalRequired = candidateIds.length * criterionIds.length;
+
   if (totalRequired === 0) return true;
 
   const scoredCount = await CompetitionScore.count({
     where: {
       judge_id: judgeId,
-      criterion_id: { [Op.in]: criteria.map((c) => c.id) },
-      candidate_id: { [Op.in]: candidates.map((c) => c.id) },
+      criterion_id: { [Op.in]: criterionIds },
+      candidate_id: { [Op.in]: candidateIds },
     },
   });
 
@@ -79,11 +113,40 @@ async function getCategoryJudgeStatuses(categoryId) {
 
   if (!judges.length) return [];
 
-  // 2️⃣ Get candidates & criteria
-  const candidates = await Candidate.findAll({
-    where: { event_id: eventId },
-    attributes: ["id"],
-  });
+  // 2️⃣ Get stage of this category
+  const stage =
+    await require("../repositories/stage_repository").findStageByCategory(
+      categoryId,
+    );
+
+  if (!stage) throw new Error("Stage not found for this category");
+
+  // 3️⃣ Get ONLY candidates for this stage
+  let candidates = [];
+
+  const isAdvancedStage = stage.maxMale !== null && stage.maxFemale !== null;
+
+  if (isAdvancedStage) {
+    const stageCandidates =
+      await require("../repositories/stage_candidate_repository").findByStage(
+        stage.id,
+      );
+
+    const candidateIds = stageCandidates.map((sc) => sc.candidate_id);
+
+    candidates = candidateIds.length
+      ? await Candidate.findAll({
+          where: { id: { [Op.in]: candidateIds } },
+          attributes: ["id"],
+        })
+      : [];
+  } else {
+    // First stage → all event candidates
+    candidates = await Candidate.findAll({
+      where: { event_id: stage.event_id },
+      attributes: ["id"],
+    });
+  }
 
   const criteria = await Criterion.findAll({
     where: { category_id: categoryId },
