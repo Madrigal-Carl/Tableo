@@ -8,6 +8,7 @@ import AdminDecisionOverlay from "../../components/AdminDecisionOverlay";
 import {
   getEventForJudge,
   updateJudge,
+  getPassedCandidates,
   checkReadyForNextStage,
 } from "../../services/judge_service";
 import {
@@ -40,6 +41,8 @@ function JudgePage() {
   const [showAdminOverlay, setShowAdminOverlay] = useState(false);
   // ✅ NEW STATE FOR LIVE JUDGE STATUSES
   const [judgeStatuses, setJudgeStatuses] = useState([]);
+  const [passedCandidates, setPassedCandidates] = useState([]);
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
   /* ===================================================== */
   /* FETCH DATA */
@@ -68,6 +71,28 @@ function JudgePage() {
 
     fetchData();
   }, [invitationCode, navigate]);
+
+  useEffect(() => {
+    if (!eventData) return;
+
+    const fetchPassedCandidates = async () => {
+      try {
+        const activeStage = [...eventData.event.stages].sort(
+          (a, b) => a.sequence - b.sequence,
+        )[stageIndex];
+
+        if (!activeStage) return;
+
+        const res = await getPassedCandidates(invitationCode, activeStage.id);
+
+        setPassedCandidates(res.candidates || []);
+      } catch (err) {
+        console.error("Failed to fetch passed candidates", err);
+      }
+    };
+
+    fetchPassedCandidates();
+  }, [stageIndex, eventData]);
 
   useEffect(() => {
     if (prevAdminOverlayRef.current && !showAdminOverlay) {
@@ -125,6 +150,7 @@ function JudgePage() {
         );
 
         const currentCategory = currentCategories[categoryIndex];
+
         if (!currentCategory) return;
 
         const statuses = await getCategoryJudgeStatuses(
@@ -132,26 +158,30 @@ function JudgePage() {
           currentCategory.id,
         );
 
-        // Remove logged in judge from display list
         const filtered = statuses.filter((j) => j.id !== eventData.judge.id);
 
         setJudgeStatuses(filtered);
 
-        // ✅ Check if THIS judge already finished
         const myStatus = statuses.find((j) => j.id === eventData.judge.id);
 
         const iHaveScored = myStatus?.status === "done";
 
-        // ✅ Check if ALL judges finished
         const allCompleted =
           statuses.length > 0 && statuses.every((j) => j.status === "done");
 
-        // 🔥 FORCE overlay open if I already scored
-        if (iHaveScored && !showAdminOverlay) {
+        /**
+         * ⭐ CRITICAL FIX
+         * Only open waiting overlay if:
+         * - I just submitted
+         * - Backend confirms I am done
+         */
+        if (justSubmitted && iHaveScored && !showAdminOverlay) {
           setShowWaitingOverlay(true);
         }
 
-        // 🔥 If everyone done → move forward
+        /**
+         * Move forward if everyone finished
+         */
         if (allCompleted) {
           setShowWaitingOverlay(false);
           await moveToNextCategory();
@@ -162,10 +192,11 @@ function JudgePage() {
     };
 
     fetchStatuses();
+
     const interval = setInterval(fetchStatuses, 3000);
 
     return () => clearInterval(interval);
-  }, [stageIndex, categoryIndex, eventData]);
+  }, [stageIndex, categoryIndex, eventData, justSubmitted, showAdminOverlay]);
 
   /* ===================================================== */
   /* POLLING FOR ADMIN DECISION */
@@ -240,7 +271,7 @@ function JudgePage() {
     if (!selectedCategory) return;
 
     const allFilled = validateScores(
-      eventData.event.candidates,
+      passedCandidates,
       normalizedCriteria,
       scores,
     );
@@ -265,7 +296,7 @@ function JudgePage() {
     const scoresToSubmit = [];
     const judgeId = eventData.judge.id;
 
-    eventData.event.candidates.forEach((candidate) => {
+    passedCandidates.forEach((candidate) => {
       normalizedCriteria.forEach((criterion) => {
         scoresToSubmit.push({
           candidate_id: candidate.id,
@@ -279,12 +310,11 @@ function JudgePage() {
     try {
       await submitScores(invitationCode, scoresToSubmit);
 
-      showToast("success", "Scores submitted successfully");
-
-      // 🔥 Immediately force overlay to show
+      setJustSubmitted(true); // 🔥 mark submission event
       setShowWaitingOverlay(true);
 
-      // 🔥 Immediately fetch latest statuses so UI updates instantly
+      showToast("success", "Scores submitted successfully");
+
       const statuses = await getCategoryJudgeStatuses(
         invitationCode,
         selectedCategory.id,
@@ -319,6 +349,7 @@ function JudgePage() {
       setCategoryIndex(categoryIndex + 1);
       setScores({});
       setShowWaitingOverlay(false);
+      setJustSubmitted(false);
       return;
     }
 
@@ -425,7 +456,7 @@ function JudgePage() {
         {!showJudgeModal && !isFinished && selectedCategory && (
           <div className="max-w-6xl mx-auto">
             <JudgeTable
-              participants={eventData.event.candidates}
+              participants={passedCandidates}
               criteria={normalizedCriteria}
               categoryName={selectedCategory.name}
               categoryMaxScore={selectedCategory.maxScore}

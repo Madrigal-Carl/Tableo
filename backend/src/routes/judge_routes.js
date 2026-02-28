@@ -46,4 +46,12 @@ router.get(
   judgeController.checkReadyForNextStage,
 );
 
+// Get candidates that passed the current stage
+router.get(
+  "/:invitationCode/stage/:stageId/passed-candidates",
+  requireJudgeInvitation,
+  validateStageId,
+  judgeController.getPassedCandidates,
+);
+
 module.exports = router;

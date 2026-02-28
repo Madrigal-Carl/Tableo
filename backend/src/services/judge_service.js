@@ -242,10 +242,43 @@ async function checkReadyForNextStage(stageId) {
   return hasMaxMale && hasMaxFemale;
 }
 
+async function getPassedCandidates(stageId) {
+  const stage = await stageRepo.findById(stageId);
+
+  if (!stage) {
+    const err = new Error("Stage not found");
+    err.status = 404;
+    throw err;
+  }
+
+  // Try fetching passed candidates
+  let candidates = await stageRepo.findPassedCandidates(stageId);
+
+  // ⭐ Fallback if empty → use all event candidates
+  if (!candidates || candidates.length === 0) {
+    const event = await sequelize.models.Event.findByPk(stage.event_id, {
+      include: [
+        {
+          model: sequelize.models.Candidate,
+          as: "candidates",
+          paranoid: false,
+        },
+      ],
+    });
+
+    if (!event) return [];
+
+    candidates = event.candidates.map((c) => c.get({ plain: true }));
+  }
+
+  return candidates;
+}
+
 module.exports = {
   updateJudge,
   createOrUpdate,
   getEventForJudge,
   deleteJudge,
   checkReadyForNextStage,
+  getPassedCandidates,
 };

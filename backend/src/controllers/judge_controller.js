@@ -73,10 +73,25 @@ async function checkReadyForNextStage(req, res, next) {
   }
 }
 
+async function getPassedCandidates(req, res, next) {
+  try {
+    const stageId = parseInt(req.params.stageId);
+
+    const candidates = await judgeService.getPassedCandidates(stageId);
+
+    res.json({
+      candidates,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   updateJudge,
   createOrUpdateJudges,
   getEventForJudge,
   deleteJudge,
   checkReadyForNextStage,
+  getPassedCandidates,
 };

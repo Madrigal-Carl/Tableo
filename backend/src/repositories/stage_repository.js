@@ -1,5 +1,6 @@
 const { Stage, Category, CategoryResult } = require("../database/models");
 const { Op } = require("sequelize");
+const sequelize = require("../database/models").sequelize;
 
 function create(data, transaction) {
   return Stage.create(data, { transaction });
@@ -75,6 +76,24 @@ function findStageWithCategories(stageId) {
   });
 }
 
+async function findPassedCandidates(stageId, transaction = null) {
+  const stage = await sequelize.models.Stage.findByPk(stageId, {
+    include: [
+      {
+        model: sequelize.models.Candidate,
+        as: "candidates",
+        required: false,
+        paranoid: false,
+      },
+    ],
+    transaction,
+  });
+
+  if (!stage) return [];
+
+  return stage.candidates.map((c) => c.get({ plain: true }));
+}
+
 module.exports = {
   create,
   findByEvent,
@@ -85,4 +104,5 @@ module.exports = {
   findByEventAndSequence,
   findCategoryResultsByCategoryIds,
   findStageWithCategories,
+  findPassedCandidates,
 };

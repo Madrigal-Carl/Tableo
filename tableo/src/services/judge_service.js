@@ -24,3 +24,11 @@ export const checkReadyForNextStage = async (invitationCode, stageId) => {
   const res = await api.get(`/judge/${invitationCode}/${stageId}/ready`);
   return res.data;
 };
+
+export const getPassedCandidates = async (invitationCode, stageId) => {
+  const res = await api.get(
+    `/judge/${invitationCode}/stage/${stageId}/passed-candidates`,
+  );
+
+  return res.data;
+};
