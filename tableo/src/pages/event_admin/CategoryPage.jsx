@@ -99,81 +99,40 @@ function CategoryPage() {
   const rankedCandidates = React.useMemo(() => {
     if (!event) return [];
 
-    const eventNotStarted =
-      !event.started_at || new Date(event.started_at) > new Date();
+    const eventNotStarted = isEventEditable(event);
 
-    // =====================================================
-    // ✅ 1️⃣ IF EVENT HASN'T STARTED → USE getEvent DATA
-    // =====================================================
     if (eventNotStarted) {
-      let fallback = (event.candidates || []).map((c, index) => ({
+      return (event.candidates || []).map((c) => ({
         candidate_id: c.id,
         name: c.name,
         sex: c.sex,
-        sequence: c.sequence ?? index + 1,
+        sequence: c.sequence || "",
+        path: c.path,
         judge_scores: [],
         total_average: 0,
         rank: "",
-        path: c.path,
       }));
-
-      if (sexFilter !== "ALL") {
-        fallback = fallback.filter(
-          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-        );
-      }
-
-      return fallback;
     }
 
-    // =====================================================
-    // ✅ 2️⃣ EVENT STARTED → TRY USING STAGE RESULTS
-    // =====================================================
-    if (!selectedCategory) return [];
+    if (!selectedCategory || !stageResults) return [];
 
     const categoryName = selectedCategory.name;
-    const categoryData = stageResults?.[categoryName];
+    const categoryData = stageResults[categoryName];
 
-    if (categoryData) {
-      const males = categoryData.males || [];
-      const females = categoryData.females || [];
+    if (!categoryData) return [];
 
-      const hasRealResults = males.length > 0 || females.length > 0;
-
-      if (hasRealResults) {
-        let combined = [...males, ...females];
-
-        if (sexFilter !== "ALL") {
-          combined = combined.filter(
-            (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
-          );
-        }
-
-        return combined;
-      }
-    }
-
-    // =====================================================
-    // ✅ 3️⃣ FALLBACK IF STAGE RESULTS EMPTY
-    // =====================================================
-    let fallback = (event.candidates || []).map((c, index) => ({
-      candidate_id: c.id,
-      name: c.name,
-      sex: c.sex,
-      sequence: c.sequence ?? index + 1,
-      judge_scores: [],
-      total_average: 0,
-      rank: "",
-      path: c.path,
-    }));
+    let combined = [
+      ...(categoryData.males || []),
+      ...(categoryData.females || []),
+    ];
 
     if (sexFilter !== "ALL") {
-      fallback = fallback.filter(
+      combined = combined.filter(
         (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
       );
     }
 
-    return fallback;
+    return combined;
   }, [event, stageResults, selectedCategory, sexFilter]);
 
   const tabs = ["Stages", "Participants", "Judges"];
