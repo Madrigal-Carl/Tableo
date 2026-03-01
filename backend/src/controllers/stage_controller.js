@@ -49,12 +49,12 @@ async function getStageResults(req, res, next) {
 async function advanceStageCandidates(req, res, next) {
   try {
     const stageId = parseInt(req.params.id);
-    const { maleCount, femaleCount } = req.body;
+    const { maleIds = [], femaleIds = [] } = req.body;
 
     const result = await stageService.advanceCandidates(
       stageId,
-      maleCount,
-      femaleCount,
+      maleIds,
+      femaleIds,
     );
 
     res.json({
