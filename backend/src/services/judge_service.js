@@ -138,12 +138,46 @@ async function getEventForJudge(req) {
     throw err;
   }
 
+  // 🚫 BLOCK if no candidates
+  if (!event.candidates || event.candidates.length === 0) {
+    const err = new Error("No candidates found for this event");
+    err.status = 403;
+    throw err;
+  }
+
+  // 🚫 BLOCK if no stages
+  if (!event.stages || event.stages.length === 0) {
+    const err = new Error("No stages configured for this event");
+    err.status = 403;
+    throw err;
+  }
+
   const stagesWithCategories = await Promise.all(
     event.stages.map(async (stage) => {
       const categories = await categoryRepo.findByEventWithStagesAndCriteria(
         event.id,
         stage.id,
       );
+
+      // 🚫 BLOCK if stage has no categories
+      if (!categories || categories.length === 0) {
+        const err = new Error(
+          `Stage "${stage.name}" has no categories configured`,
+        );
+        err.status = 403;
+        throw err;
+      }
+
+      // 🚫 BLOCK if any category has no criteria
+      for (const cat of categories) {
+        if (!cat.criteria || cat.criteria.length === 0) {
+          const err = new Error(
+            `Category "${cat.name}" has no criteria configured`,
+          );
+          err.status = 403;
+          throw err;
+        }
+      }
 
       return {
         ...stage.get({ plain: true }),
@@ -175,6 +209,7 @@ async function getEventForJudge(req) {
     },
   };
 }
+
 
 async function deleteJudge(judgeId) {
   return sequelize.transaction(async (t) => {
