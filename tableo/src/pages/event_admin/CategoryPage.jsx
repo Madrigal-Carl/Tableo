@@ -101,8 +101,9 @@ function CategoryPage() {
 
     const eventNotStarted = isEventEditable(event);
 
+    // 🟢 EVENT NOT STARTED
     if (eventNotStarted) {
-      return (event.candidates || []).map((c) => ({
+      let candidates = (event.candidates || []).map((c) => ({
         candidate_id: c.id,
         name: c.name,
         sex: c.sex,
@@ -112,8 +113,18 @@ function CategoryPage() {
         total_average: 0,
         rank: "",
       }));
+
+      // ✅ APPLY FILTER HERE TOO
+      if (sexFilter !== "ALL") {
+        candidates = candidates.filter(
+          (c) => c.sex?.toLowerCase() === sexFilter.toLowerCase(),
+        );
+      }
+
+      return candidates;
     }
 
+    // 🔵 EVENT STARTED
     if (!selectedCategory || !stageResults) return [];
 
     const categoryName = selectedCategory.name;
@@ -134,6 +145,7 @@ function CategoryPage() {
 
     return combined;
   }, [event, stageResults, selectedCategory, sexFilter]);
+
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -494,9 +506,8 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${
-                    activeTopTab === tab ? "text-gray-600" : "text-white"
-                  }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
+                    }`}
                 >
                   {tab}
                 </button>
@@ -521,11 +532,10 @@ function CategoryPage() {
                           if (!canEditEvent) return;
                           setActiveStage(stageObj.name);
                         }}
-                        className={`pb-3 text-lg font-semibold transition ${
-                          activeStage === stageObj.name
-                            ? "border-b-2 border-[#192BC2] text-[#192BC2]"
-                            : "text-gray-400 hover:text-gray-600"
-                        } ${!canEditEvent ? "cursor-not-allowed" : ""}`}
+                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
+                          ? "border-b-2 border-[#192BC2] text-[#192BC2]"
+                          : "text-gray-400 hover:text-gray-600"
+                          } ${!canEditEvent ? "cursor-not-allowed" : ""}`}
                       >
                         {stageObj.name}
                       </button>
@@ -573,8 +583,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                                .slice(0, 30)
-                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                              .slice(0, 30)
+                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -599,9 +609,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                                name: c.label,
-                                weight: c.percentage,
-                              }))
+                              name: c.label,
+                              weight: c.percentage,
+                            }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -923,9 +933,8 @@ function CategoryPage() {
             setAdvanceCounts({ maleCount: null, femaleCount: null });
           }}
           contestants={advanceQueue[currentAdvanceIndex]?.contestants || []}
-          roundTitle={`${activeStage} - ${
-            advanceQueue[currentAdvanceIndex]?.sex || ""
-          }`}
+          roundTitle={`${activeStage} - ${advanceQueue[currentAdvanceIndex]?.sex || ""
+            }`}
           onProceed={async (selectedIds) => {
             const sex = advanceQueue[currentAdvanceIndex]?.sex;
             const contestants =

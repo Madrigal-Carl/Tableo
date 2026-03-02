@@ -85,161 +85,164 @@ function ViewOnlyTable({
         </div>
 
         {/* TABLE */}
-        {filteredData.length === 0 ? (
-          <h1 className="text-4xl font-bold text-gray-300 mt-20 text-center">
-            No {title}
-          </h1>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
-              <thead>
-                <tr className="text-xs uppercase tracking-wider text-gray-400">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
+            <thead>
+              <tr className="text-xs uppercase tracking-wider text-gray-400">
+                {isJudge ? (
+                  <>
+                    <th className="px-4 py-3 w-1/4 text-center">
+                      Judge Code
+                    </th>
+                    <th className="px-4 py-3 w-1/4 text-center">
+                      {nameLabel}
+                    </th>
+                    <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
+                    <th className="px-4 py-3 w-1/4 text-center">Actions</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-4 py-3 w-1/4 text-center">
+                      Participant No.
+                    </th>
+                    <th className="px-4 py-3 w-1/4 text-center">
+                      {nameLabel}
+                    </th>
+                    {fieldKey && (
+                      <th className="px-4 py-3 w-1/4 text-center">
+                        {fieldLabel}
+                      </th>
+                    )}
+                    <th className="px-4 py-3 w-1/4 text-center">Actions</th>
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
+                    className="px-4 py-10 text-center text-gray-400 text-xl font-semibold"
+                  >
+                    No {title}
+                  </td>
+                </tr>
+              )}
+
+              {filteredData.map((item) => (
+                <tr
+                  key={item.id}
+                  className="bg-gray-50 hover:bg-gray-100 transition shadow-sm rounded-xl"
+                >
                   {isJudge ? (
                     <>
-                      <th className="px-4 py-3 w-1/4 text-center">
-                        Judge Code
-                      </th>
-                      <th className="px-4 py-3 w-1/4 text-center">
-                        {nameLabel}
-                      </th>
-                      <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
-                      <th className="px-4 py-3 w-1/4 text-center">Actions</th>
+                      <td className="px-4 py-4 text-center font-medium text-gray-600">
+                        {item.invitationCode}
+                      </td>
+                      <td className="px-4 py-4 text-center font-semibold text-gray-800">
+                        {item.name}
+                      </td>
+                      <td className="px-4 py-4 text-center text-gray-600 capitalize">
+                        {item.suffix || "-"}
+                      </td>
                     </>
                   ) : (
                     <>
-                      <th className="px-4 py-3 w-1/4 text-center">
-                        Participant No.
-                      </th>
-                      <th className="px-4 py-3 w-1/4 text-center">
-                        {nameLabel}
-                      </th>
+                      <td className="px-4 py-4 text-center font-medium text-gray-600">
+                        {item.sequence != null ? item.sequence : "-"}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
+                            {item.path ? (
+                              <img
+                                src={`${import.meta.env.VITE_ASSET_URL}${item.path}`}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              item.name
+                                ?.split(" ")
+                                .map((n) => n[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase()
+                            )}
+                          </div>
+                          <p className="font-semibold text-gray-800">
+                            {item.name}
+                          </p>
+                        </div>
+                      </td>
                       {fieldKey && (
-                        <th className="px-4 py-3 w-1/4 text-center">
-                          {fieldLabel}
-                        </th>
+                        <td className="px-4 py-4 text-center text-gray-600 capitalize">
+                          {item[fieldKey] || "-"}
+                        </td>
                       )}
-                      <th className="px-4 py-3 w-1/4 text-center">Actions</th>
                     </>
                   )}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="bg-gray-50 hover:bg-gray-100 transition shadow-sm rounded-xl"
-                  >
-                    {isJudge ? (
-                      <>
-                        <td className="px-4 py-4 text-center font-medium text-gray-600">
-                          {item.invitationCode}
-                        </td>
-                        <td className="px-4 py-4 text-center font-semibold text-gray-800">
-                          {item.name}
-                        </td>
-                        <td className="px-4 py-4 text-center text-gray-600 capitalize">
-                          {item.suffix || "-"}
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-4 py-4 text-center font-medium text-gray-600">
-                          {item.sequence != null ? item.sequence : "-"}
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <div className="flex items-center justify-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
-                              {item.path ? (
-                                <img
-                                  src={`${import.meta.env.VITE_ASSET_URL}${item.path}`}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                item.name
-                                  ?.split(" ")
-                                  .map((n) => n[0])
-                                  .slice(0, 2)
-                                  .join("")
-                                  .toUpperCase()
-                              )}
-                            </div>
-                            <p className="font-semibold text-gray-800">
-                              {item.name}
-                            </p>
-                          </div>
-                        </td>
-                        {fieldKey && (
-                          <td className="px-4 py-4 text-center text-gray-600 capitalize">
-                            {item[fieldKey] || "-"}
-                          </td>
-                        )}
-                      </>
-                    )}
 
-                    {/* ACTIONS */}
-                    <td className="px-4 py-4 text-center">
-                      {editable ? (
-                        <div className="flex justify-center gap-2">
-                          {/* EDIT (Participants only) */}
-                          {!isJudge && (
-                            <button
-                              onClick={() => canEdit && openEditModal(item)}
-                              disabled={!canEdit}
-                              className={`p-2 rounded-lg transition
-            ${
-              canEdit
-                ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-                : "text-gray-300 cursor-not-allowed"
-            }`}
-                            >
-                              <SquarePen size={16} />
-                            </button>
-                          )}
-
-                          {/* DELETE */}
+                  {/* ACTIONS */}
+                  <td className="px-4 py-4 text-center">
+                    {editable ? (
+                      <div className="flex justify-center gap-2">
+                        {/* EDIT (Participants only) */}
+                        {!isJudge && (
                           <button
-                            onClick={() => canEdit && onDelete?.(item)}
+                            onClick={() => canEdit && openEditModal(item)}
                             disabled={!canEdit}
                             className={`p-2 rounded-lg transition
-          ${
-            canEdit
-              ? "text-gray-500 hover:text-red-600 hover:bg-red-50"
-              : "text-gray-300 cursor-not-allowed"
-          }`}
+            ${canEdit
+                                ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                : "text-gray-300 cursor-not-allowed"
+                              }`}
                           >
-                            <Trash2 size={16} />
+                            <SquarePen size={16} />
                           </button>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">View only</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                        )}
 
-                {/* ADD ROW */}
-                {onAdd && (
-                  <tr
-                    className={`bg-gray-100 transition
-      ${canEdit ? "hover:bg-gray-200 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
-                    onClick={() => canEdit && onAdd()}
-                  >
-                    <td
-                      colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
-                      className="px-4 py-4 text-center text-blue-600 font-semibold"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Plus size={16} />
-                        Add {title.slice(0, -1)}
+                        {/* DELETE */}
+                        <button
+                          onClick={() => canEdit && onDelete?.(item)}
+                          disabled={!canEdit}
+                          className={`p-2 rounded-lg transition
+          ${canEdit
+                              ? "text-gray-500 hover:text-red-600 hover:bg-red-50"
+                              : "text-gray-300 cursor-not-allowed"
+                            }`}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    ) : (
+                      <span className="text-sm text-gray-400">View only</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+
+              {/* ADD ROW */}
+              {onAdd && (
+                <tr
+                  className={`bg-gray-100 transition
+      ${canEdit ? "hover:bg-gray-200 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
+                  onClick={() => canEdit && onAdd()}
+                >
+                  <td
+                    colSpan={isJudge ? 4 : fieldKey ? 4 : 3}
+                    className="px-4 py-4 text-center text-blue-600 font-semibold"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Plus size={16} />
+                      Add {title.slice(0, -1)}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* EDIT MODAL */}
