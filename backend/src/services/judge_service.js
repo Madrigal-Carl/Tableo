@@ -2,6 +2,7 @@ const sequelize = require("../database/models").sequelize;
 const { isEventEditable } = require("../utils/event_time_guard");
 const judgeRepo = require("../repositories/judge_repository");
 const categoryRepo = require("../repositories/category_repository");
+const stageRepo = require("../repositories/stage_repository");
 const crypto = require("crypto");
 
 function generateInvitationCode(length = 6) {
@@ -214,4 +215,70 @@ async function deleteJudge(judgeId) {
   });
 }
 
-module.exports = { updateJudge, createOrUpdate, getEventForJudge, deleteJudge };
+async function checkReadyForNextStage(stageId) {
+  const stage = await stageRepo.findById(stageId);
+
+  if (!stage) {
+    const err = new Error("Stage not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const nextStage = await stageRepo.findByEventAndSequence(
+    stage.event_id,
+    stage.sequence + 1,
+  );
+
+  if (!nextStage) {
+    return false;
+  }
+
+  const hasMaxMale =
+    nextStage.maxMale !== null && nextStage.maxMale !== undefined;
+
+  const hasMaxFemale =
+    nextStage.maxFemale !== null && nextStage.maxFemale !== undefined;
+
+  return hasMaxMale && hasMaxFemale;
+}
+
+async function getPassedCandidates(stageId) {
+  const stage = await stageRepo.findById(stageId);
+
+  if (!stage) {
+    const err = new Error("Stage not found");
+    err.status = 404;
+    throw err;
+  }
+
+  // Try fetching passed candidates
+  let candidates = await stageRepo.findPassedCandidates(stageId);
+
+  // ⭐ Fallback if empty → use all event candidates
+  if (!candidates || candidates.length === 0) {
+    const event = await sequelize.models.Event.findByPk(stage.event_id, {
+      include: [
+        {
+          model: sequelize.models.Candidate,
+          as: "candidates",
+          paranoid: false,
+        },
+      ],
+    });
+
+    if (!event) return [];
+
+    candidates = event.candidates.map((c) => c.get({ plain: true }));
+  }
+
+  return candidates;
+}
+
+module.exports = {
+  updateJudge,
+  createOrUpdate,
+  getEventForJudge,
+  deleteJudge,
+  checkReadyForNextStage,
+  getPassedCandidates,
+};

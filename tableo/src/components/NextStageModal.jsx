@@ -32,16 +32,19 @@ function NextStageModal({
       return;
     }
 
-    if (count > sortedContestants.length) return;
+    if (count > sortedContestants.length) {
+      setAdvanceCount(sortedContestants.length);
+      return;
+    }
 
     const cutoffScore = sortedContestants[count - 1]?.average;
 
     const aboveCutoff = sortedContestants.filter(
-      (c) => c.average > cutoffScore
+      (c) => c.average > cutoffScore,
     );
 
     const tiedAtCutoff = sortedContestants.filter(
-      (c) => c.average === cutoffScore
+      (c) => c.average === cutoffScore,
     );
 
     if (aboveCutoff.length + tiedAtCutoff.length > count) {
@@ -62,16 +65,26 @@ function NextStageModal({
   if (!isOpen) return null;
 
   const handleCheckboxChange = (id, checked) => {
+    const maxAllowed = Number(advanceCount);
+
     if (checked) {
+      if (selectedIds.length >= maxAllowed) return;
+
       setSelectedIds((prev) => [...prev, id]);
     } else {
       setSelectedIds((prev) => prev.filter((x) => x !== id));
     }
   };
 
-  const isTieUnresolved =
-    tieIds.length > 0 &&
-    selectedIds.length !== Number(advanceCount);
+  const count = Number(advanceCount);
+
+  const isInvalidCount =
+    !count || count < 1 || count > sortedContestants.length;
+
+  const isTieUnresolved = tieIds.length > 0 && selectedIds.length !== count;
+
+  const disableProceed =
+    isInvalidCount || isTieUnresolved || selectedIds.length !== count;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
@@ -108,16 +121,11 @@ function NextStageModal({
                       type="checkbox"
                       checked={isSelected}
                       onChange={(e) =>
-                        handleCheckboxChange(
-                          c.candidate_id,
-                          e.target.checked
-                        )
+                        handleCheckboxChange(c.candidate_id, e.target.checked)
                       }
                     />
                   )}
-                  <span className="text-gray-600">
-                    {c.rank ?? index + 1}
-                  </span>
+                  <span className="text-gray-600">{c.rank ?? index + 1}</span>
                 </div>
 
                 <span className="text-gray-700">{c.name}</span>
@@ -139,8 +147,18 @@ function NextStageModal({
           <input
             type="number"
             min="1"
+            max={sortedContestants.length}
             value={advanceCount}
-            onChange={(e) => setAdvanceCount(e.target.value)}
+            onChange={(e) => {
+              let value = e.target.value;
+
+              if (value < 0) value = 0;
+
+              if (value > sortedContestants.length) {
+                value = sortedContestants.length;
+              }
+              setAdvanceCount(value);
+            }}
             className="w-16 h-9 text-center border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
 
@@ -161,14 +179,15 @@ function NextStageModal({
           </button>
 
           <button
-            disabled={isTieUnresolved}
+            disabled={disableProceed}
             onClick={() => onProceed(selectedIds)}
             className={`px-6 py-2 rounded-lg text-sm font-medium transition
-              ${isTieUnresolved
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-[#192BC2] text-white hover:bg-[#192BC2]/80"
-              }
-            `}
+    ${
+      disableProceed
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        : "bg-[#192BC2] text-white hover:bg-[#192BC2]/80"
+    }
+  `}
           >
             Proceed
           </button>

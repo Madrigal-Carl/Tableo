@@ -69,8 +69,8 @@ function CategoryPage() {
   const [sexFilter, setSexFilter] = useState("ALL");
 
   const [advanceCounts, setAdvanceCounts] = useState({
-    maleCount: null,
-    femaleCount: null,
+    maleIds: [],
+    femaleIds: [],
   });
 
   const [stageResults, setStageResults] = useState({});
@@ -97,11 +97,28 @@ function CategoryPage() {
   }, [activeStage, event]);
 
   const rankedCandidates = React.useMemo(() => {
+    if (!event) return [];
+
+    const eventNotStarted = isEventEditable(event);
+
+    if (eventNotStarted) {
+      return (event.candidates || []).map((c) => ({
+        candidate_id: c.id,
+        name: c.name,
+        sex: c.sex,
+        sequence: c.sequence || "",
+        path: c.path,
+        judge_scores: [],
+        total_average: 0,
+        rank: "",
+      }));
+    }
+
     if (!selectedCategory || !stageResults) return [];
 
     const categoryName = selectedCategory.name;
-
     const categoryData = stageResults[categoryName];
+
     if (!categoryData) return [];
 
     let combined = [
@@ -116,7 +133,7 @@ function CategoryPage() {
     }
 
     return combined;
-  }, [stageResults, selectedCategory, sexFilter]);
+  }, [event, stageResults, selectedCategory, sexFilter]);
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -909,62 +926,80 @@ function CategoryPage() {
           roundTitle={`${activeStage} - ${
             advanceQueue[currentAdvanceIndex]?.sex || ""
           }`}
-          onProceed={async (advanceCount) => {
+          onProceed={async (selectedIds) => {
             const sex = advanceQueue[currentAdvanceIndex]?.sex;
+            const contestants =
+              advanceQueue[currentAdvanceIndex]?.contestants || [];
 
-            if (!advanceCount || Number(advanceCount) <= 0) {
-              showToast("error", "Please enter a valid number");
+            const totalContestants = contestants.length;
+
+            // ✅ 1️⃣ Must select at least 1
+            if (!selectedIds || selectedIds.length < 1) {
+              showToast("error", "You must select at least 1 contestant.");
               return;
             }
 
-            // 🔹 Store count but DO NOT call backend yet
+            // ✅ 2️⃣ Cannot select more than available contestants
+            if (selectedIds.length > totalContestants) {
+              showToast(
+                "error",
+                `You cannot select more than ${totalContestants} contestants.`,
+              );
+              return;
+            }
+
+            // ✅ 3️⃣ Extra safety: prevent invalid IDs
+            const validIds = contestants.map((c) => c.candidate_id);
+
+            const hasInvalid = selectedIds.some((id) => !validIds.includes(id));
+
+            if (hasInvalid) {
+              showToast("error", "Invalid contestant selection detected.");
+              return;
+            }
+
+            // 🔹 Store selected IDs
             if (sex === "Male") {
               setAdvanceCounts((prev) => ({
                 ...prev,
-                maleCount: Number(advanceCount),
+                maleIds: selectedIds,
               }));
             }
 
             if (sex === "Female") {
               setAdvanceCounts((prev) => ({
                 ...prev,
-                femaleCount: Number(advanceCount),
+                femaleIds: selectedIds,
               }));
             }
 
             const nextIndex = currentAdvanceIndex + 1;
 
-            // 🔹 If there's another modal (Female after Male)
             if (nextIndex < advanceQueue.length) {
               setCurrentAdvanceIndex(nextIndex);
               return;
             }
 
-            // 🔥 BOTH inputs are done → now call backend
             try {
               setLoading(true);
 
               const stageId = getStageIdByName(activeStage);
 
               const payload = {
-                maleCount:
-                  sex === "Male"
-                    ? Number(advanceCount)
-                    : advanceCounts.maleCount,
-                femaleCount:
+                maleIds:
+                  sex === "Male" ? selectedIds : advanceCounts.maleIds || [],
+                femaleIds:
                   sex === "Female"
-                    ? Number(advanceCount)
-                    : advanceCounts.femaleCount,
+                    ? selectedIds
+                    : advanceCounts.femaleIds || [],
               };
 
               await advanceStageCandidates(stageId, payload);
 
-              // 🔥 Refetch full event
               const res = await getEvent(eventId);
               const updatedEvent = res.data;
               setEvent(updatedEvent);
 
-              // 🔥 Determine next stage by sequence
               const sortedStages = updatedEvent.stages
                 .slice()
                 .sort((a, b) => a.sequence - b.sequence);
@@ -981,11 +1016,11 @@ function CategoryPage() {
 
               showToast("success", "Candidates advanced successfully");
 
-              // Reset modal state
+              // Reset
               setIsNextStageModalOpen(false);
               setAdvanceQueue([]);
               setCurrentAdvanceIndex(0);
-              setAdvanceCounts({ maleCount: null, femaleCount: null });
+              setAdvanceCounts({ maleIds: [], femaleIds: [] });
             } catch (err) {
               showToast("error", err.response?.data?.message || err.message);
             } finally {
