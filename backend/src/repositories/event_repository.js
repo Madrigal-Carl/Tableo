@@ -44,12 +44,6 @@ function findByIdWithRelations(id) {
   });
 }
 
-function findByUser(userId) {
-  return Event.findAll({
-    where: { user_id: userId },
-  });
-}
-
 async function softDelete(eventId, userId) {
   return sequelize.transaction(async (t) => {
     const event = await Event.findByPk(eventId, { transaction: t });
@@ -113,6 +107,26 @@ async function restore(eventId, transaction) {
   });
 }
 
+async function getAllEvents() {
+  return Event.findAll({
+    include: [
+      { model: Stage, as: "stages" },
+      { model: Judge, as: "judges" },
+      { model: Candidate, as: "candidates" },
+      {
+        model: Category,
+        as: "categories",
+        include: [
+          { model: sequelize.models.CategoryResult, as: "category_result" },
+          { model: sequelize.models.Criterion, as: "criteria" },
+        ],
+      },
+      { model: sequelize.models.User, as: "creator", attributes: ["email"] },
+    ],
+    order: [["date", "ASC"]],
+  });
+}
+
 module.exports = {
   create,
   findById,
@@ -123,4 +137,5 @@ module.exports = {
   findDeletedByUser,
   findDeletedById,
   restore,
+  getAllEvents,
 };
