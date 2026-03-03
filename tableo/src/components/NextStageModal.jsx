@@ -57,7 +57,7 @@ function NextStageModal({
             min="1"
             value={advanceCount}
             onChange={(e) => setAdvanceCount(e.target.value)}
-            className="w-14 h-8 text-center border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-14 h-8 text-center border border-[#192BC2] rounded-md focus:outline-none focus:ring-2 focus:ring-[#192BC2]/80"
           />
         </div>
 
@@ -65,7 +65,7 @@ function NextStageModal({
         <div className="flex justify-between mt-7">
           <button
             onClick={onClose}
-            className="bg-orange-200 text-orange-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#192BC2] transition"
+            className="bg-[#192BC2]/60 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#192BC2] transition"
           >
             Cancel
           </button>
