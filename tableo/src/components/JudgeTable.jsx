@@ -60,7 +60,7 @@ function JudgeTable({
         </div>
       )}
 
-      <div className="overflow-x-auto h-[600px] overflow-y-auto mt-4">
+      <div className="overflow-x-auto max-h-[600px] overflow-y-auto mt-4">
         {/* Header Row */}
         <div
           className="grid gap-2 mb-2 text-center font-semibold text-gray-700 border-b border-gray-200"
