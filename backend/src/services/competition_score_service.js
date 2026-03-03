@@ -4,7 +4,8 @@ const {
   Criterion,
   CompetitionScore,
   Category,
-  Judge, // ✅ ADD THIS
+  Judge,
+  Stage // ✅ ADD THIS
 } = require("../database/models");
 const { generateCategoryResults } = require("./category_result_service");
 const { Op, fn, col } = require("sequelize"); // ✅ ADD fn, col
@@ -233,6 +234,26 @@ async function isCategoryFullyCompleted(categoryId) {
 
   return true; // ✅ All judges completed
 }
+// =====================================================
+async function isEventFullyCompleted(eventId) {
+  const stages = await Stage.findAll({
+    where: { event_id: eventId },
+  });
+
+  if (!stages.length) {
+    return false;
+  }
+
+  for (const stage of stages) {
+    const stageCompleted = await isStageFullyCompleted(stage.id);
+
+    if (!stageCompleted) {
+      return false;
+    }
+  }
+
+  return true;
+}
 /* ===================================================== */
 
 async function isStageFullyCompleted(stageId) {
@@ -319,4 +340,5 @@ module.exports = {
   getCategoryJudgeStatuses,
   isCategoryFullyCompleted,
   isStageFullyCompleted,
+  isEventFullyCompleted,
 };
