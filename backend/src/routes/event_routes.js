@@ -39,4 +39,10 @@ router.get("/deleted/all", requireAuth, eventController.getDeletedEvents);
 // Restore Event
 router.patch("/:eventId/restore", requireAuth, eventController.restoreEvent);
 
+// Finalize Event (Create Event Results from Final Stage)
+router.post(
+  "/:eventId/finalize",
+  requireAuth,
+  eventController.finalizeEvent
+);
 module.exports = router;
