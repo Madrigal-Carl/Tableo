@@ -225,7 +225,7 @@ function JudgePage() {
           setScores({});
           setShowWaitingOverlay(false);
         }
-      } catch (err) {}
+      } catch (err) { }
     }, 3000);
 
     return () => clearInterval(interval);
@@ -247,7 +247,14 @@ function JudgePage() {
   );
   const selectedCategory = currentCategories[categoryIndex] ?? null;
   const normalizedCriteria = normalizeCriteria(selectedCategory);
+  // ✅ Split candidates by gender
+  const maleCandidates = passedCandidates.filter(
+    (c) => c.sex?.toLowerCase() === "male"
+  );
 
+  const femaleCandidates = passedCandidates.filter(
+    (c) => c.sex?.toLowerCase() === "female"
+  );
   /* ===================================================== */
   /* SAVE JUDGE */
   /* ===================================================== */
@@ -457,16 +464,45 @@ function JudgePage() {
       <div className="pt-24 px-6">
         {!showJudgeModal && !isFinished && selectedCategory && (
           <div className="max-w-6xl mx-auto">
-            <JudgeTable
-              participants={passedCandidates}
-              criteria={normalizedCriteria}
-              categoryName={selectedCategory.name}
-              categoryMaxScore={selectedCategory.maxScore}
-              categoryPercentage={selectedCategory.percentage}
-              scores={scores}
-              setScores={setScores}
-              categoryKey={`${stageIndex}-${categoryIndex}`}
-            />
+            {/* ================= MALE TABLE ================= */}
+            {maleCandidates.length > 0 && (
+              <>
+                <h2 className="text-2xl font-bold mb-4 text-blue-600">
+                  Male Candidates
+                </h2>
+
+                <JudgeTable
+                  participants={maleCandidates}
+                  criteria={normalizedCriteria}
+                  categoryName={`${selectedCategory.name} - Male`}
+                  categoryMaxScore={selectedCategory.maxScore}
+                  categoryPercentage={selectedCategory.percentage}
+                  scores={scores}
+                  setScores={setScores}
+                  categoryKey={`male-${stageIndex}-${categoryIndex}`}
+                />
+              </>
+            )}
+
+            {/* ================= FEMALE TABLE ================= */}
+            {femaleCandidates.length > 0 && (
+              <>
+                <h2 className="text-2xl font-bold mt-12 mb-4 text-pink-600">
+                  Female Candidates
+                </h2>
+
+                <JudgeTable
+                  participants={femaleCandidates}
+                  criteria={normalizedCriteria}
+                  categoryName={`${selectedCategory.name} - Female`}
+                  categoryMaxScore={selectedCategory.maxScore}
+                  categoryPercentage={selectedCategory.percentage}
+                  scores={scores}
+                  setScores={setScores}
+                  categoryKey={`female-${stageIndex}-${categoryIndex}`}
+                />
+              </>
+            )}
 
             <div className="flex justify-end mt-6">
               <button
