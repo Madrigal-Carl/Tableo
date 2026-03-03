@@ -25,6 +25,5 @@ export const checkEventCompletion = async (eventId) => {
   const res = await api.get(
     `/competition/event/${eventId}/completion-status`
   );
-
   return res.data; // { eventId, completed }
 };
