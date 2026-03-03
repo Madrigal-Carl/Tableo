@@ -9,7 +9,7 @@ const {
 } = require("../database/models");
 const { generateCategoryResults } = require("./category_result_service");
 const { Op, fn, col } = require("sequelize"); // ✅ ADD fn, col
-
+const { isEventEditable } = require("../utils/event_time_guard");
 async function submitScores(scores) {
   // 1. Save competition scores
   await competitionScoreRepository.bulkUpsert(scores);
