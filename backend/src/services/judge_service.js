@@ -4,7 +4,9 @@ const judgeRepo = require("../repositories/judge_repository");
 const categoryRepo = require("../repositories/category_repository");
 const stageRepo = require("../repositories/stage_repository");
 const crypto = require("crypto");
-
+const {
+  isEventFullyCompleted,
+} = require("./competition_score_service"); // ✅ ADD THIS
 function generateInvitationCode(length = 6) {
   return crypto
     .randomBytes(length)
@@ -37,8 +39,8 @@ async function updateJudge(invitationCode, data) {
 
     const event = await judge.getEvent({ transaction: t });
 
-    if (hasEventEnded(event)) {
-      const err = new Error("Event has already ended");
+    if (await isEventFullyCompleted(event.id)) {
+      const err = new Error("Event is already completed");
       err.status = 403;
       throw err;
     }
@@ -108,14 +110,25 @@ function hasEventStarted({ date, timeStart }) {
   return !isEventEditable({ date, timeStart });
 }
 
-function hasEventEnded({ date, timeEnd }) {
-  if (!timeEnd) return false;
+async function hasEventEnded(event) {
+  if (!event) return false;
+
+  // ✅ 1. Check scoring completion first
+  const completed = await isEventFullyCompleted(event.id);
+
+  if (completed) {
+    return true;
+  }
+
+  // ✅ 2. Fallback to time-based check
+  if (!event.timeEnd) return false;
 
   const now = new Date();
+  const baseDate = new Date(event.date);
 
-  const baseDate = new Date(date);
-
-  const [hours, minutes, seconds] = timeEnd.split(":").map(Number);
+  const [hours, minutes, seconds] = event.timeEnd
+    .split(":")
+    .map(Number);
 
   const end = new Date(baseDate);
   end.setHours(hours, minutes, seconds || 0, 0);
@@ -132,8 +145,9 @@ async function getEventForJudge(req) {
     throw err;
   }
 
-  if (hasEventEnded(event)) {
-    const err = new Error("Event has already ended");
+  // 🚫 BLOCK only if fully completed
+  if (await isEventFullyCompleted(event.id)) {
+    const err = new Error("Event scoring is already completed");
     err.status = 403;
     throw err;
   }
