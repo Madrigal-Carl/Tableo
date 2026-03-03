@@ -74,7 +74,7 @@ function ViewOnlyTable({
               <select
                 value={sexFilter}
                 onChange={(e) => setSexFilter(e.target.value)}
-                className="px-4 py-2 rounded-md focus:ring-2 focus:ring-orange-400"
+                className="px-4 py-2 rounded-md focus:ring-2 focus:ring-[#192BC2]"
               >
                 <option value="ALL">All</option>
                 <option value="MALE">Male</option>

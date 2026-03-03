@@ -14,6 +14,7 @@ import JudgePage from "./pages/judge/JudgePage.jsx";
 import CategoryPage from "./pages/event_admin/CategoryPage.jsx";
 import ArchivePage from "./pages/event_admin/ArchivePage.jsx";
 import SettingsPage from "./pages/event_admin/SettingsPage.jsx";
+import AboutUs from "./layouts/AboutUs.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -25,6 +26,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<LoginPage />} />
             <Route path="/auth/register" element={<RegisterPage />} />
+            <Route path="/about" element={<AboutUs />} />
           </Route>
 
           {/* Judge access via invitation code */}
