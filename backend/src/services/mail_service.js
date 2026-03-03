@@ -1,26 +1,26 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT || 587,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
 async function sendVerificationEmail(to, code) {
-    const mailOptions = {
-        from: `"Tabléo" <${process.env.SMTP_USER}>`,
-        to,
-        subject: "Your Verification Code",
-        html: `
+  const mailOptions = {
+    from: `"Tabléo" <${process.env.SMTP_USER}>`,
+    to,
+    subject: "Your Verification Code",
+    html: `
       <div style="font-family: Arial, Helvetica, sans-serif; background-color: #f9fafb; padding: 40px;">
         <div style="max-width: 480px; margin: auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
 
           <!-- Header -->
-          <div style="background-color: #FA824C; padding: 20px; text-align: center;">
+          <div style="background-color: #192BC2; padding: 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Tabléo</h1>
           </div>
 
@@ -35,7 +35,7 @@ async function sendVerificationEmail(to, code) {
               font-size: 36px;
               font-weight: 700;
               letter-spacing: 6px;
-              color: #FA824C;
+              color: #192BC2;
               background-color: #FFF3ED;
               padding: 16px 0;
               border-radius: 10px;
@@ -59,10 +59,74 @@ async function sendVerificationEmail(to, code) {
         </div>
       </div>
     `,
-        text: `Your verification code is: ${code}`,
-    };
+    text: `Your verification code is: ${code}`,
+  };
 
-    await transporter.sendMail(mailOptions);
+  await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendVerificationEmail };
+async function sendEventReminderEmail(
+  to,
+  eventName,
+  eventDate,
+  type = "tomorrow",
+) {
+  const reminderText =
+    type === "1hour"
+      ? `Reminder: Your event "${eventName}" will start in 1 hour.`
+      : `Reminder: Your event "${eventName}" will start tomorrow.`;
+
+  const subject = type === "1hour" ? "Event Starting Soon!" : "Event Reminder";
+
+  const formattedDate = eventDate.toLocaleString("en-PH", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const mailOptions = {
+    from: `"Tabléo" <${process.env.SMTP_USER}>`,
+    to,
+    subject,
+    html: `
+      <div style="font-family: Arial, Helvetica, sans-serif; background-color: #f9fafb; padding: 40px;">
+        <div style="max-width: 480px; margin: auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <div style="background-color: #192BC2; padding: 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Tabléo</h1>
+          </div>
+
+          <!-- Body -->
+          <div style="padding: 30px; text-align: center;">
+            <p style="font-size: 16px; color: #374151; margin-bottom: 16px;">
+              ${reminderText}
+            </p>
+
+            <h2 style="color: #192BC2; margin: 16px 0;">${eventName}</h2>
+
+            <p style="font-size: 14px; color: #6b7280;">
+              Event Date: ${formattedDate}
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="background-color: #f3f4f6; padding: 16px; text-align: center;">
+            <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+              © ${new Date().getFullYear()} Tabléo
+            </p>
+          </div>
+
+        </div>
+      </div>
+    `,
+    text: reminderText,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+module.exports = { sendVerificationEmail, sendEventReminderEmail };
