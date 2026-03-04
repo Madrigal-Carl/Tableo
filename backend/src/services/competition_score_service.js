@@ -257,10 +257,9 @@ async function isEventFullyCompleted(eventId) {
 /* ===================================================== */
 
 async function isStageFullyCompleted(stageId) {
-  // 1️⃣ Get stage with its categories
   const stage =
     await require("../repositories/stage_repository").findStageWithCategories(
-      stageId,
+      stageId
     );
 
   if (!stage) throw new Error("Stage not found");
@@ -268,70 +267,19 @@ async function isStageFullyCompleted(stageId) {
   const categories = stage.categories;
   if (!categories.length) return false;
 
-  const eventId = stage.event_id;
+  // ✅ Check each category individually
+  for (const category of categories) {
+    const categoryCompleted = await isCategoryFullyCompletedForStage(
+      category.id,
+      stage.event_id
+    );
 
-  // 2️⃣ Get all judges of the event
-  const judges = await Judge.findAll({
-    where: { event_id: eventId },
-    attributes: ["id"],
-  });
-
-  if (!judges.length) return true; // no judges = nothing to validate
-
-  const judgeIds = judges.map((j) => j.id);
-
-  // 3️⃣ Get all candidates of the event
-  const candidates = await Candidate.findAll({
-    where: { event_id: eventId },
-    attributes: ["id"],
-  });
-
-  if (!candidates.length) return false;
-
-  const candidateIds = candidates.map((c) => c.id);
-
-  // 4️⃣ Get all criteria from ALL categories in this stage
-  const categoryIds = categories.map((c) => c.id);
-
-  const criteria = await Criterion.findAll({
-    where: { category_id: { [Op.in]: categoryIds } },
-    attributes: ["id"],
-  });
-
-  if (!criteria.length) return false;
-
-  const criterionIds = criteria.map((c) => c.id);
-
-  // 5️⃣ Total required scores per judge
-  const totalRequiredPerJudge = candidateIds.length * criterionIds.length;
-
-  // 6️⃣ Count actual scores grouped by judge
-  const groupedScores = await CompetitionScore.findAll({
-    attributes: ["judge_id", [fn("COUNT", col("id")), "score_count"]],
-    where: {
-      judge_id: { [Op.in]: judgeIds },
-      candidate_id: { [Op.in]: candidateIds },
-      criterion_id: { [Op.in]: criterionIds },
-    },
-    group: ["judge_id"],
-    raw: true,
-  });
-
-  const scoreMap = {};
-  groupedScores.forEach((row) => {
-    scoreMap[row.judge_id] = parseInt(row.score_count);
-  });
-
-  // 7️⃣ Validate each judge
-  for (const judgeId of judgeIds) {
-    const scored = scoreMap[judgeId] || 0;
-
-    if (scored !== totalRequiredPerJudge) {
-      return false; // ❌ One judge incomplete
+    if (!categoryCompleted) {
+      return false; // ❌ If ONE category incomplete → stage incomplete
     }
   }
 
-  return true; // ✅ All judges completed all categories
+  return true; // ✅ All categories complete
 }
 /* ===================================================== */
 async function getEventFullSummary(eventId) {
@@ -380,6 +328,83 @@ async function getEventFullSummary(eventId) {
     finalized: finalized > 0
   };
 }
+async function isCategoryFullyCompletedForStage(categoryId, eventId) {
+  const judges = await Judge.findAll({
+    where: { event_id: eventId },
+    attributes: ["id"],
+  });
+
+  const stage =
+    await require("../repositories/stage_repository").findStageByCategory(
+      categoryId
+    );
+
+  if (!stage) return false;
+
+  const isAdvancedStage =
+    stage.maxMale !== null && stage.maxFemale !== null;
+
+  let candidates = [];
+
+  if (isAdvancedStage) {
+    const stageCandidates =
+      await require("../repositories/stage_candidate_repository")
+        .findByStage(stage.id);
+
+    const candidateIds = stageCandidates.map((sc) => sc.candidate_id);
+
+    candidates = candidateIds.length
+      ? await Candidate.findAll({
+          where: { id: { [Op.in]: candidateIds } },
+          attributes: ["id"],
+        })
+      : [];
+  } else {
+    candidates = await Candidate.findAll({
+      where: { event_id: eventId },
+      attributes: ["id"],
+    });
+  }
+
+  const criteria = await Criterion.findAll({
+    where: { category_id: categoryId },
+    attributes: ["id"],
+  });
+
+  if (!criteria.length || !candidates.length) return false;
+
+  const totalRequiredPerJudge =
+    candidates.length * criteria.length;
+
+  const judgeIds = judges.map((j) => j.id);
+
+  const groupedScores = await CompetitionScore.findAll({
+    attributes: ["judge_id", [fn("COUNT", col("id")), "score_count"]],
+    where: {
+      judge_id: { [Op.in]: judgeIds },
+      candidate_id: { [Op.in]: candidates.map(c => c.id) },
+      criterion_id: { [Op.in]: criteria.map(c => c.id) },
+    },
+    group: ["judge_id"],
+    raw: true,
+  });
+
+  const scoreMap = {};
+  groupedScores.forEach(row => {
+    scoreMap[row.judge_id] = parseInt(row.score_count);
+  });
+
+  // ✅ Check every judge
+  for (const judgeId of judgeIds) {
+    const scored = scoreMap[judgeId] || 0;
+
+    if (scored !== totalRequiredPerJudge) {
+      return false;
+    }
+  }
+
+  return true;
+}
 module.exports = {
   submitScores,
   hasCompletedCategory,
@@ -387,5 +412,6 @@ module.exports = {
   isCategoryFullyCompleted,
   isStageFullyCompleted,
   isEventFullyCompleted,
-  getEventFullSummary
+  getEventFullSummary,
+  isCategoryFullyCompletedForStage
 };
