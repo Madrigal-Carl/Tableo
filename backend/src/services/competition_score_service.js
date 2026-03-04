@@ -333,7 +333,53 @@ async function isStageFullyCompleted(stageId) {
 
   return true; // ✅ All judges completed all categories
 }
+/* ===================================================== */
+async function getEventFullSummary(eventId) {
 
+  // 1️⃣ Get Event with relations
+  const event = await require("../repositories/event_repository")
+    .findByIdWithRelations(eventId);
+
+  if (!event) throw new Error("Event not found");
+
+  // 2️⃣ Get ALL scores for this event
+  const scores = await CompetitionScore.findAll({
+  include: [
+    {
+      model: Candidate,
+      as: "candidate", // ✅ ADD THIS (MATCH YOUR MODEL)
+      where: { event_id: eventId },
+      required: true,
+    },
+    {
+      model: Judge,
+      as: "judge", // ✅ ALSO ADD THIS IF YOU WANT FULL DATA
+    },
+    {
+      model: Criterion,
+      as: "criterion",
+    }
+  ]
+});
+
+  // 3️⃣ Check if event is fully completed
+  const completed = await isEventFullyCompleted(eventId);
+
+  // 4️⃣ Check if finalized
+  const EventResult = require("../database/models").EventResult;
+
+  const finalized = await EventResult.count({
+    where: { event_id: eventId }
+  });
+
+  // 5️⃣ Return EVERYTHING
+  return {
+    event,
+    scores,
+    completed,
+    finalized: finalized > 0
+  };
+}
 module.exports = {
   submitScores,
   hasCompletedCategory,
@@ -341,4 +387,5 @@ module.exports = {
   isCategoryFullyCompleted,
   isStageFullyCompleted,
   isEventFullyCompleted,
+  getEventFullSummary
 };

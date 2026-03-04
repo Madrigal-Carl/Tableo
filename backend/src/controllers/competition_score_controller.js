@@ -83,19 +83,15 @@ async function checkEventCompletion(req, res, next) {
   try {
     const { eventId } = req.params;
 
-    const completed =
-      await competitionScoreService.isEventFullyCompleted(eventId);
+    const data =
+      await competitionScoreService.getEventFullSummary(eventId);
 
-    res.status(200).json({
-      eventId,
-      completed,
-    });
+    res.status(200).json(data);
+
   } catch (err) {
     next(err);
   }
 }
-/* ===================================================== */
-
 module.exports = {
   submitScores,
   checkCategoryCompletion,

@@ -10,6 +10,7 @@ import CriteriaModal from "../../components/CriteriaModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
 import FinalsModal from "../../components/FinalsModal";
+import StageRankingsModal from "../../components/StageRankingsModal";
 import { showToast } from "../../utils/swal";
 import {
   addCriteria,
@@ -80,6 +81,8 @@ function CategoryPage() {
   const participantsData = event?.candidates || [];
   const [isFinalsOpen, setIsFinalsOpen] = useState(false);
   const [finalResults, setFinalResults] = useState(null);
+  const [isRankingsOpen, setIsRankingsOpen] = useState(false);
+  const [rankingsData, setRankingsData] = useState(null);
   useEffect(() => {
     async function fetchResults() {
       if (!activeStage) return;
@@ -800,25 +803,32 @@ function CategoryPage() {
                 isEventFinalized ? (
                   // 🟢 ALREADY FINALIZED
                   <button
-                    className="bg-purple-600 px-6 h-12.5 rounded-lg text-white font-medium hover:bg-purple-700 mt-6 ml-auto flex items-center gap-2"
+                    className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2"
                     onClick={async () => {
                       try {
                         setLoading(true);
 
-                        const stageId = getStageIdByName(activeStage);
-                        if (!stageId) {
-                          showToast("error", "Stage not found");
+                        const completionRes = await checkEventCompletion(eventId);
+                        if (!completionRes.completed) {
+                          showToast("error", "Event is not yet completed");
                           return;
                         }
 
-                        const res = await getStageOverallResult(stageId);
-                        if (!res?.data?.data) {
-                          showToast("error", "No final results found");
-                          return;
+                        const formatted = {};
+
+                        for (const stage of event.stages) {
+                          const res = await getStageOverallResult(stage.id);
+                          const data = res?.data?.data;
+
+                          formatted[stage.name] = {
+                            male: data?.males || [],
+                            female: data?.females || [],
+                          };
                         }
 
-                        setFinalResults(res.data.data);
-                        setIsFinalsOpen(true);
+                        setRankingsData(formatted);
+                        setIsRankingsOpen(true);
+
                       } catch (err) {
                         showToast("error", err.message);
                       } finally {
@@ -1158,6 +1168,12 @@ function CategoryPage() {
               setLoading(false);
             }
           }}
+        />
+        <StageRankingsModal
+          isOpen={isRankingsOpen}
+          onClose={() => setIsRankingsOpen(false)}
+          event={event}
+          rankingsData={rankingsData}
         />
       </div>
     </>
