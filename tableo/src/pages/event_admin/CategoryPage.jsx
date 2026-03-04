@@ -17,7 +17,7 @@ import {
 } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-import { getEvent, finalizeEvent } from "../../services/event_service";
+import { getEvent, finalizeEvent, checkEventFinalized } from "../../services/event_service";
 import { deleteJudge } from "../../services/judge_service";
 import {
   addCategoryToEvent,
@@ -76,6 +76,7 @@ function CategoryPage() {
 
   const [stageResults, setStageResults] = useState({});
   const [eventCompleted, setEventCompleted] = useState(false);
+  const [isEventFinalized, setIsEventFinalized] = useState(false);
   const participantsData = event?.candidates || [];
   const [isFinalsOpen, setIsFinalsOpen] = useState(false);
   const [finalResults, setFinalResults] = useState(null);
@@ -388,6 +389,20 @@ function CategoryPage() {
     fetchCompletionStatus();
   }, [eventId, event]);
   useEffect(() => {
+    async function fetchFinalizedStatus() {
+      try {
+        const res = await checkEventFinalized(eventId);
+        setIsEventFinalized(res.data.finalized);
+      } catch (err) {
+        console.error("Failed to check finalized status:", err);
+      }
+    }
+
+    if (eventId) {
+      fetchFinalizedStatus();
+    }
+  }, [eventId, event]);
+  useEffect(() => {
     if (!activeStage) return;
     fetchCategories(activeStage);
   }, [activeStage, eventId]);
@@ -544,13 +559,13 @@ function CategoryPage() {
                     >
                       <button
                         onClick={() => {
-                          if (!canEditEvent) return;
+                          if (!canEditEvent && !eventCompleted) return;
                           setActiveStage(stageObj.name);
                         }}
                         className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
                           ? "border-b-2 border-[#192BC2] text-[#192BC2]"
                           : "text-gray-400 hover:text-gray-600"
-                          } ${!canEditEvent ? "cursor-not-allowed" : ""}`}
+                          } ${!canEditEvent && !eventCompleted ? "cursor-not-allowed" : "cursor-pointer"}`}
                       >
                         {stageObj.name}
                       </button>
@@ -782,8 +797,40 @@ function CategoryPage() {
                 </table>
               </div>
               {!canEditEvent && (
-                eventCompleted ? (
-                  // ✅ EVENT COMPLETED → Show "Proceed to Rankings"
+                isEventFinalized ? (
+                  // 🟢 ALREADY FINALIZED
+                  <button
+                    className="bg-purple-600 px-6 h-12.5 rounded-lg text-white font-medium hover:bg-purple-700 mt-6 ml-auto flex items-center gap-2"
+                    onClick={async () => {
+                      try {
+                        setLoading(true);
+
+                        const stageId = getStageIdByName(activeStage);
+                        if (!stageId) {
+                          showToast("error", "Stage not found");
+                          return;
+                        }
+
+                        const res = await getStageOverallResult(stageId);
+                        if (!res?.data?.data) {
+                          showToast("error", "No final results found");
+                          return;
+                        }
+
+                        setFinalResults(res.data.data);
+                        setIsFinalsOpen(true);
+                      } catch (err) {
+                        showToast("error", err.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                  >
+                    View Results
+                    <ArrowRight size={24} />
+                  </button>
+                ) : eventCompleted ? (
+                  // 🔵 ALL JUDGES FINISHED → READY TO FINALIZE
                   <button
                     className="bg-green-600 px-6 h-12.5 rounded-lg text-white font-medium hover:bg-green-700 mt-6 ml-auto flex items-center gap-2"
                     onClick={async () => {
@@ -791,7 +838,6 @@ function CategoryPage() {
                         setLoading(true);
 
                         const stageId = getStageIdByName(activeStage);
-
                         if (!stageId) {
                           showToast("error", "Stage not found");
                           return;
@@ -806,9 +852,8 @@ function CategoryPage() {
 
                         setFinalResults(res.data.data);
                         setIsFinalsOpen(true);
-
                       } catch (err) {
-                        showToast("error", err.response?.data?.message || err.message);
+                        showToast("error", err.message);
                       } finally {
                         setLoading(false);
                       }
@@ -818,9 +863,9 @@ function CategoryPage() {
                     <ArrowRight size={24} />
                   </button>
                 ) : (
-                  // 🔵 EVENT NOT COMPLETED → Normal Proceed Button
+                  // 🔴 STILL SCORING → NORMAL ADVANCE BUTTON
                   <button
-                    className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
+                    className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2"
                     onClick={async () => {
                       if (!activeStage) return;
 

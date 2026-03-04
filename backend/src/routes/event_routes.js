@@ -45,4 +45,10 @@ router.post(
   requireAuth,
   eventController.finalizeEvent
 );
+// Check if Event Already Finalized
+router.get(
+  "/:eventId/is-finalized",
+  requireAuth,
+  eventController.checkIfFinalized
+);
 module.exports = router;

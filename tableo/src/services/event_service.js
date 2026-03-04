@@ -38,3 +38,6 @@ export const restoreEvent = (eventId) => {
 export const finalizeEvent = (eventId) => {
   return api.post(`/events/${eventId}/finalize`);
 };
+export const checkEventFinalized = (eventId) => {
+  return api.get(`/events/${eventId}/is-finalized`);
+};
