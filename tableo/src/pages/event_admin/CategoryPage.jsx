@@ -9,6 +9,7 @@ import AddCategoryModal from "../../components/AddCategoryModal";
 import CriteriaModal from "../../components/CriteriaModal";
 import FullScreenLoader from "../../components/FullScreenLoader";
 import { validateCategories } from "../../validations/category_validation";
+import FinalsModal from "../../components/FinalsModal";
 import { showToast } from "../../utils/swal";
 import {
   addCriteria,
@@ -16,7 +17,7 @@ import {
 } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-import { getEvent } from "../../services/event_service";
+import { getEvent, finalizeEvent } from "../../services/event_service";
 import { deleteJudge } from "../../services/judge_service";
 import {
   addCategoryToEvent,
@@ -37,7 +38,7 @@ import {
   getStageOverallResult,
 } from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
-
+import { checkEventCompletion } from "../../services/competition_score_service";
 function CategoryPage() {
   const navigate = useNavigate();
   const { eventId } = useParams();
@@ -74,9 +75,10 @@ function CategoryPage() {
   });
 
   const [stageResults, setStageResults] = useState({});
-
+  const [eventCompleted, setEventCompleted] = useState(false);
   const participantsData = event?.candidates || [];
-
+  const [isFinalsOpen, setIsFinalsOpen] = useState(false);
+  const [finalResults, setFinalResults] = useState(null);
   useEffect(() => {
     async function fetchResults() {
       if (!activeStage) return;
@@ -371,7 +373,20 @@ function CategoryPage() {
 
     fetchEvent();
   }, [event, eventId]);
+  useEffect(() => {
+    async function fetchCompletionStatus() {
+      if (!eventId) return;
 
+      try {
+        const res = await checkEventCompletion(eventId);
+        setEventCompleted(res.completed);
+      } catch (err) {
+        console.error("Failed to check event completion:", err);
+      }
+    }
+
+    fetchCompletionStatus();
+  }, [eventId, event]);
   useEffect(() => {
     if (!activeStage) return;
     fetchCategories(activeStage);
@@ -767,63 +782,93 @@ function CategoryPage() {
                 </table>
               </div>
               {!canEditEvent && (
-                <button
-                  className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
-                  onClick={async () => {
-                    if (!activeStage) return;
+                eventCompleted ? (
+                  // ✅ EVENT COMPLETED → Show "Proceed to Rankings"
+                  <button
+                    className="bg-green-600 px-6 h-12.5 rounded-lg text-white font-medium hover:bg-green-700 mt-6 ml-auto flex items-center gap-2"
+                    onClick={async () => {
+                      try {
+                        setLoading(true);
 
-                    const stageId = getStageIdByName(activeStage);
-                    if (!stageId) return;
+                        const stageId = getStageIdByName(activeStage);
 
-                    try {
-                      setLoading(true);
+                        if (!stageId) {
+                          showToast("error", "Stage not found");
+                          return;
+                        }
 
-                      const res = await getStageOverallResult(stageId); // 🔥 new API
-                      const data = res.data.data;
+                        const res = await getStageOverallResult(stageId);
 
-                      const maleContestants = (data.males || []).map((c) => ({
-                        ...c,
-                        average: c.stage_total, // 🔹 use stage_total
-                        rank: c.rank,
-                        sex: "Male",
-                      }));
+                        if (!res?.data?.data) {
+                          showToast("error", "No final results found");
+                          return;
+                        }
 
-                      const femaleContestants = (data.females || []).map(
-                        (c) => ({
+                        setFinalResults(res.data.data);
+                        setIsFinalsOpen(true);
+
+                      } catch (err) {
+                        showToast("error", err.response?.data?.message || err.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                  >
+                    Proceed to Rankings
+                    <ArrowRight size={24} />
+                  </button>
+                ) : (
+                  // 🔵 EVENT NOT COMPLETED → Normal Proceed Button
+                  <button
+                    className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2 cursor-pointer"
+                    onClick={async () => {
+                      if (!activeStage) return;
+
+                      const stageId = getStageIdByName(activeStage);
+                      if (!stageId) return;
+
+                      try {
+                        setLoading(true);
+
+                        const res = await getStageOverallResult(stageId);
+                        const data = res.data.data;
+
+                        const maleContestants = (data.males || []).map((c) => ({
                           ...c,
-                          average: c.stage_total, // 🔹 use stage_total
+                          average: c.stage_total,
+                          rank: c.rank,
+                          sex: "Male",
+                        }));
+
+                        const femaleContestants = (data.females || []).map((c) => ({
+                          ...c,
+                          average: c.stage_total,
                           rank: c.rank,
                           sex: "Female",
-                        }),
-                      );
+                        }));
 
-                      const queue = [];
+                        const queue = [];
 
-                      if (maleContestants.length)
-                        queue.push({
-                          sex: "Male",
-                          contestants: maleContestants,
-                        });
+                        if (maleContestants.length)
+                          queue.push({ sex: "Male", contestants: maleContestants });
 
-                      if (femaleContestants.length)
-                        queue.push({
-                          sex: "Female",
-                          contestants: femaleContestants,
-                        });
+                        if (femaleContestants.length)
+                          queue.push({ sex: "Female", contestants: femaleContestants });
 
-                      setAdvanceQueue(queue);
-                      setCurrentAdvanceIndex(0);
-                      setIsNextStageModalOpen(true);
-                    } catch (err) {
-                      showToast("error", err.message);
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                >
-                  Proceed
-                  <ArrowRight size={24} />
-                </button>
+                        setAdvanceQueue(queue);
+                        setCurrentAdvanceIndex(0);
+                        setIsNextStageModalOpen(true);
+                      } catch (err) {
+                        showToast("error", err.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                  >
+                    Proceed
+                    <ArrowRight size={24} />
+                  </button>
+                )
               )}
             </>
           )}
@@ -1032,6 +1077,38 @@ function CategoryPage() {
               setAdvanceCounts({ maleIds: [], femaleIds: [] });
             } catch (err) {
               showToast("error", err.response?.data?.message || err.message);
+            } finally {
+              setLoading(false);
+            }
+          }}
+        />
+        <FinalsModal
+          isOpen={isFinalsOpen}
+          onClose={() => setIsFinalsOpen(false)}
+          loading={loading}
+          results={{
+            males: finalResults?.males || [],
+            females: finalResults?.females || [],
+          }}
+          onFinalize={async () => {
+            try {
+              setLoading(true);
+
+              // ✅ CALL YOUR IMPORTED FUNCTION HERE
+              await finalizeEvent(eventId);
+
+              showToast("success", "Event finalized successfully");
+
+              // ✅ Refresh event after finalize
+              const res = await getEvent(eventId);
+              setEvent(res.data);
+
+              setIsFinalsOpen(false);
+            } catch (err) {
+              showToast(
+                "error",
+                err.response?.data?.message || err.message
+              );
             } finally {
               setLoading(false);
             }
