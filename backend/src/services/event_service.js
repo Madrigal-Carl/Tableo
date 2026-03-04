@@ -213,6 +213,19 @@ async function restoreEvent(eventId, userId) {
 }
 async function finalizeEventResults(eventId) {
   return sequelize.transaction(async (t) => {
+
+    // 🚫 0️⃣ Prevent double finalization
+    const existingResults = await EventResult.count({
+      where: { event_id: eventId },
+      transaction: t,
+    });
+
+    if (existingResults > 0) {
+      const err = new Error("Event has already been finalized");
+      err.status = 400;
+      throw err;
+    }
+
     // 1️⃣ Get last stage (highest sequence)
     const lastStage = await Stage.findOne({
       where: { event_id: eventId },
@@ -233,14 +246,9 @@ async function finalizeEventResults(eventId) {
       throw err;
     }
 
-    // 3️⃣ Get overall results (males + females)
+    // 3️⃣ Get overall results
     const results = await getStageOverallResults(lastStage.id);
 
-    if (!results) {
-      throw new Error("No results found for final stage");
-    }
-
-    // 🔥 Flatten results (because function returns { males, females })
     const combinedResults = [
       ...(results.males || []),
       ...(results.females || []),
@@ -250,14 +258,7 @@ async function finalizeEventResults(eventId) {
       throw new Error("No results found for final stage");
     }
 
-    // 4️⃣ Clear existing event results (safe reset)
-    await EventResult.destroy({
-      where: { event_id: eventId },
-      force: true,
-      transaction: t,
-    });
-
-    // 5️⃣ Insert finalists into EventResult table
+    // 4️⃣ Insert finalists into EventResult
     for (const r of combinedResults) {
       await EventResult.create(
         {
@@ -274,6 +275,13 @@ async function finalizeEventResults(eventId) {
     return { message: "Event finalized successfully" };
   });
 }
+async function checkIfEventFinalized(eventId) {
+  const finalized = await EventResult.findOne({
+    where: { event_id: eventId },
+  });
+
+  return !!finalized;
+}
 module.exports = {
   createEvent,
   getEvent,
@@ -283,4 +291,5 @@ module.exports = {
   getDeletedEvents,
   restoreEvent,
   finalizeEventResults,
+  checkIfEventFinalized,
 };

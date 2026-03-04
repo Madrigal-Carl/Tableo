@@ -125,6 +125,19 @@ async function finalizeEvent(req, res, next) {
     next(err);
   }
 }
+async function checkIfFinalized(req, res, next) {
+  try {
+    const { eventId } = req.params;
+
+    const finalized = await eventService.checkIfEventFinalized(eventId);
+
+    res.json({
+      finalized,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 module.exports = {
   createEvent,
   getEvent,
@@ -134,4 +147,5 @@ module.exports = {
   getDeletedEvents,
   restoreEvent,
   finalizeEvent,
+  checkIfFinalized,
 };
