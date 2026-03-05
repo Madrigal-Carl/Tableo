@@ -91,12 +91,8 @@ function ViewOnlyTable({
               <tr className="text-xs uppercase tracking-wider text-gray-400">
                 {isJudge ? (
                   <>
-                    <th className="px-4 py-3 w-1/4 text-center">
-                      Judge Code
-                    </th>
-                    <th className="px-4 py-3 w-1/4 text-center">
-                      {nameLabel}
-                    </th>
+                    <th className="px-4 py-3 w-1/4 text-center">Judge Code</th>
+                    <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
                     <th className="px-4 py-3 w-1/4 text-center">Suffix</th>
                     <th className="px-4 py-3 w-1/4 text-center">Actions</th>
                   </>
@@ -105,9 +101,7 @@ function ViewOnlyTable({
                     <th className="px-4 py-3 w-1/4 text-center">
                       Participant No.
                     </th>
-                    <th className="px-4 py-3 w-1/4 text-center">
-                      {nameLabel}
-                    </th>
+                    <th className="px-4 py-3 w-1/4 text-center">{nameLabel}</th>
                     {fieldKey && (
                       <th className="px-4 py-3 w-1/4 text-center">
                         {fieldLabel}
@@ -152,8 +146,8 @@ function ViewOnlyTable({
                       <td className="px-4 py-4 text-center font-medium text-gray-600">
                         {item.sequence != null ? item.sequence : "-"}
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-3">
+                      <td className="px-4 py-4 text-left">
+                        <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-sm font-semibold text-gray-600">
                             {item.path ? (
                               <img
@@ -193,10 +187,11 @@ function ViewOnlyTable({
                             onClick={() => canEdit && openEditModal(item)}
                             disabled={!canEdit}
                             className={`p-2 rounded-lg transition
-            ${canEdit
-                                ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-                                : "text-gray-300 cursor-not-allowed"
-                              }`}
+            ${
+              canEdit
+                ? "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
                           >
                             <SquarePen size={16} />
                           </button>
@@ -207,10 +202,11 @@ function ViewOnlyTable({
                           onClick={() => canEdit && onDelete?.(item)}
                           disabled={!canEdit}
                           className={`p-2 rounded-lg transition
-          ${canEdit
-                              ? "text-gray-500 hover:text-red-600 hover:bg-red-50"
-                              : "text-gray-300 cursor-not-allowed"
-                            }`}
+          ${
+            canEdit
+              ? "text-gray-500 hover:text-red-600 hover:bg-red-50"
+              : "text-gray-300 cursor-not-allowed"
+          }`}
                         >
                           <Trash2 size={16} />
                         </button>
