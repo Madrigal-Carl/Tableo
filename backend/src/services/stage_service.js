@@ -99,12 +99,12 @@ async function computeStageRanking(stageId, candidates) {
       judgeCount: 0,
       judges: [],
     };
-
     candidateCategoryMap[candidate_id][category_id].sum += average;
     candidateCategoryMap[candidate_id][category_id].judgeCount += 1;
-
+    const judgeName = judgeMap.get(judge_id) ?? "Unknown";
     candidateCategoryMap[candidate_id][category_id].judges.push({
       judge_id,
+      name: judgeName,
       score: average,
     });
   }
@@ -223,6 +223,7 @@ async function computeStageOverallRanking(stageId, candidates) {
 
     return {
       candidate_id: candidate.id,
+      sequence: candidate.sequence,
       name: candidate.name,
       sex: candidate.sex,
       path: candidate.path,

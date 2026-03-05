@@ -5,6 +5,7 @@ const sequelize = require("../database/models").sequelize;
 function create(data, transaction) {
   return Stage.create(data, { transaction });
 }
+
 function findById(id, transaction) {
   return Stage.findByPk(id, { transaction });
 }

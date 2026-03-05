@@ -18,7 +18,11 @@ import {
 } from "../../services/criterion_service";
 import { validateCriteria } from "../../validations/criterion_validation";
 import { isEventEditable } from "../../utils/eventEditable";
-import { getEvent, finalizeEvent, checkEventFinalized } from "../../services/event_service";
+import {
+  getEvent,
+  finalizeEvent,
+  checkEventFinalized,
+} from "../../services/event_service";
 import { deleteJudge } from "../../services/judge_service";
 import {
   addCategoryToEvent,
@@ -40,6 +44,8 @@ import {
 } from "../../services/stage_service";
 import { ArrowRight } from "lucide-react";
 import { checkEventCompletion } from "../../services/competition_score_service";
+import { exportStageReport } from "../../services/report_service";
+
 function CategoryPage() {
   const navigate = useNavigate();
   const { eventId } = useParams();
@@ -102,6 +108,44 @@ function CategoryPage() {
     fetchResults();
   }, [activeStage, event]);
 
+  const handleExportReport = async (stageName) => {
+    try {
+      const stageId = getStageIdByName(stageName || activeStage);
+
+      if (!stageId) {
+        showToast("error", "Stage not found");
+        return;
+      }
+
+      setLoading(true);
+
+      const res = await exportStageReport(stageId);
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `stage-${stageId}-report.docx`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      showToast("success", "Report downloaded successfully");
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Failed to export report");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const rankedCandidates = React.useMemo(() => {
     if (!event) return [];
 
@@ -151,7 +195,6 @@ function CategoryPage() {
 
     return combined;
   }, [event, stageResults, selectedCategory, sexFilter]);
-
 
   const tabs = ["Stages", "Participants", "Judges"];
 
@@ -539,8 +582,9 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
-                    }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${
+                    activeTopTab === tab ? "text-gray-600" : "text-white"
+                  }`}
                 >
                   {tab}
                 </button>
@@ -565,10 +609,11 @@ function CategoryPage() {
                           if (!canEditEvent && !eventCompleted) return;
                           setActiveStage(stageObj.name);
                         }}
-                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
-                          ? "border-b-2 border-[#192BC2] text-[#192BC2]"
-                          : "text-gray-400 hover:text-gray-600"
-                          } ${!canEditEvent && !eventCompleted ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        className={`pb-3 text-lg font-semibold transition ${
+                          activeStage === stageObj.name
+                            ? "border-b-2 border-[#192BC2] text-[#192BC2]"
+                            : "text-gray-400 hover:text-gray-600"
+                        } ${!canEditEvent && !eventCompleted ? "cursor-not-allowed" : "cursor-pointer"}`}
                       >
                         {stageObj.name}
                       </button>
@@ -616,8 +661,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                              .slice(0, 30)
-                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                                .slice(0, 30)
+                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -642,9 +687,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                              name: c.label,
-                              weight: c.percentage,
-                            }))
+                                name: c.label,
+                                weight: c.percentage,
+                              }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -799,8 +844,8 @@ function CategoryPage() {
                   </tbody>
                 </table>
               </div>
-              {!canEditEvent && (
-                isEventFinalized ? (
+              {!canEditEvent &&
+                (isEventFinalized ? (
                   // 🟢 ALREADY FINALIZED
                   <button
                     className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2"
@@ -808,7 +853,8 @@ function CategoryPage() {
                       try {
                         setLoading(true);
 
-                        const completionRes = await checkEventCompletion(eventId);
+                        const completionRes =
+                          await checkEventCompletion(eventId);
                         if (!completionRes.completed) {
                           showToast("error", "Event is not yet completed");
                           return;
@@ -828,7 +874,6 @@ function CategoryPage() {
 
                         setRankingsData(formatted);
                         setIsRankingsOpen(true);
-
                       } catch (err) {
                         showToast("error", err.message);
                       } finally {
@@ -895,20 +940,28 @@ function CategoryPage() {
                           sex: "Male",
                         }));
 
-                        const femaleContestants = (data.females || []).map((c) => ({
-                          ...c,
-                          average: c.stage_total,
-                          rank: c.rank,
-                          sex: "Female",
-                        }));
+                        const femaleContestants = (data.females || []).map(
+                          (c) => ({
+                            ...c,
+                            average: c.stage_total,
+                            rank: c.rank,
+                            sex: "Female",
+                          }),
+                        );
 
                         const queue = [];
 
                         if (maleContestants.length)
-                          queue.push({ sex: "Male", contestants: maleContestants });
+                          queue.push({
+                            sex: "Male",
+                            contestants: maleContestants,
+                          });
 
                         if (femaleContestants.length)
-                          queue.push({ sex: "Female", contestants: femaleContestants });
+                          queue.push({
+                            sex: "Female",
+                            contestants: femaleContestants,
+                          });
 
                         setAdvanceQueue(queue);
                         setCurrentAdvanceIndex(0);
@@ -923,8 +976,7 @@ function CategoryPage() {
                     Proceed
                     <ArrowRight size={24} />
                   </button>
-                )
-              )}
+                ))}
             </>
           )}
 
@@ -1022,7 +1074,7 @@ function CategoryPage() {
           isOpen={isEditStageModalOpen}
           setIsOpen={setIsEditStageModalOpen}
           currentStage={selectedStageObj}
-          stages={event?.stages || []} // ✅ ADD THIS
+          stages={event?.stages || []}
           onSave={handleUpdateStage}
         />
 
@@ -1033,8 +1085,9 @@ function CategoryPage() {
             setAdvanceCounts({ maleCount: null, femaleCount: null });
           }}
           contestants={advanceQueue[currentAdvanceIndex]?.contestants || []}
-          roundTitle={`${activeStage} - ${advanceQueue[currentAdvanceIndex]?.sex || ""
-            }`}
+          roundTitle={`${activeStage} - ${
+            advanceQueue[currentAdvanceIndex]?.sex || ""
+          }`}
           onProceed={async (selectedIds) => {
             const sex = advanceQueue[currentAdvanceIndex]?.sex;
             const contestants =
@@ -1160,10 +1213,7 @@ function CategoryPage() {
 
               setIsFinalsOpen(false);
             } catch (err) {
-              showToast(
-                "error",
-                err.response?.data?.message || err.message
-              );
+              showToast("error", err.response?.data?.message || err.message);
             } finally {
               setLoading(false);
             }
@@ -1174,6 +1224,7 @@ function CategoryPage() {
           onClose={() => setIsRankingsOpen(false)}
           event={event}
           rankingsData={rankingsData}
+          onExport={handleExportReport}
         />
       </div>
     </>

@@ -43,6 +43,7 @@ const competitionScoreRoutes = require("./routes/competition_score_routes");
 const judgeRoutes = require("./routes/judge_routes");
 const stageRoutes = require("./routes/stage_routes");
 const eventReminderRoutes = require("./routes/event_reminder_routes");
+const reportRoutes = require("./routes/report_routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
@@ -53,6 +54,7 @@ app.use("/api/competition", competitionScoreRoutes);
 app.use("/api/judge", judgeRoutes);
 app.use("/api/stages", stageRoutes);
 app.use("/api/test-reminder", eventReminderRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.use(errorHandler);
 
