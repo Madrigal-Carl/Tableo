@@ -8,6 +8,7 @@ const {
   TableCell,
   WidthType,
   AlignmentType,
+  ProtectionType,
 } = require("docx");
 
 const stageService = require("./stage_service");
@@ -62,6 +63,10 @@ async function generateStageReport(stageId) {
   children.push(createOverallTable(overallResults));
 
   const doc = new Document({
+    protection: {
+      edit: ProtectionType.READ_ONLY,
+      enforcement: true,
+    },
     sections: [
       {
         children,
