@@ -5,18 +5,16 @@ async function exportStageReport(req, res) {
   try {
     const { stageId } = req.params;
 
-    // Fetch stage info to get name
     const stageInfo = await stageRepo.findById(stageId);
     const stageName = stageInfo
       ? stageInfo.name.replace(/[^a-z0-9]/gi, "_")
       : "stage";
 
-    // Generate report buffer
     const buffer = await reportService.generateStageReport(stageId);
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=${stageName}_report.docx`,
+      `attachment; filename="${stageName}_report.docx"`,
     );
     res.setHeader(
       "Content-Type",
