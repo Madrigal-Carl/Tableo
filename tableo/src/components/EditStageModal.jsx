@@ -52,7 +52,7 @@ function EditStageModal({
         />
 
         {/* Sequence Dropdown */}
-        <label className="block text-sm mb-1 font-medium text-gray-500">
+        {/* <label className="block text-sm mb-1 font-medium text-gray-500">
           Sequence
         </label>
         <select
@@ -65,7 +65,7 @@ function EditStageModal({
               {num}
             </option>
           ))}
-        </select>
+        </select> */}
 
         <div className="flex justify-end gap-3">
           <button
