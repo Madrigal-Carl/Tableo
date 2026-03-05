@@ -4,9 +4,8 @@ const judgeRepo = require("../repositories/judge_repository");
 const categoryRepo = require("../repositories/category_repository");
 const stageRepo = require("../repositories/stage_repository");
 const crypto = require("crypto");
-const {
-  isEventFullyCompleted,
-} = require("./competition_score_service"); // ✅ ADD THIS
+const { isEventFullyCompleted } = require("./competition_score_service");
+
 function generateInvitationCode(length = 6) {
   return crypto
     .randomBytes(length)
@@ -110,32 +109,6 @@ function hasEventStarted({ date, timeStart }) {
   return !isEventEditable({ date, timeStart });
 }
 
-async function hasEventEnded(event) {
-  if (!event) return false;
-
-  // ✅ 1. Check scoring completion first
-  const completed = await isEventFullyCompleted(event.id);
-
-  if (completed) {
-    return true;
-  }
-
-  // ✅ 2. Fallback to time-based check
-  if (!event.timeEnd) return false;
-
-  const now = new Date();
-  const baseDate = new Date(event.date);
-
-  const [hours, minutes, seconds] = event.timeEnd
-    .split(":")
-    .map(Number);
-
-  const end = new Date(baseDate);
-  end.setHours(hours, minutes, seconds || 0, 0);
-
-  return now.getTime() > end.getTime();
-}
-
 async function getEventForJudge(req) {
   const { event, judge } = req;
 
@@ -155,6 +128,24 @@ async function getEventForJudge(req) {
   // 🚫 BLOCK if no candidates
   if (!event.candidates || event.candidates.length === 0) {
     const err = new Error("No candidates found for this event");
+    err.status = 403;
+    throw err;
+  }
+
+  // 🚫 BLOCK if no candidates
+  if (!event.candidates || event.candidates.length === 0) {
+    const err = new Error("No candidates found for this event");
+    err.status = 403;
+    throw err;
+  }
+
+  // 🚫 BLOCK if candidate data incomplete
+  const hasUneditedCandidates = event.candidates.some(
+    (candidate) => !candidate.sex,
+  );
+
+  if (hasUneditedCandidates) {
+    const err = new Error("Some candidates are not fully configured yet.");
     err.status = 403;
     throw err;
   }
@@ -223,7 +214,6 @@ async function getEventForJudge(req) {
     },
   };
 }
-
 
 async function deleteJudge(judgeId) {
   return sequelize.transaction(async (t) => {
