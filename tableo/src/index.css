@@ -36,7 +36,7 @@ body {
 
 /* Optional: hover effect */
 body::-webkit-scrollbar-thumb:hover {
-  background-color: #1c2fd1; 
+  background-color: #192BC2; 
 }
 
 /* Modal scrollbar */
@@ -55,7 +55,7 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 .modal-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #1c2fd1;
+  background-color: #192BC2;
 }
 
 .modal-scroll {

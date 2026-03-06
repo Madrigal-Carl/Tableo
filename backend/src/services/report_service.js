@@ -1,89 +1,55 @@
-const {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  AlignmentType,
-} = require("docx");
+const { jsPDF } = require("jspdf");
+const autoTable = require("jspdf-autotable").default;
 
 const stageService = require("./stage_service");
 const stageRepo = require("../repositories/stage_repository");
+const eventRepo = require("../repositories/event_repository");
 
 async function generateStageReport(stageId) {
   const stageResults = await stageService.getStageResults(stageId);
   const overallResults = await stageService.getStageOverallResults(stageId);
 
-  // Fetch stage info to get the stage name
   const stageInfo = await stageRepo.findById(stageId);
   const stageName = stageInfo ? stageInfo.name : "STAGE";
 
-  const children = [];
+  const eventInfo = stageInfo
+    ? await eventRepo.findById(stageInfo.event_id)
+    : null;
 
-  // STAGE TITLE (centered, bold, Arial, size 18)
-  children.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: stageName,
-          bold: true,
-          size: 36, // 18pt
-          font: "Arial",
-        }),
-      ],
-    }),
-  );
+  const eventName = eventInfo ? eventInfo.title : "EVENT";
 
-  children.push(new Paragraph("")); // spacing
+  const doc = new jsPDF();
 
-  // CATEGORY TABLES
-  buildCategoryTables(stageResults, children);
+  let y = 20;
 
-  children.push(new Paragraph(""));
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: "Overall Summary",
-          bold: true,
-          size: 28, // 14pt
-          font: "Arial",
-        }),
-      ],
-    }),
-  );
-  children.push(new Paragraph(""));
+  // EVENT TITLE
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text(eventName, 105, y, { align: "center" });
 
-  // OVERALL TABLE
-  children.push(createOverallTable(overallResults));
+  y += 8;
 
-  const doc = new Document({
-    protection: {
-      edit: "readOnly",
-      enforcement: true,
-    },
-    sections: [
-      {
-        children,
-      },
-    ],
-  });
+  // STAGE TITLE (smaller)
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(14);
+  doc.text(stageName, 105, y, { align: "center" });
 
-  return await Packer.toBuffer(doc);
-}
+  y += 12;
 
-function buildCategoryTables(stageResults, children) {
+  // --------------------
+  // CATEGORIES TITLE
+  // --------------------
+  doc.setFontSize(16);
+  doc.text("Categories", 14, y);
+
+  y += 10; // two line spacing
+
   const categories = Object.keys(stageResults);
 
   for (const category of categories) {
     const data = stageResults[category];
     const sample = data.males[0] || data.females[0];
 
-    // Get judge names from sample candidate
     const judgeNames = sample?.judge_scores.map((j) => j.name) || [];
 
     const headers = [
@@ -94,161 +60,112 @@ function buildCategoryTables(stageResults, children) {
       "Ranking",
     ];
 
-    // Category title (bold, Arial, size 14)
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: `Category: ${category}`,
-            bold: true,
-            size: 28,
-            font: "Arial",
-          }),
-        ],
-      }),
-    );
+    // CATEGORY TITLE
+    doc.setFontSize(14);
+    doc.text(`Category: ${category}`, 14, y);
+    y += 8;
 
-    // Men table
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: "Men", bold: true, font: "Arial", size: 24 }),
-        ],
-      }),
-    );
-    children.push(createTable(headers, data.males));
+    // MEN TABLE
+    doc.setFontSize(12);
+    doc.text("Men", 14, y);
+    y += 4;
 
-    // Women table
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: "Women", bold: true, font: "Arial", size: 24 }),
-        ],
-      }),
-    );
-    children.push(createTable(headers, data.females));
-
-    children.push(new Paragraph("")); // spacing after each category
-  }
-}
-
-function createTable(headers, data) {
-  const headerRow = new TableRow({
-    children: headers.map(
-      (h) =>
-        new TableCell({
-          width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: h,
-                  bold: true,
-                  font: "Arial",
-                  size: 24, // 12pt
-                }),
-              ],
-            }),
-          ],
-        }),
-    ),
-  });
-
-  const rows = data.map((c) => {
-    const cells = [
+    const maleRows = data.males.map((c) => [
       c.sequence,
       c.name,
       ...c.judge_scores.map((j) => Number(j.score).toFixed(2)),
       Number(c.total_average).toFixed(2),
       c.rank,
-    ];
+    ]);
 
-    return new TableRow({
-      children: cells.map(
-        (cell) =>
-          new TableCell({
-            width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                children: [
-                  new TextRun({
-                    text: String(cell ?? ""),
-                    font: "Arial",
-                    size: 24, // 12pt
-                  }),
-                ],
-              }),
-            ],
-          }),
-      ),
+    autoTable(doc, {
+      startY: y,
+      head: [headers],
+      body: maleRows,
+      styles: { halign: "center", fontSize: 9 },
+      headStyles: { fillColor: [200, 200, 200] },
     });
-  });
 
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [headerRow, ...rows],
-  });
-}
+    y = doc.lastAutoTable.finalY + 6;
 
-function createOverallTable(overallResults) {
-  const headers = ["No.", "Participants", "Average", "Ranking"];
-  const all = [...overallResults.males, ...overallResults.females];
+    // WOMEN TABLE
+    doc.text("Women", 14, y);
+    y += 4;
 
-  const headerRow = new TableRow({
-    children: headers.map(
-      (h) =>
-        new TableCell({
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: h,
-                  bold: true,
-                  font: "Arial",
-                  size: 24, // 12pt
-                }),
-              ],
-            }),
-          ],
-        }),
-    ),
-  });
+    const femaleRows = data.females.map((c) => [
+      c.sequence,
+      c.name,
+      ...c.judge_scores.map((j) => Number(j.score).toFixed(2)),
+      Number(c.total_average).toFixed(2),
+      c.rank,
+    ]);
 
-  const rows = all.map(
-    (c) =>
-      new TableRow({
-        children: [
-          c.sequence, // <-- use the candidate sequence here
-          c.name,
-          Number(c.stage_total).toFixed(2),
-          c.rank,
-        ].map(
-          (cell) =>
-            new TableCell({
-              children: [
-                new Paragraph({
-                  alignment: AlignmentType.CENTER,
-                  children: [
-                    new TextRun({
-                      text: String(cell ?? ""),
-                      font: "Arial",
-                      size: 24, // 12pt
-                    }),
-                  ],
-                }),
-              ],
-            }),
-        ),
-      }),
-  );
+    autoTable(doc, {
+      startY: y,
+      head: [headers],
+      body: femaleRows,
+      styles: { halign: "center", fontSize: 9 },
+      headStyles: { fillColor: [200, 200, 200] },
+    });
 
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [headerRow, ...rows],
-  });
+    y = doc.lastAutoTable.finalY + 12; // spacing between categories
+  }
+
+  // --------------------
+  // OVERALL SUMMARY
+  // --------------------
+
+  y += 6; // extra spacing before section
+
+  doc.setFontSize(16);
+  doc.text("Overall Summary", 14, y);
+
+  y += 10; // two line spacing
+
+  if (overallResults.males.length > 0) {
+    doc.setFontSize(12);
+    doc.text("Male Overall", 14, y);
+    y += 4;
+
+    const rows = overallResults.males.map((c) => [
+      c.sequence,
+      c.name,
+      Number(c.stage_total).toFixed(2),
+      c.rank,
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [["No.", "Participants", "Average", "Ranking"]],
+      body: rows,
+      styles: { halign: "center", fontSize: 9 },
+      headStyles: { fillColor: [200, 200, 200] },
+    });
+
+    y = doc.lastAutoTable.finalY + 8;
+  }
+
+  if (overallResults.females.length > 0) {
+    doc.text("Female Overall", 14, y);
+    y += 4;
+
+    const rows = overallResults.females.map((c) => [
+      c.sequence,
+      c.name,
+      Number(c.stage_total).toFixed(2),
+      c.rank,
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [["No.", "Participants", "Average", "Ranking"]],
+      body: rows,
+      styles: { halign: "center", fontSize: 9 },
+      headStyles: { fillColor: [200, 200, 200] },
+    });
+  }
+
+  return Buffer.from(doc.output("arraybuffer"));
 }
 
 module.exports = {

@@ -103,7 +103,9 @@ function JudgeTable({
                   N/A
                 </div>
               )}
-              <span className="font-medium text-gray-800">{p.name}</span>
+              <span className="font-medium text-gray-800">
+                Candiate No. {p.sequence} - {p.name}
+              </span>
             </div>
 
             {/* Criteria input */}
@@ -126,12 +128,7 @@ function JudgeTable({
 
             {/* Average per participant */}
             <div className="font-semibold text-center">
-              {calculateTotal(
-                p.id,
-                criteria,
-                scores,
-                categoryPercentage / 100,
-              )}
+              {calculateTotal(p.id, criteria, scores, categoryPercentage / 100)}
               %
             </div>
           </div>

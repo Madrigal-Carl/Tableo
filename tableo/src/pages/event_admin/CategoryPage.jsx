@@ -122,7 +122,7 @@ function CategoryPage() {
       const res = await exportStageReport(stageId);
 
       const blob = new Blob([res.data], {
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        type: "application/pdf",
       });
 
       const url = window.URL.createObjectURL(blob);
@@ -130,9 +130,9 @@ function CategoryPage() {
       const link = document.createElement("a");
       link.href = url;
 
-      // ✅ Extract filename from Content-Disposition
       const disposition = res.headers["content-disposition"];
-      let filename = "report.docx"; // fallback
+      let filename = "report.pdf";
+
       if (disposition && disposition.includes("filename=")) {
         filename = disposition
           .split("filename=")[1]
