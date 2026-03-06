@@ -64,7 +64,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
                     : "",
                 )
               }
-              className="w-full rounded-full border-orange-400 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
+              className="w-full rounded-full border-[#192BC2]/50 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#192BC2]"
             >
               {SUFFIX_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -101,7 +101,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
             <select
               value={value}
               onChange={(e) => handleChange(key, e.target.value)}
-              className="w-full rounded-full border-orange-400 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#FA824C] capitalize"
+              className="w-full rounded-full border-[#192BC2]/50 border px-4 py-2 pr-8 appearance-none focus:outline-none focus:ring-1 focus:ring-[#192BC2] capitalize"
             >
               {SEX_OPTIONS.map((option) => (
                 <option key={option} value={option} disabled={option === ""}>
@@ -146,7 +146,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
                 preview: URL.createObjectURL(file),
               }));
             }}
-            className="w-full mt-1 rounded-full border-orange-400 border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
+            className="w-full mt-1 rounded-full border-[#192BC2]/50 border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#192BC2]"
           />
         </div>
       );
@@ -161,7 +161,7 @@ function EditModal({ isOpen, onClose, onSave, item, isParticipant = false }) {
             type="text"
             value={value || ""}
             onChange={(e) => handleChange(key, e.target.value)}
-            className="w-full mt-1 rounded-full border-orange-400 border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#FA824C]"
+            className="w-full mt-1 rounded-full border-[#192BC2]/50 border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#192BC2]"
           />
         </div>
       );
