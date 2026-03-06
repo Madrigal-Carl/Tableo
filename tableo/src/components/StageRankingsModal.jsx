@@ -20,7 +20,7 @@ export default function StageRankingsModal({
   }, [event]);
 
   /* =========================================================
-     AUTO SELECT FIRST AVAILABLE STAGE FROM rankingsData
+     AUTO SELECT FIRST AVAILABLE STAGE
   ========================================================== */
 
   useEffect(() => {
@@ -245,13 +245,13 @@ export default function StageRankingsModal({
 }
 
 /* =========================================================
-   REUSABLE CARD
+   ✅ REUSABLE CARD (WITH SEQUENCE FIX)
 ========================================================= */
 
 function RankingCard({ candidate }) {
   return (
     <div className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {candidate.path ? (
           <img
             src={`${import.meta.env.VITE_ASSET_URL}${candidate.path}`}
@@ -263,8 +263,19 @@ function RankingCard({ candidate }) {
 
         <div>
           <p className="font-medium">{candidate.name}</p>
+
+          {/* ✅ Candidate No (Sequence) */}
+          <p className="text-xs text-gray-500">
+            Candidate No.: {candidate.sequence ?? "—"}
+          </p>
+
           <p className="text-sm text-gray-500">
-            Avg: {Number(candidate.total_average || candidate.stage_total || 0).toFixed(2)}
+            Avg:{" "}
+            {Number(
+              candidate.total_average ||
+              candidate.stage_total ||
+              0
+            ).toFixed(2)}
           </p>
         </div>
       </div>
