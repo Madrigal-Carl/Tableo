@@ -1,7 +1,8 @@
 import logo from "../assets/logo.svg";
+import { useNavigate } from "react-router-dom";
 
 function Navigation() {
-
+  const navigate = useNavigate();
   return (
     <nav className="fixed top-2 left-0 w-full flex justify-between items-center p-2 bg-white z-50 px-12">
       {/* Logo */}
@@ -9,7 +10,8 @@ function Navigation() {
 
       {/* RIGHT SIDE */}
       <div className="flex space-x-16 items-center pr-8">
-        <button className="text-2xl font-medium text-gray-700 hover:text-gray-900">
+        <button className="text-2xl font-medium text-gray-700 hover:text-gray-900"
+        onClick={() => navigate("/about")}>
           About
         </button>
 

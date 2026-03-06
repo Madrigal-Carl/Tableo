@@ -2,7 +2,9 @@ const sequelize = require("../database/models").sequelize;
 const { isEventEditable } = require("../utils/event_time_guard");
 const judgeRepo = require("../repositories/judge_repository");
 const categoryRepo = require("../repositories/category_repository");
+const stageRepo = require("../repositories/stage_repository");
 const crypto = require("crypto");
+const { isEventFullyCompleted } = require("./competition_score_service");
 
 function generateInvitationCode(length = 6) {
   return crypto
@@ -36,8 +38,8 @@ async function updateJudge(invitationCode, data) {
 
     const event = await judge.getEvent({ transaction: t });
 
-    if (hasEventEnded(event)) {
-      const err = new Error("Event has already ended");
+    if (await isEventFullyCompleted(event.id)) {
+      const err = new Error("Event is already completed");
       err.status = 403;
       throw err;
     }
@@ -107,21 +109,6 @@ function hasEventStarted({ date, timeStart }) {
   return !isEventEditable({ date, timeStart });
 }
 
-function hasEventEnded({ date, timeEnd }) {
-  if (!timeEnd) return false;
-
-  const now = new Date();
-
-  const baseDate = new Date(date);
-
-  const [hours, minutes, seconds] = timeEnd.split(":").map(Number);
-
-  const end = new Date(baseDate);
-  end.setHours(hours, minutes, seconds || 0, 0);
-
-  return now.getTime() > end.getTime();
-}
-
 async function getEventForJudge(req) {
   const { event, judge } = req;
 
@@ -131,8 +118,41 @@ async function getEventForJudge(req) {
     throw err;
   }
 
-  if (hasEventEnded(event)) {
-    const err = new Error("Event has already ended");
+  // 🚫 BLOCK only if fully completed
+  if (await isEventFullyCompleted(event.id)) {
+    const err = new Error("Event scoring is already completed");
+    err.status = 403;
+    throw err;
+  }
+
+  // 🚫 BLOCK if no candidates
+  if (!event.candidates || event.candidates.length === 0) {
+    const err = new Error("No candidates found for this event");
+    err.status = 403;
+    throw err;
+  }
+
+  // 🚫 BLOCK if no candidates
+  if (!event.candidates || event.candidates.length === 0) {
+    const err = new Error("No candidates found for this event");
+    err.status = 403;
+    throw err;
+  }
+
+  // 🚫 BLOCK if candidate data incomplete
+  const hasUneditedCandidates = event.candidates.some(
+    (candidate) => !candidate.sex,
+  );
+
+  if (hasUneditedCandidates) {
+    const err = new Error("Some candidates are not fully configured yet.");
+    err.status = 403;
+    throw err;
+  }
+
+  // 🚫 BLOCK if no stages
+  if (!event.stages || event.stages.length === 0) {
+    const err = new Error("No stages configured for this event");
     err.status = 403;
     throw err;
   }
@@ -143,6 +163,26 @@ async function getEventForJudge(req) {
         event.id,
         stage.id,
       );
+
+      // 🚫 BLOCK if stage has no categories
+      if (!categories || categories.length === 0) {
+        const err = new Error(
+          `Stage "${stage.name}" has no categories configured`,
+        );
+        err.status = 403;
+        throw err;
+      }
+
+      // 🚫 BLOCK if any category has no criteria
+      for (const cat of categories) {
+        if (!cat.criteria || cat.criteria.length === 0) {
+          const err = new Error(
+            `Category "${cat.name}" has no criteria configured`,
+          );
+          err.status = 403;
+          throw err;
+        }
+      }
 
       return {
         ...stage.get({ plain: true }),
@@ -214,4 +254,70 @@ async function deleteJudge(judgeId) {
   });
 }
 
-module.exports = { updateJudge, createOrUpdate, getEventForJudge, deleteJudge };
+async function checkReadyForNextStage(stageId) {
+  const stage = await stageRepo.findById(stageId);
+
+  if (!stage) {
+    const err = new Error("Stage not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const nextStage = await stageRepo.findByEventAndSequence(
+    stage.event_id,
+    stage.sequence + 1,
+  );
+
+  if (!nextStage) {
+    return false;
+  }
+
+  const hasMaxMale =
+    nextStage.maxMale !== null && nextStage.maxMale !== undefined;
+
+  const hasMaxFemale =
+    nextStage.maxFemale !== null && nextStage.maxFemale !== undefined;
+
+  return hasMaxMale && hasMaxFemale;
+}
+
+async function getPassedCandidates(stageId) {
+  const stage = await stageRepo.findById(stageId);
+
+  if (!stage) {
+    const err = new Error("Stage not found");
+    err.status = 404;
+    throw err;
+  }
+
+  // Try fetching passed candidates
+  let candidates = await stageRepo.findPassedCandidates(stageId);
+
+  // ⭐ Fallback if empty → use all event candidates
+  if (!candidates || candidates.length === 0) {
+    const event = await sequelize.models.Event.findByPk(stage.event_id, {
+      include: [
+        {
+          model: sequelize.models.Candidate,
+          as: "candidates",
+          paranoid: false,
+        },
+      ],
+    });
+
+    if (!event) return [];
+
+    candidates = event.candidates.map((c) => c.get({ plain: true }));
+  }
+
+  return candidates;
+}
+
+module.exports = {
+  updateJudge,
+  createOrUpdate,
+  getEventForJudge,
+  deleteJudge,
+  checkReadyForNextStage,
+  getPassedCandidates,
+};

@@ -27,5 +27,9 @@ router.get(
   requireJudgeInvitation,
   competitionScoreController.getJudgeStatuses,
 );
-
+// Check if event is fully completed
+router.get(
+  "/event/:eventId/completion-status",
+  competitionScoreController.checkEventCompletion,
+);
 module.exports = router;

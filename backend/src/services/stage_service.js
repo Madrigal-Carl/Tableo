@@ -68,34 +68,6 @@ async function createOrUpdate(eventId, newCount, transaction = null) {
   }
 }
 
-function assignRankings(results) {
-  results.sort((a, b) => b.final_average - a.final_average);
-
-  let rank = 1;
-  let previousAverage = null;
-  let sameCount = 0;
-
-  for (const candidate of results) {
-    if (!candidate.final_average || candidate.final_average <= 0) {
-      candidate.rank = "";
-      continue;
-    }
-
-    if (
-      previousAverage !== null &&
-      candidate.final_average !== previousAverage
-    ) {
-      rank += sameCount;
-      sameCount = 1;
-    } else {
-      sameCount++;
-    }
-
-    candidate.rank = rank;
-    previousAverage = candidate.final_average;
-  }
-}
-
 async function computeStageRanking(stageId, candidates) {
   const stage = await stageRepo.findStageWithCategories(stageId);
   if (!stage) throw new Error("Stage not found");
@@ -127,12 +99,12 @@ async function computeStageRanking(stageId, candidates) {
       judgeCount: 0,
       judges: [],
     };
-
     candidateCategoryMap[candidate_id][category_id].sum += average;
     candidateCategoryMap[candidate_id][category_id].judgeCount += 1;
-
+    const judgeName = judgeMap.get(judge_id) ?? "Unknown";
     candidateCategoryMap[candidate_id][category_id].judges.push({
       judge_id,
+      name: judgeName,
       score: average,
     });
   }
@@ -153,6 +125,7 @@ async function computeStageRanking(stageId, candidates) {
 
       return {
         candidate_id: candidate.id,
+        sequence: candidate.sequence,
         name: candidate.name,
         sex: candidate.sex,
         path: candidate.path,
@@ -250,6 +223,7 @@ async function computeStageOverallRanking(stageId, candidates) {
 
     return {
       candidate_id: candidate.id,
+      sequence: candidate.sequence,
       name: candidate.name,
       sex: candidate.sex,
       path: candidate.path,
@@ -368,7 +342,7 @@ async function getStageResults(stageId) {
   return await computeStageRanking(stageId, candidates);
 }
 
-async function advanceCandidates(stageId, maleCount, femaleCount) {
+async function advanceCandidates(stageId, maleIds = [], femaleIds = []) {
   return sequelize.transaction(async (t) => {
     const stage = await stageRepo.findById(stageId, t);
     if (!stage) throw new Error("Stage not found");
@@ -392,32 +366,40 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
       );
     }
 
+    // 🔥 Get candidates currently allowed in this stage
     const candidates = await getCandidatesForStage(stageId);
 
     if (!candidates.length) {
       throw new Error("No candidates found for this stage");
     }
 
-    const results = await computeStageOverallRanking(stageId, candidates);
+    const candidateMap = new Map(candidates.map((c) => [c.id, c]));
 
-    const males = results.males;
-    const females = results.females;
+    // ✅ Validate all provided IDs exist in current stage
+    const allIds = [...maleIds, ...femaleIds];
 
-    if (maleCount > males.length) {
-      throw new Error(
-        `Not enough male candidates to advance. Only ${males.length} available.`,
-      );
+    for (const id of allIds) {
+      if (!candidateMap.has(id)) {
+        throw new Error(`Candidate ID ${id} is not valid for this stage.`);
+      }
     }
 
-    if (femaleCount > females.length) {
-      throw new Error(
-        `Not enough female candidates to advance. Only ${females.length} available.`,
-      );
+    // ✅ Validate sex consistency
+    for (const id of maleIds) {
+      const candidate = candidateMap.get(id);
+      if (candidate.sex?.toLowerCase() !== "male") {
+        throw new Error(`Candidate ID ${id} is not male.`);
+      }
     }
 
-    const topMales = males.slice(0, maleCount);
-    const topFemales = females.slice(0, femaleCount);
+    for (const id of femaleIds) {
+      const candidate = candidateMap.get(id);
+      if (candidate.sex?.toLowerCase() !== "female") {
+        throw new Error(`Candidate ID ${id} is not female.`);
+      }
+    }
 
+    // 🔥 Get next stage
     const nextStage = await stageRepo.findByEventAndSequence(
       eventId,
       stage.sequence + 1,
@@ -438,16 +420,18 @@ async function advanceCandidates(stageId, maleCount, femaleCount) {
       );
     }
 
-    const stageCandidates = [...topMales, ...topFemales].map((c) => ({
+    // 🔥 Prepare insertion
+    const stageCandidates = allIds.map((id) => ({
       stage_id: nextStage.id,
-      candidate_id: c.candidate_id ?? c.candidateId,
+      candidate_id: id,
     }));
 
+    // ✅ Save advancement limits for reference
     await stageRepo.update(
       nextStage.id,
       {
-        maxMale: maleCount,
-        maxFemale: femaleCount,
+        maxMale: maleIds.length,
+        maxFemale: femaleIds.length,
       },
       t,
     );

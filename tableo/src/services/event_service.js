@@ -35,3 +35,9 @@ export const getDeletedEvents = () => {
 export const restoreEvent = (eventId) => {
   return api.patch(`/events/${eventId}/restore`);
 };
+export const finalizeEvent = (eventId) => {
+  return api.post(`/events/${eventId}/finalize`);
+};
+export const checkEventFinalized = (eventId) => {
+  return api.get(`/events/${eventId}/is-finalized`);
+};

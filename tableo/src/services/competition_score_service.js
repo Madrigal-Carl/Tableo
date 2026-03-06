@@ -20,3 +20,10 @@ export const getCategoryJudgeStatuses = async (
 
   return res.data; // backend returns judge status array
 };
+
+export const checkEventCompletion = async (eventId) => {
+  const res = await api.get(
+    `/competition/event/${eventId}/completion-status`
+  );
+  return res.data; // { eventId, completed }
+};

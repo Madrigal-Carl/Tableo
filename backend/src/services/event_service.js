@@ -12,6 +12,10 @@ const {
   Candidate,
   CompetitionScore,
 } = require("../database/models");
+const stageRepo = require("../repositories/stage_repository");
+const { getStageOverallResults, getCandidatesForStage } = require("./stage_service");
+const { EventResult } = require("../database/models");
+const { isStageFullyCompleted } = require("./competition_score_service");
 
 async function createEvent({
   title,
@@ -207,7 +211,77 @@ async function restoreEvent(eventId, userId) {
     return restored;
   });
 }
+async function finalizeEventResults(eventId) {
+  return sequelize.transaction(async (t) => {
 
+    // 🚫 0️⃣ Prevent double finalization
+    const existingResults = await EventResult.count({
+      where: { event_id: eventId },
+      transaction: t,
+    });
+
+    if (existingResults > 0) {
+      const err = new Error("Event has already been finalized");
+      err.status = 400;
+      throw err;
+    }
+
+    // 1️⃣ Get last stage (highest sequence)
+    const lastStage = await Stage.findOne({
+      where: { event_id: eventId },
+      order: [["sequence", "DESC"]],
+      transaction: t,
+    });
+
+    if (!lastStage) {
+      throw new Error("No stages found for this event");
+    }
+
+    // 2️⃣ Check if final stage is fully completed
+    const completed = await isStageFullyCompleted(lastStage.id);
+
+    if (!completed) {
+      const err = new Error("Final stage is not fully completed");
+      err.status = 400;
+      throw err;
+    }
+
+    // 3️⃣ Get overall results
+    const results = await getStageOverallResults(lastStage.id);
+
+    const combinedResults = [
+      ...(results.males || []),
+      ...(results.females || []),
+    ];
+
+    if (!combinedResults.length) {
+      throw new Error("No results found for final stage");
+    }
+
+    // 4️⃣ Insert finalists into EventResult
+    for (const r of combinedResults) {
+      await EventResult.create(
+        {
+          event_id: eventId,
+          candidate_id: r.candidate_id,
+          total_score: r.stage_total,
+          average: r.stage_total,
+          rank: r.rank,
+        },
+        { transaction: t }
+      );
+    }
+
+    return { message: "Event finalized successfully" };
+  });
+}
+async function checkIfEventFinalized(eventId) {
+  const finalized = await EventResult.findOne({
+    where: { event_id: eventId },
+  });
+
+  return !!finalized;
+}
 module.exports = {
   createEvent,
   getEvent,
@@ -216,4 +290,6 @@ module.exports = {
   getAllEvents,
   getDeletedEvents,
   restoreEvent,
+  finalizeEventResults,
+  checkIfEventFinalized,
 };

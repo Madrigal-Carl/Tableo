@@ -1,20 +1,41 @@
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
-    const EventResult = sequelize.define('EventResult', {
-        totalScore: { type: DataTypes.FLOAT, allowNull: false },
-        average: { type: DataTypes.FLOAT, allowNull: false },
-        rank: { type: DataTypes.INTEGER, allowNull: false },
-    }, {
-        paranoid: true,
-        timestamps: true,
-        underscored: true,
+  const EventResult = sequelize.define(
+    'EventResult',
+    {
+      total_score: { // ✅ MATCH DATABASE COLUMN
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      average: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      rank: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+    },
+    {
+      paranoid: true,
+      timestamps: true,
+      underscored: true,
+      tableName: 'event_results', // ✅ SAFETY
+    }
+  );
+
+  EventResult.associate = function (models) {
+    EventResult.belongsTo(models.Event, {
+      foreignKey: 'event_id',
+      as: 'event',
     });
 
-    EventResult.associate = function (models) {
-        EventResult.belongsTo(models.Event, { foreignKey: 'event_id', as: 'event' });
-        EventResult.belongsTo(models.Candidate, { foreignKey: 'candidate_id', as: 'candidate' });
-    };
+    EventResult.belongsTo(models.Candidate, {
+      foreignKey: 'candidate_id',
+      as: 'candidate',
+    });
+  };
 
-    return EventResult;
-}
+  return EventResult;
+};

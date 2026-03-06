@@ -1,4 +1,4 @@
-const judgeService = require('../services/judge_service');
+const judgeService = require("../services/judge_service");
 
 async function updateJudge(req, res, next) {
   try {
@@ -6,10 +6,12 @@ async function updateJudge(req, res, next) {
     const data = req.body;
 
     const updatedJudges = await judgeService.updateJudge(invitationCode, data);
-    const updatedJudge = updatedJudges.find(j => j.invitationCode === invitationCode);
+    const updatedJudge = updatedJudges.find(
+      (j) => j.invitationCode === invitationCode,
+    );
 
     res.json({
-      message: 'Judge updated successfully',
+      message: "Judge updated successfully",
       judge: updatedJudge,
     });
   } catch (err) {
@@ -33,18 +35,18 @@ async function deleteJudge(req, res, next) {
 }
 
 async function createOrUpdateJudges(req, res, next) {
-    try {
-        const eventId = parseInt(req.params.eventId);
-        const { count } = req.body;
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const { count } = req.body;
 
-        await judgeService.createOrUpdate(eventId, count);
+    await judgeService.createOrUpdate(eventId, count);
 
-        res.json({
-            message: `Judges synced successfully for event ${eventId}`,
-        });
-    } catch (err) {
-        next(err);
-    }
+    res.json({
+      message: `Judges synced successfully for event ${eventId}`,
+    });
+  } catch (err) {
+    next(err);
+  }
 }
 
 async function getEventForJudge(req, res, next) {
@@ -57,4 +59,39 @@ async function getEventForJudge(req, res, next) {
   }
 }
 
-module.exports = { updateJudge, createOrUpdateJudges, getEventForJudge, deleteJudge };
+async function checkReadyForNextStage(req, res, next) {
+  try {
+    const stageId = parseInt(req.params.stageId);
+
+    const isReady = await judgeService.checkReadyForNextStage(stageId);
+
+    res.json({
+      ready: isReady,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getPassedCandidates(req, res, next) {
+  try {
+    const stageId = parseInt(req.params.stageId);
+
+    const candidates = await judgeService.getPassedCandidates(stageId);
+
+    res.json({
+      candidates,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  updateJudge,
+  createOrUpdateJudges,
+  getEventForJudge,
+  deleteJudge,
+  checkReadyForNextStage,
+  getPassedCandidates,
+};

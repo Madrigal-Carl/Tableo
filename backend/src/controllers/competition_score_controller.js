@@ -76,11 +76,25 @@ async function getJudgeStatuses(req, res, next) {
     next(err);
   }
 }
+/* =====================================================
+   CHECK IF EVENT IS FULLY COMPLETED
+===================================================== */
+async function checkEventCompletion(req, res, next) {
+  try {
+    const { eventId } = req.params;
 
-/* ===================================================== */
+    const data =
+      await competitionScoreService.getEventFullSummary(eventId);
 
+    res.status(200).json(data);
+
+  } catch (err) {
+    next(err);
+  }
+}
 module.exports = {
   submitScores,
   checkCategoryCompletion,
-  getJudgeStatuses, // ✅ NEW
+  getJudgeStatuses,
+  checkEventCompletion,
 };
