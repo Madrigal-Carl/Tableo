@@ -129,7 +129,18 @@ function CategoryPage() {
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = `stage-${stageId}-report.docx`;
+
+      // ✅ Extract filename from Content-Disposition
+      const disposition = res.headers["content-disposition"];
+      let filename = "report.docx"; // fallback
+      if (disposition && disposition.includes("filename=")) {
+        filename = disposition
+          .split("filename=")[1]
+          .replace(/["']/g, "")
+          .trim();
+      }
+
+      link.download = filename;
 
       document.body.appendChild(link);
       link.click();

@@ -7,26 +7,30 @@ const { sendEventReminderEmail } = require("../services/mail_service");
  */
 function parseEventDate(event) {
   const eventDate = new Date(event.date);
+
   if (event.timeStart) {
     const [hours, minutes, seconds] = event.timeStart.split(":").map(Number);
     eventDate.setHours(hours, minutes, seconds || 0);
   }
+
   return eventDate;
 }
 
 /**
- * Check if the event is tomorrow (ignores time, only date)
+ * Check if the event is tomorrow (local timezone safe)
  */
 function isTomorrow(event) {
   const eventDate = parseEventDate(event);
+
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
 
-  const eventYMD = eventDate.toISOString().split("T")[0];
-  const tomorrowYMD = tomorrow.toISOString().split("T")[0];
-
-  return eventYMD === tomorrowYMD;
+  return (
+    eventDate.getFullYear() === tomorrow.getFullYear() &&
+    eventDate.getMonth() === tomorrow.getMonth() &&
+    eventDate.getDate() === tomorrow.getDate()
+  );
 }
 
 /**

@@ -62,6 +62,10 @@ async function generateStageReport(stageId) {
   children.push(createOverallTable(overallResults));
 
   const doc = new Document({
+    protection: {
+      edit: "readOnly",
+      enforcement: true,
+    },
     sections: [
       {
         children,
