@@ -4,6 +4,7 @@ import goldenDrops from "../assets/golden-drops-background.jpg";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import VerificationModal from "../components/VerificationModal";
 import NewPasswordModal from "../components/NewPasswordModal";
+import { ArrowLeft } from "lucide-react";
 import {
   login,
   forgotPasswordRequest,
@@ -86,10 +87,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 relative">
+      {/* BACK BUTTON */}
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="absolute top-4 left-4 flex items-center gap-2 text-sm text-gray-600 hover:text-[#192BC2] px-3 py-1"
+      >
+        <ArrowLeft size={32} />
+      </button>
       <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-6">
-
           {/* LEFT IMAGE */}
           <div className="hidden md:block order-1">
             <div className="relative h-full w-full overflow-hidden rounded-2xl">
@@ -108,9 +116,7 @@ export default function LoginPage() {
               Welcome back to{" "}
               <span className="text-[#192BC2] font-bold">Tabléo</span>
             </h1>
-            <p className="text-sm text-gray-500 mb-8">
-              Sign in to continue
-            </p>
+            <p className="text-sm text-gray-500 mb-8">Sign in to continue</p>
 
             <form
               onSubmit={(e) => {

@@ -14,12 +14,10 @@ async function exportStageReport(req, res) {
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${stageName}_report.docx"`,
+      `attachment; filename="${stageName}_report.pdf"`,
     );
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    );
+
+    res.setHeader("Content-Type", "application/pdf");
 
     res.send(buffer);
   } catch (err) {
