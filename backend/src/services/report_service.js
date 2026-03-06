@@ -59,7 +59,7 @@ async function generateStageReport(stageId) {
   children.push(new Paragraph(""));
 
   // OVERALL TABLE
-  children.push(createOverallTable(overallResults));
+  children.push(...createOverallTable(overallResults));
 
   const doc = new Document({
     protection: {
@@ -194,8 +194,48 @@ function createTable(headers, data) {
 
 function createOverallTable(overallResults) {
   const headers = ["No.", "Participants", "Average", "Ranking"];
-  const all = [...overallResults.males, ...overallResults.females];
+  const children = [];
 
+  // Male overall table
+  if (overallResults.males.length > 0) {
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "Male Overall",
+            bold: true,
+            size: 28, // 14pt
+            font: "Arial",
+          }),
+        ],
+      }),
+    );
+    children.push(createSimpleTable(headers, overallResults.males));
+    children.push(new Paragraph("")); // spacing
+  }
+
+  // Female overall table
+  if (overallResults.females.length > 0) {
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "Female Overall",
+            bold: true,
+            size: 28, // 14pt
+            font: "Arial",
+          }),
+        ],
+      }),
+    );
+    children.push(createSimpleTable(headers, overallResults.females));
+    children.push(new Paragraph("")); // spacing
+  }
+
+  return children; // return as array of Paragraphs + Tables
+}
+
+function createSimpleTable(headers, data) {
   const headerRow = new TableRow({
     children: headers.map(
       (h) =>
@@ -217,11 +257,11 @@ function createOverallTable(overallResults) {
     ),
   });
 
-  const rows = all.map(
+  const rows = data.map(
     (c) =>
       new TableRow({
         children: [
-          c.sequence, // <-- use the candidate sequence here
+          c.sequence,
           c.name,
           Number(c.stage_total).toFixed(2),
           c.rank,
@@ -235,7 +275,7 @@ function createOverallTable(overallResults) {
                     new TextRun({
                       text: String(cell ?? ""),
                       font: "Arial",
-                      size: 24, // 12pt
+                      size: 24,
                     }),
                   ],
                 }),
