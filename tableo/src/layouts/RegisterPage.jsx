@@ -7,6 +7,7 @@ import { registerRequest } from "../services/auth_service";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+import { ArrowLeft } from "lucide-react";
 import { validateRegister } from "../validations/auth_validation";
 import { showToast } from "../utils/swal";
 
@@ -49,10 +50,17 @@ export default function RegisterPage() {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 relative">
+        {/* BACK BUTTON */}
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="absolute top-4 left-4 flex items-center gap-2 text-sm text-gray-600 hover:text-[#192BC2] px-3 py-1"
+        >
+          <ArrowLeft size={32} />
+        </button>
         <div className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-6">
-
             {/* LEFT FORM */}
             <div className="flex flex-col justify-center px-8 py-10 md:px-12">
               <h1 className="text-2xl font-semibold text-gray-800">
