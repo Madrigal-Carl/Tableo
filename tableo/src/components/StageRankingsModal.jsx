@@ -48,8 +48,7 @@ export default function StageRankingsModal({
   const overallMale = overall.male || [];
   const overallFemale = overall.female || [];
 
-  const showOverall =
-    overallMale.length > 0 || overallFemale.length > 0;
+  const showOverall = overallMale.length > 0 || overallFemale.length > 0;
 
   const stageTabs = Object.keys(rankingsData || {}).length
     ? Object.keys(rankingsData)
@@ -60,7 +59,6 @@ export default function StageRankingsModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white w-[90%] max-w-7xl rounded-2xl shadow-xl p-6 relative overflow-y-auto max-h-[90vh]">
-
         {/* CLOSE */}
         <button
           onClick={onClose}
@@ -80,8 +78,9 @@ export default function StageRankingsModal({
             className="absolute top-1 left-1 h-10 bg-white rounded-sm transition-transform duration-300"
             style={{
               width: "140px",
-              transform: `translateX(${stageTabs.findIndex((s) => s === activeStage) * 140
-                }px)`,
+              transform: `translateX(${
+                stageTabs.findIndex((s) => s === activeStage) * 140
+              }px)`,
             }}
           />
 
@@ -92,8 +91,9 @@ export default function StageRankingsModal({
               <button
                 key={stageName}
                 onClick={() => setActiveStage(stageName)}
-                className={`relative z-10 w-[140px] h-10 font-medium ${isActive ? "text-gray-600" : "text-white"
-                  }`}
+                className={`relative z-10 w-[140px] h-10 font-medium ${
+                  isActive ? "text-gray-600" : "text-white"
+                }`}
               >
                 {stageName}
               </button>
@@ -122,10 +122,7 @@ export default function StageRankingsModal({
                     {overallMale
                       .sort((a, b) => a.rank - b.rank)
                       .map((c) => (
-                        <RankingCard
-                          key={c.candidate_id}
-                          candidate={c}
-                        />
+                        <RankingCard key={c.candidate_id} candidate={c} />
                       ))}
                   </div>
                 </div>
@@ -141,10 +138,7 @@ export default function StageRankingsModal({
                     {overallFemale
                       .sort((a, b) => a.rank - b.rank)
                       .map((c) => (
-                        <RankingCard
-                          key={c.candidate_id}
-                          candidate={c}
-                        />
+                        <RankingCard key={c.candidate_id} candidate={c} />
                       ))}
                   </div>
                 </div>
@@ -163,17 +157,14 @@ export default function StageRankingsModal({
           </h3>
 
           {Object.keys(categories).length === 0 && (
-            <p className="text-gray-400">
-              No category rankings available.
-            </p>
+            <p className="text-gray-400">No category rankings available.</p>
           )}
 
           {Object.entries(categories).map(([categoryName, data]) => {
             const males = data?.males || [];
             const females = data?.females || [];
 
-            if (males.length === 0 && females.length === 0)
-              return null;
+            if (males.length === 0 && females.length === 0) return null;
 
             return (
               <div
@@ -187,9 +178,7 @@ export default function StageRankingsModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {males.length > 0 && (
                     <div>
-                      <h5 className="text-blue-600 font-medium mb-3">
-                        Male
-                      </h5>
+                      <h5 className="text-blue-600 font-medium mb-3">Male</h5>
 
                       <div className="space-y-3">
                         {males
@@ -206,9 +195,7 @@ export default function StageRankingsModal({
 
                   {females.length > 0 && (
                     <div>
-                      <h5 className="text-pink-600 font-medium mb-3">
-                        Female
-                      </h5>
+                      <h5 className="text-pink-600 font-medium mb-3">Female</h5>
 
                       <div className="space-y-3">
                         {females
@@ -238,7 +225,6 @@ export default function StageRankingsModal({
             Export Report
           </button>
         </div>
-
       </div>
     </div>
   );
@@ -262,7 +248,9 @@ function RankingCard({ candidate }) {
         )}
 
         <div>
-          <p className="font-medium">{candidate.name}</p>
+          <p className="font-medium">
+            {candidate.name || candidate.candidateName}
+          </p>
 
           {/* ✅ Candidate No (Sequence) */}
           <p className="text-xs text-gray-500">
@@ -273,16 +261,15 @@ function RankingCard({ candidate }) {
             Avg:{" "}
             {Number(
               candidate.total_average ||
-              candidate.stage_total ||
-              0
+                candidate.stage_total ||
+                candidate.average ||
+                0,
             ).toFixed(2)}
           </p>
         </div>
       </div>
 
-      <div className="text-xl font-bold text-[#FA824C]">
-        #{candidate.rank}
-      </div>
+      <div className="text-xl font-bold text-[#FA824C]">#{candidate.rank}</div>
     </div>
   );
 }

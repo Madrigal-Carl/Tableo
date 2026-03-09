@@ -22,6 +22,7 @@ import {
   getEvent,
   finalizeEvent,
   checkEventFinalized,
+  getEventResults,
 } from "../../services/event_service";
 import { deleteJudge } from "../../services/judge_service";
 import {
@@ -110,7 +111,14 @@ function CategoryPage() {
 
   const handleExportReport = async (stageName) => {
     try {
-      const stageId = getStageIdByName(stageName || activeStage);
+      const sortedStages =
+        event?.stages?.slice().sort((a, b) => a.sequence - b.sequence) || [];
+
+      const lastStage = sortedStages[sortedStages.length - 1]?.name;
+
+      const currentStage = stageName || activeStage;
+
+      const stageId = getStageIdByName(currentStage);
 
       if (!stageId) {
         showToast("error", "Stage not found");
@@ -556,6 +564,13 @@ function CategoryPage() {
       .map((s) => s.name) || [];
   const filteredCategories = categories;
 
+  const sortedStages =
+    event?.stages?.slice().sort((a, b) => a.sequence - b.sequence) || [];
+
+  const lastStage = sortedStages[sortedStages.length - 1]?.name;
+  const isLastStage = activeStage === lastStage;
+
+  const isDisabled = isLastStage && !eventCompleted;
   return (
     <>
       {/* Loader */}
@@ -593,8 +608,9 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
-                    }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${
+                    activeTopTab === tab ? "text-gray-600" : "text-white"
+                  }`}
                 >
                   {tab}
                 </button>
@@ -619,10 +635,11 @@ function CategoryPage() {
                           if (!canEditEvent && !eventCompleted) return;
                           setActiveStage(stageObj.name);
                         }}
-                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
-                          ? "border-b-2 border-[#192BC2] text-[#192BC2]"
-                          : "text-gray-400 hover:text-gray-600"
-                          } ${!canEditEvent && !eventCompleted ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        className={`pb-3 text-lg font-semibold transition ${
+                          activeStage === stageObj.name
+                            ? "border-b-2 border-[#192BC2] text-[#192BC2]"
+                            : "text-gray-400 hover:text-gray-600"
+                        } ${!canEditEvent && !eventCompleted ? "cursor-not-allowed" : "cursor-pointer"}`}
                       >
                         {stageObj.name}
                       </button>
@@ -670,8 +687,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                              .slice(0, 30)
-                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                                .slice(0, 30)
+                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -696,9 +713,9 @@ function CategoryPage() {
                         setCriteriaList(
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                              name: c.label,
-                              weight: c.percentage,
-                            }))
+                                name: c.label,
+                                weight: c.percentage,
+                              }))
                             : [{ name: "", weight: "" }],
                         );
                         setIsCriteriaModalOpen(true);
@@ -866,47 +883,47 @@ function CategoryPage() {
                         const stagesList = event?.stages || [];
 
                         for (const stage of stagesList) {
+                          const isLastStage = stage.name === lastStage;
 
-                          // ✅ 1. GET OVERALL RESULTS
-                          const overallRes = await getStageOverallResult(stage.id);
-                          const overallData = overallRes?.data?.data;
+                          let overallData = null;
 
-                          // ✅ 2. GET CATEGORY RESULTS
+                          // 🔵 LAST STAGE → USE EVENT RESULTS
+                          if (isLastStage) {
+                            const res = await getEventResults(eventId);
+
+                            overallData = res?.data?.results || {
+                              males: [],
+                              females: [],
+                            };
+                          } else {
+                            // 🔵 NORMAL STAGE
+                            const overallRes = await getStageOverallResult(
+                              stage.id,
+                            );
+                            overallData = overallRes?.data?.data;
+                          }
+
                           const categoryRes = await getStageResults(stage.id);
                           const categoryData = categoryRes?.data?.data || {};
 
-                          // 🔥 Your API returns:
-                          // {
-                          //   "Stage Name": {
-                          //       "Category Name": {
-                          //            males: [],
-                          //            females: []
-                          //       }
-                          //   }
-                          // }
-
                           const categoryFormatted = {};
 
-                          // ✅ Get stage object properly
                           const stageEntry =
                             categoryData[stage.name] || categoryData || {};
 
-                          // ✅ If categories exist directly
                           if (stageEntry) {
-                            Object.entries(stageEntry).forEach(([categoryName, categoryValue]) => {
-                              if (!categoryValue) return;
+                            Object.entries(stageEntry).forEach(
+                              ([categoryName, categoryValue]) => {
+                                if (!categoryValue) return;
 
-                              const males = categoryValue.males || [];
-                              const females = categoryValue.females || [];
-
-                              categoryFormatted[categoryName] = {
-                                males,
-                                females,
-                              };
-                            });
+                                categoryFormatted[categoryName] = {
+                                  males: categoryValue.males || [],
+                                  females: categoryValue.females || [],
+                                };
+                              },
+                            );
                           }
 
-                          // ✅ Save properly formatted stage data
                           formatted[stage.name] = {
                             overall: {
                               male: overallData?.males || [],
@@ -919,7 +936,6 @@ function CategoryPage() {
                         // ✅ NOW PASS IT TO MODAL
                         setRankingsData(formatted);
                         setIsRankingsOpen(true);
-
                       } catch (err) {
                         showToast("error", err.message);
                       } finally {
@@ -930,7 +946,7 @@ function CategoryPage() {
                     View Results
                     <ArrowRight size={24} />
                   </button>
-                ) : eventCompleted ? (
+                ) : eventCompleted && isLastStage ? (
                   // 🔵 ALL JUDGES FINISHED → READY TO FINALIZE
                   <button
                     className="bg-green-600 px-6 h-12.5 rounded-lg text-white font-medium hover:bg-green-700 mt-6 ml-auto flex items-center gap-2"
@@ -960,14 +976,22 @@ function CategoryPage() {
                       }
                     }}
                   >
-                    Proceed to Rankings
+                    Finalize
                     <ArrowRight size={24} />
                   </button>
                 ) : (
                   // 🔴 STILL SCORING → NORMAL ADVANCE BUTTON
                   <button
-                    className="bg-[#192BC2] px-6 h-12.5 rounded-lg text-white font-medium hover:bg-[#192BC2]/70 mt-6 ml-auto flex items-center gap-2"
+                    disabled={isDisabled}
+                    className={`px-6 h-12.5 rounded-lg text-white font-medium mt-6 ml-auto flex items-center gap-2
+  ${
+    isDisabled
+      ? "bg-gray-400 cursor-not-allowed opacity-60"
+      : "bg-[#192BC2] hover:bg-[#192BC2]/70 cursor-pointer"
+  }`}
                     onClick={async () => {
+                      if (isDisabled) return;
+
                       if (!activeStage) return;
 
                       const stageId = getStageIdByName(activeStage);
@@ -1131,8 +1155,9 @@ function CategoryPage() {
             setAdvanceCounts({ maleCount: null, femaleCount: null });
           }}
           contestants={advanceQueue[currentAdvanceIndex]?.contestants || []}
-          roundTitle={`${activeStage} - ${advanceQueue[currentAdvanceIndex]?.sex || ""
-            }`}
+          roundTitle={`${activeStage} - ${
+            advanceQueue[currentAdvanceIndex]?.sex || ""
+          }`}
           onProceed={async (selectedIds) => {
             const sex = advanceQueue[currentAdvanceIndex]?.sex;
             const contestants =
@@ -1235,6 +1260,7 @@ function CategoryPage() {
             }
           }}
         />
+
         <FinalsModal
           isOpen={isFinalsOpen}
           onClose={() => setIsFinalsOpen(false)}
@@ -1243,12 +1269,12 @@ function CategoryPage() {
             males: finalResults?.males || [],
             females: finalResults?.females || [],
           }}
-          onFinalize={async () => {
+          onFinalize={async (results) => {
             try {
               setLoading(true);
 
               // ✅ CALL YOUR IMPORTED FUNCTION HERE
-              await finalizeEvent(eventId);
+              await finalizeEvent(eventId, results);
 
               showToast("success", "Event finalized successfully");
 
@@ -1264,6 +1290,7 @@ function CategoryPage() {
             }
           }}
         />
+
         <StageRankingsModal
           isOpen={isRankingsOpen}
           onClose={() => setIsRankingsOpen(false)}

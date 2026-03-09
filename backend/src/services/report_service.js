@@ -4,19 +4,62 @@ const autoTable = require("jspdf-autotable").default;
 const stageService = require("./stage_service");
 const stageRepo = require("../repositories/stage_repository");
 const eventRepo = require("../repositories/event_repository");
+const eventService = require("./event_service");
 
 async function generateStageReport(stageId) {
   const stageResults = await stageService.getStageResults(stageId);
-  const overallResults = await stageService.getStageOverallResults(stageId);
 
   const stageInfo = await stageRepo.findById(stageId);
   const stageName = stageInfo ? stageInfo.name : "STAGE";
 
   const eventInfo = stageInfo
-    ? await eventRepo.findById(stageInfo.event_id)
+    ? await eventRepo.findByIdWithRelations(stageInfo.event_id)
     : null;
 
   const eventName = eventInfo ? eventInfo.title : "EVENT";
+
+  // 🔹 Determine if this is the last stage
+  let overallResults;
+
+  if (eventInfo?.stages?.length) {
+    const sortedStages = eventInfo.stages
+      .map((s) => s.toJSON())
+      .sort((a, b) => a.sequence - b.sequence);
+
+    const lastStage = sortedStages[sortedStages.length - 1];
+
+    const isLastStage = Number(lastStage.id) === Number(stageId);
+
+    if (isLastStage) {
+      console.log("Using FINAL Event Results");
+
+      const finalResults = await eventService.getEventResults(
+        stageInfo.event_id,
+        eventInfo.user_id,
+      );
+
+      overallResults = {
+        males: finalResults.males.map((c) => ({
+          sequence: c.sequence,
+          name: c.name,
+          stage_total: c.average,
+          rank: c.rank,
+        })),
+        females: finalResults.females.map((c) => ({
+          sequence: c.sequence,
+          name: c.name,
+          stage_total: c.average,
+          rank: c.rank,
+        })),
+      };
+    } else {
+      console.log("Using Stage Results");
+
+      overallResults = await stageService.getStageOverallResults(stageId);
+    }
+  } else {
+    overallResults = await stageService.getStageOverallResults(stageId);
+  }
 
   const doc = new jsPDF();
 
