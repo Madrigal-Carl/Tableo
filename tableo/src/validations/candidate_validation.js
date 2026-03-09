@@ -10,8 +10,8 @@ export function validateCandidate(data) {
   }
 
   // LENGTH
-  if (name.length < 8) {
-    return "Candidate name must be at least 8 characters";
+  if (name.length < 4) {
+    return "Candidate name must be at least 4 characters";
   }
 
   if (name.length > 50) {
