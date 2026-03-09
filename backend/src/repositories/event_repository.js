@@ -5,6 +5,7 @@ const {
   Judge,
   Candidate,
   sequelize,
+  EventResult,
 } = require("../database/models");
 const { Op } = require("sequelize");
 
@@ -127,6 +128,14 @@ async function getAllEvents() {
   });
 }
 
+async function findResultsByEvent(eventId) {
+  return EventResult.findAll({
+    where: { event_id: eventId },
+    include: [{ model: Candidate, as: "candidate" }],
+    order: [["rank", "ASC"]],
+  });
+}
+
 module.exports = {
   create,
   findById,
@@ -138,4 +147,5 @@ module.exports = {
   findDeletedById,
   restore,
   getAllEvents,
+  findResultsByEvent,
 };

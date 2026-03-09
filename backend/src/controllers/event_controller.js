@@ -111,8 +111,13 @@ async function finalizeEvent(req, res, next) {
   try {
     const userId = req.user.id;
     const eventId = req.params.eventId;
+    const payload = req.body;
 
-    const result = await eventService.finalizeEventResults(eventId, userId);
+    const result = await eventService.finalizeEventResults(
+      eventId,
+      userId,
+      payload,
+    );
 
     const io = req.app.get("io");
     io.emit("events:updated", { userId });
@@ -138,6 +143,20 @@ async function checkIfFinalized(req, res, next) {
     next(err);
   }
 }
+
+async function getEventResults(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const eventId = req.params.eventId;
+
+    const results = await eventService.getEventResults(eventId, userId);
+
+    res.status(200).json({ results });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createEvent,
   getEvent,
@@ -148,4 +167,5 @@ module.exports = {
   restoreEvent,
   finalizeEvent,
   checkIfFinalized,
+  getEventResults,
 };

@@ -13,7 +13,10 @@ const {
   CompetitionScore,
 } = require("../database/models");
 const stageRepo = require("../repositories/stage_repository");
-const { getStageOverallResults, getCandidatesForStage } = require("./stage_service");
+const {
+  getStageOverallResults,
+  getCandidatesForStage,
+} = require("./stage_service");
 const { EventResult } = require("../database/models");
 const { isStageFullyCompleted } = require("./competition_score_service");
 
@@ -211,10 +214,14 @@ async function restoreEvent(eventId, userId) {
     return restored;
   });
 }
-async function finalizeEventResults(eventId) {
+async function finalizeEventResults(eventId, userId, payload = {}) {
   return sequelize.transaction(async (t) => {
+    const event = await eventRepo.findByIdWithRelations(eventId, t);
 
-    // 🚫 0️⃣ Prevent double finalization
+    if (!event) throw new Error("Event not found");
+    if (event.user_id !== userId) throw new Error("Unauthorized");
+
+    // 🚫 Prevent double finalize
     const existingResults = await EventResult.count({
       where: { event_id: eventId },
       transaction: t,
@@ -226,7 +233,7 @@ async function finalizeEventResults(eventId) {
       throw err;
     }
 
-    // 1️⃣ Get last stage (highest sequence)
+    // 1️⃣ Get final stage
     const lastStage = await Stage.findOne({
       where: { event_id: eventId },
       order: [["sequence", "DESC"]],
@@ -237,7 +244,7 @@ async function finalizeEventResults(eventId) {
       throw new Error("No stages found for this event");
     }
 
-    // 2️⃣ Check if final stage is fully completed
+    // 2️⃣ Check completion
     const completed = await isStageFullyCompleted(lastStage.id);
 
     if (!completed) {
@@ -246,35 +253,42 @@ async function finalizeEventResults(eventId) {
       throw err;
     }
 
-    // 3️⃣ Get overall results
-    const results = await getStageOverallResults(lastStage.id);
+    // 3️⃣ If frontend sent manual ranking → use it
+    let combinedResults = [];
 
-    const combinedResults = [
-      ...(results.males || []),
-      ...(results.females || []),
-    ];
+    if (payload?.males || payload?.females) {
+      combinedResults = [...(payload.males || []), ...(payload.females || [])];
+    } else {
+      // fallback to auto ranking
+      const results = await getStageOverallResults(lastStage.id);
+
+      combinedResults = [...(results.males || []), ...(results.females || [])];
+    }
 
     if (!combinedResults.length) {
       throw new Error("No results found for final stage");
     }
 
-    // 4️⃣ Insert finalists into EventResult
-    for (const r of combinedResults) {
+    // 4️⃣ Save results
+    for (let i = 0; i < combinedResults.length; i++) {
+      const r = combinedResults[i];
+
       await EventResult.create(
         {
           event_id: eventId,
           candidate_id: r.candidate_id,
           total_score: r.stage_total,
           average: r.stage_total,
-          rank: r.rank,
+          rank: r.rank || i + 1,
         },
-        { transaction: t }
+        { transaction: t },
       );
     }
 
     return { message: "Event finalized successfully" };
   });
 }
+
 async function checkIfEventFinalized(eventId) {
   const finalized = await EventResult.findOne({
     where: { event_id: eventId },
@@ -282,6 +296,41 @@ async function checkIfEventFinalized(eventId) {
 
   return !!finalized;
 }
+
+async function getEventResults(eventId, userId) {
+  const event = await eventRepo.findByIdWithRelations(eventId);
+
+  if (!event) throw new Error("Event not found");
+  if (event.user_id !== userId) throw new Error("Unauthorized");
+
+  const results = await eventRepo.findResultsByEvent(eventId);
+
+  const males = [];
+  const females = [];
+
+  results.forEach((r) => {
+    const formatted = {
+      candidate_id: r.candidate_id,
+      name: r.candidate.name,
+      sequence: r.candidate.sequence,
+      average: r.average,
+      rank: r.rank,
+      path: r.candidate.path || null,
+    };
+
+    if (r.candidate.sex?.toLowerCase() === "male") {
+      males.push(formatted);
+    } else if (r.candidate.sex?.toLowerCase() === "female") {
+      females.push(formatted);
+    }
+  });
+
+  return {
+    males,
+    females,
+  };
+}
+
 module.exports = {
   createEvent,
   getEvent,
@@ -292,4 +341,5 @@ module.exports = {
   restoreEvent,
   finalizeEventResults,
   checkIfEventFinalized,
+  getEventResults,
 };
