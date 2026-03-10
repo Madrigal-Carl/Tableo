@@ -75,16 +75,28 @@ async function createOrUpdateCategories({ eventId, stage_id, categories, userId 
           t
         );
       } else {
-        // ✅ update sequence also
-        await category.update(
-          {
-            sequence, // ✅ FIX ADDED
-            name: incoming.name.trim(),
-            percentage: incoming.percentage,
-            maxScore: incoming.maxScore,
-          },
-          { transaction: t }
-        );
+        const newName = incoming.name.trim();
+        const newPercentage = incoming.percentage;
+        const newMaxScore = incoming.maxScore;
+
+        const hasChanges =
+          category.name !== newName ||
+          category.percentage !== newPercentage ||
+          category.maxScore !== newMaxScore ||
+          category.sequence !== sequence;
+
+        // ✅ Only update if something changed
+        if (hasChanges) {
+          await category.update(
+            {
+              sequence,
+              name: newName,
+              percentage: newPercentage,
+              maxScore: newMaxScore,
+            },
+            { transaction: t }
+          );
+        }
       }
 
       usedCategoryIds.add(category.id);

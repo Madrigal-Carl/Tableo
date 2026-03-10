@@ -18,6 +18,7 @@ function HomePage() {
   const [sortAZ, setSortAZ] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState([]);
+  const [originalEvent, setOriginalEvent] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -65,7 +66,7 @@ function HomePage() {
     const formattedDate = event.date
       ? new Date(event.date).toISOString().split("T")[0]
       : "";
-    setNewEvent({
+    const formattedEvent = {
       id: event.id,
       title: event.title,
       location: event.location,
@@ -77,13 +78,47 @@ function HomePage() {
       judges: event.judges,
       candidates: event.candidates,
       image: event.image || null,
-    });
+    };
+
+    setNewEvent(formattedEvent);
+    setOriginalEvent(JSON.parse(JSON.stringify(formattedEvent)));
     setIsModalOpen(true);
   };
 
   const handleUpdateEvent = async () => {
     const error = validateEvent(newEvent);
     if (error) return showToast("error", error);
+
+    // ✅ Detect if image was changed (File vs URL)
+    const imageChanged =
+      newEvent.image && typeof newEvent.image !== "string";
+
+    // ✅ Normalize values for comparison
+    const normalizedCurrent = {
+      ...newEvent,
+      stages: Number(newEvent.stages),
+      judges: Number(newEvent.judges),
+      candidates: Number(newEvent.candidates),
+    };
+
+    const normalizedOriginal = {
+      ...originalEvent,
+      stages: Number(originalEvent?.stages),
+      judges: Number(originalEvent?.judges),
+      candidates: Number(originalEvent?.candidates),
+    };
+
+    const isSame =
+      !imageChanged &&
+      JSON.stringify(normalizedCurrent) ===
+      JSON.stringify(normalizedOriginal);
+
+    // ✅ No changes detected
+    if (isSame) {
+      showToast("info", "Saved — no changes made");
+      setIsModalOpen(false);
+      return;
+    }
 
     try {
       setLoading(true);

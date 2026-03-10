@@ -68,6 +68,8 @@ function CategoryPage() {
   const [advanceQueue, setAdvanceQueue] = useState([]);
   const [currentAdvanceIndex, setCurrentAdvanceIndex] = useState(0);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [originalCategories, setOriginalCategories] = useState([]);
+  const [originalCriteria, setOriginalCriteria] = useState([]);
   const [categoryList, setCategoryList] = useState([
     { name: "", weight: "", maxScore: "" },
   ]);
@@ -219,9 +221,22 @@ function CategoryPage() {
 
   const handleEditParticipant = async (updated) => {
     try {
-      setLoading(true);
+      const original = event?.candidates?.find((c) => c.id === updated.id);
 
       const { id, formData, isFile, ...rest } = updated;
+
+      // ✅ Check if anything actually changed
+      if (
+        original &&
+        original.name === rest.name &&
+        original.sex === rest.sex &&
+        !isFile
+      ) {
+        showToast("info", "Saved — no changes made");
+        return;
+      }
+
+      setLoading(true);
 
       if (isFile && formData) {
         await editCandidate(id, formData, true);
@@ -232,7 +247,7 @@ function CategoryPage() {
       const eventRes = await getEvent(eventId);
       setEvent(eventRes.data);
 
-      showToast("success", "Participant updated successfully");
+      showToast("success", "Saved successfully");
     } catch (err) {
       showToast("error", err.message);
     } finally {
@@ -292,8 +307,32 @@ function CategoryPage() {
     }
   };
 
-  const handleEditJudge = (updated) => {
-    console.log("Edit judge:", updated);
+  const handleEditJudge = async (updated) => {
+    try {
+      const original = event?.judges?.find((j) => j.id === updated.id);
+
+      if (
+        original &&
+        original.name === updated.name &&
+        original.suffix === updated.suffix
+      ) {
+        showToast("info", "Saved — no changes made");
+        return;
+      }
+
+      setLoading(true);
+
+      await createOrUpdateJudges(eventId, updated);
+
+      const res = await getEvent(eventId);
+      setEvent(res.data);
+
+      showToast("success", "Saved successfully");
+    } catch (err) {
+      showToast("error", err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteJudge = async (item) => {
@@ -349,6 +388,14 @@ function CategoryPage() {
 
       setCategories(stageCategories);
       setSelectedCategory(stageCategories[0] || null);
+
+      setOriginalCategories(
+        stageCategories.map((c) => ({
+          name: c.name,
+          weight: c.percentage,
+          maxScore: c.maxScore,
+        }))
+      );
     } catch (err) {
       showToast("error", "Failed to load categories for this stage");
     } finally {
@@ -358,22 +405,30 @@ function CategoryPage() {
 
   const handleUpdateStage = async (updatedStage) => {
     try {
+      const original = event?.stages?.find((s) => s.id === updatedStage.id);
+
+      if (
+        original &&
+        original.name === updatedStage.name &&
+        original.sequence === updatedStage.sequence
+      ) {
+        showToast("info", "Saved — no changes made");
+        return;
+      }
+
       setLoading(true);
 
-      // 🔥 Call backend to update BOTH name and sequence
       await updateStage(updatedStage.id, {
         name: updatedStage.name,
         sequence: updatedStage.sequence,
       });
 
-      // 🔥 Refetch full event so ordering is correct
       const res = await getEvent(eventId);
       setEvent(res.data);
 
-      // Set active stage to updated name
       setActiveStage(updatedStage.name);
 
-      showToast("success", "Stage updated successfully");
+      showToast("success", "Saved successfully");
     } catch (err) {
       showToast("error", err.response?.data?.message || err.message);
     } finally {
@@ -499,6 +554,22 @@ function CategoryPage() {
         showToast("error", "Please select a valid stage");
         return;
       }
+      const normalizedCurrent = categoryList.map((c) => ({
+        name: c.name.trim(),
+        weight: Number(c.weight),
+        maxScore: Number(c.maxScore),
+      }));
+
+      const isSame =
+        JSON.stringify(normalizedCurrent) ===
+        JSON.stringify(originalCategories);
+
+      if (isSame) {
+        showToast("info", "Saved — no changes made");
+        setIsCategoryModalOpen(false);   // ✅ close modal
+        resetCategoryForm();             // ✅ optional reset
+        return;
+      }
 
       setLoading(true);
 
@@ -528,7 +599,21 @@ function CategoryPage() {
       showToast("error", "Please select a category first");
       return;
     }
+    const normalizedCurrent = criteriaList.map((c) => ({
+      name: c.name.trim(),
+      weight: Number(c.weight),
+    }));
 
+    const isSame =
+      JSON.stringify(normalizedCurrent) ===
+      JSON.stringify(originalCriteria);
+
+    if (isSame) {
+      showToast("info", "Saved — no changes made");
+      setIsCriteriaModalOpen(false);
+      setCriteriaList([{ name: "", weight: "" }]);
+      return;
+    }
     const errorMessage = validateCriteria(criteriaList);
     if (errorMessage) {
       showToast("error", errorMessage);
@@ -608,9 +693,8 @@ function CategoryPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTopTab(tab)}
-                  className={`relative z-10 w-27.5 h-10 font-medium ${
-                    activeTopTab === tab ? "text-gray-600" : "text-white"
-                  }`}
+                  className={`relative z-10 w-27.5 h-10 font-medium ${activeTopTab === tab ? "text-gray-600" : "text-white"
+                    }`}
                 >
                   {tab}
                 </button>
@@ -635,11 +719,10 @@ function CategoryPage() {
                           if (!canEditEvent && !eventCompleted) return;
                           setActiveStage(stageObj.name);
                         }}
-                        className={`pb-3 text-lg font-semibold transition ${
-                          activeStage === stageObj.name
-                            ? "border-b-2 border-[#192BC2] text-[#192BC2]"
-                            : "text-gray-400 hover:text-gray-600"
-                        } ${!canEditEvent && !eventCompleted ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        className={`pb-3 text-lg font-semibold transition ${activeStage === stageObj.name
+                          ? "border-b-2 border-[#192BC2] text-[#192BC2]"
+                          : "text-gray-400 hover:text-gray-600"
+                          } ${!canEditEvent && !eventCompleted ? "cursor-not-allowed" : "cursor-pointer"}`}
                       >
                         {stageObj.name}
                       </button>
@@ -687,8 +770,8 @@ function CategoryPage() {
                         <option key={cat.id} value={cat.id} title={cat.name}>
                           {cat.name.length > 30
                             ? cat.name
-                                .slice(0, 30)
-                                .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
+                              .slice(0, 30)
+                              .replace(/\b\w/g, (l) => l.toUpperCase()) + "…"
                             : cat.name.replace(/\b\w/g, (l) => l.toUpperCase())}
                         </option>
                       ))}
@@ -710,14 +793,16 @@ function CategoryPage() {
                           selectedCategory.id,
                         );
                         const criteria = res.data.data || [];
-                        setCriteriaList(
+                        const formatted =
                           criteria.length > 0
                             ? criteria.map((c) => ({
-                                name: c.label,
-                                weight: c.percentage,
-                              }))
-                            : [{ name: "", weight: "" }],
-                        );
+                              name: c.label,
+                              weight: c.percentage,
+                            }))
+                            : [{ name: "", weight: "" }];
+
+                        setCriteriaList(formatted);
+                        setOriginalCriteria(JSON.parse(JSON.stringify(formatted)));
                         setIsCriteriaModalOpen(true);
                       } catch (err) {
                         console.error(err);
@@ -984,11 +1069,10 @@ function CategoryPage() {
                   <button
                     disabled={isDisabled}
                     className={`px-6 h-12.5 rounded-lg text-white font-medium mt-6 ml-auto flex items-center gap-2
-  ${
-    isDisabled
-      ? "bg-gray-400 cursor-not-allowed opacity-60"
-      : "bg-[#192BC2] hover:bg-[#192BC2]/70 cursor-pointer"
-  }`}
+  ${isDisabled
+                        ? "bg-gray-400 cursor-not-allowed opacity-60"
+                        : "bg-[#192BC2] hover:bg-[#192BC2]/70 cursor-pointer"
+                      }`}
                     onClick={async () => {
                       if (isDisabled) return;
 
@@ -1155,9 +1239,8 @@ function CategoryPage() {
             setAdvanceCounts({ maleCount: null, femaleCount: null });
           }}
           contestants={advanceQueue[currentAdvanceIndex]?.contestants || []}
-          roundTitle={`${activeStage} - ${
-            advanceQueue[currentAdvanceIndex]?.sex || ""
-          }`}
+          roundTitle={`${activeStage} - ${advanceQueue[currentAdvanceIndex]?.sex || ""
+            }`}
           onProceed={async (selectedIds) => {
             const sex = advanceQueue[currentAdvanceIndex]?.sex;
             const contestants =
