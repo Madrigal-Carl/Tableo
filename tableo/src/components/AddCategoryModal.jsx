@@ -78,7 +78,7 @@ function AddCategoryModal({
                             />
                         </div>
                         <div className="flex flex-col">
-                            <label className="text-sm text-gray-500 mb-1">Max</label>
+                            <label className="text-sm text-gray-500 mb-1">Max Score</label>
                             <input
                                 type="number"
                                 value={category.maxScore}
