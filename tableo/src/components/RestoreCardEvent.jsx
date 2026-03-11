@@ -23,7 +23,7 @@ function RestoreCardEvent({
                     className="p-2 rounded-full bg-black/50 text-white hover:bg-green-600 transition"
                     title="Restore Event"
                 >
-                    <FiRotateCcw size={16} />
+                    {/* <FiRotateCcw size={16} /> */}
                 </button>
             </div>
 
