@@ -93,6 +93,30 @@ function CategoryPage() {
   const [isRankingsOpen, setIsRankingsOpen] = useState(false);
   const [rankingsData, setRankingsData] = useState(null);
   useEffect(() => {
+    if (!eventId || !activeStage) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const stageId = getStageIdByName(activeStage);
+        if (!stageId) return;
+
+        // check stage results
+        const res = await getStageResults(stageId);
+        const newResults = res.data.data || {};
+
+        // if results changed → reload page
+        if (JSON.stringify(newResults) !== JSON.stringify(stageResults)) {
+          window.location.reload();
+        }
+
+      } catch (err) {
+        console.error("Auto refresh check failed:", err);
+      }
+    }, 5000); // check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [eventId, activeStage, stageResults]);
+  useEffect(() => {
     async function fetchResults() {
       if (!activeStage) return;
 
