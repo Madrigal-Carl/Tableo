@@ -1,8 +1,15 @@
 const eventService = require("../services/event_service");
+const fs = require("fs");
+const path = require("path");
 
 async function createEvent(req, res, next) {
   try {
     const userId = req.user.id;
+
+    const uploadDir = path.join(__dirname, "../uploads/events");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
     const event = await eventService.createEvent({
       ...req.body,
