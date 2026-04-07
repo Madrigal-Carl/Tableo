@@ -10,16 +10,10 @@ function SideNavigation() {
   const { logout } = useAuth();
 
   const navItem = (label, Icon, paths, action) => {
-    const normalizedPaths = Array.isArray(paths)
-      ? paths
-      : paths
-        ? [paths]
-        : [];
+    const normalizedPaths = Array.isArray(paths) ? paths : paths ? [paths] : [];
 
     const isActive = normalizedPaths.some(
-      (p) =>
-        location.pathname === p ||
-        location.pathname.startsWith(p + "/")
+      (p) => location.pathname === p || location.pathname.startsWith(p + "/"),
     );
 
     return (
@@ -29,10 +23,11 @@ function SideNavigation() {
           if (normalizedPaths[0]) navigate(normalizedPaths[0]);
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition
-        ${isActive
+        ${
+          isActive
             ? "bg-[#192BC2] text-white hover:bg-[#192BC2]/70"
             : "text-gray-700 hover:bg-[#192BC2] hover:text-white"
-          }`}
+        }`}
       >
         <Icon size={20} />
         <span>{label}</span>
@@ -86,7 +81,7 @@ function SideNavigation() {
 
       {/* Settings */}
       <div className="flex flex-col gap-2">
-        {navItem("Profile Settings", Settings, "/settings")}
+        {navItem("Profile Settings", Settings, "/#")}
       </div>
 
       {/* Bottom Action */}
