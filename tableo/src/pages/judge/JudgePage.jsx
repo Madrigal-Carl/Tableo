@@ -225,7 +225,7 @@ function JudgePage() {
           setScores({});
           setShowWaitingOverlay(false);
         }
-      } catch (err) { }
+      } catch (err) {}
     }, 3000);
 
     return () => clearInterval(interval);
@@ -249,11 +249,11 @@ function JudgePage() {
   const normalizedCriteria = normalizeCriteria(selectedCategory);
   // ✅ Split candidates by gender
   const maleCandidates = passedCandidates.filter(
-    (c) => c.sex?.toLowerCase() === "male"
+    (c) => c.sex?.toLowerCase() === "male",
   );
 
   const femaleCandidates = passedCandidates.filter(
-    (c) => c.sex?.toLowerCase() === "female"
+    (c) => c.sex?.toLowerCase() === "female",
   );
   /* ===================================================== */
   /* SAVE JUDGE */
@@ -282,8 +282,10 @@ function JudgePage() {
   const handleProceed = async () => {
     if (!selectedCategory) return;
 
+    const visibleCandidates = [...maleCandidates, ...femaleCandidates];
+
     const allFilled = validateScores(
-      passedCandidates,
+      visibleCandidates,
       normalizedCriteria,
       scores,
     );
